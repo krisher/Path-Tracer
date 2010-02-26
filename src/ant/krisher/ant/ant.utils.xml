@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<project name="ant-utils" xmlns:utils="antlib:krisher.ant" default="dist">
+	<dirname property="paths.antutils" file="${ant.file.ant-utils}" />
+	<taskdef uri="antlib:krisher.ant" file="${paths.antutils}/antlib.xml" />
+
+        <!-- just in case it was not defined in the project build file -->
+        <property name="root.source.dir" location="${paths.antutils}/../.." />
+
+
+	<target name="init">
+		<tstamp />
+
+		<!-- Read the project's build.properties -->
+		<property file="build.properties" />
+		<!-- Delegate to antlib to initialize any others. -->
+		<utils:init-property-defaults />
+	</target>
+
+	<target name="new-project" depends="init" description="Initialize directory structure for a new sub-project.">
+		<utils:create-source-paths />
+	</target>
+
+	<target name="prepare-build-paths" depends="init">
+		<utils:create-build-paths />
+	</target>
+
+	<target name="compile-main" depends="init,prepare-build-paths" description="Compiles source Java files">
+		<utils:compile-javac type-path="${paths.main}">
+			<buildpath>
+				<path refid="${pathrefs.runtime}" />
+				<path refid="${pathrefs.build}" />
+			</buildpath>
+		</utils:compile-javac>
+	</target>
+
+	<target name="compile-tests" depends="init,prepare-build-paths" description="Compiles source Java test files">
+		<utils:compile-javac type-path="${paths.test}" build-path-ref="${pathrefs.test}">
+			<buildpath>
+				<path refid="${pathrefs.build}" />
+				<path refid="${pathrefs.runtime}" />
+				<path refid="${pathrefs.test}" />
+				<pathelement location="${paths.build}/${paths.main}/${paths.classes}" />
+				<pathelement location="${paths.build}/${paths.main}/${paths.resources}" />
+			</buildpath>
+		</utils:compile-javac>
+	</target>
+
+
+
+	<target name="copy-test-resources" depends="init" if="available.test.resources">
+		<mkdir dir="${paths.build}/${paths.test}/${paths.resources}" />
+		<copy todir="${paths.build}/${paths.test}/${paths.resources}" failonerror="false">
+			<fileset dir="${paths.source}/${paths.test}/${paths.resources}" />
+		</copy>
+	</target>
+
+	<target name="copy-test-files" depends="init" if="available.test.files">
+		<mkdir dir="${paths.build}/${paths.test}/" />
+		<copy todir="${paths.build}/${paths.test}" failonerror="false">
+			<fileset dir="${paths.source}/${paths.test}/${paths.files}" />
+		</copy>
+	</target>
+
+
+	<target name="jar-with-manifest" if="main.class" depends="init, compile-main, copy-libs, copy-resources">
+		<utils:jar-with-manifest />
+	</target>
+
+	<target name="jar-no-manifest" unless="main.class" depends="init, compile-main, copy-libs, copy-resources">
+		<utils:jar-no-manifest />
+	</target>
+
+	<target name="dist" depends="init,copy-libs,copy-files,jar-with-manifest,jar-no-manifest" />
+
+	<target name="test" depends="init,compile-tests,copy-test-resources, copy-test-files" if="available.test.java">
+		<junit printsummary="withOutAndErr" fork="true" dir="${paths.build}/${paths.test}" failureproperty="_test.failure">
+			<classpath>
+				<path refid="${pathrefs.runtime}" />
+				<path refid="${pathrefs.build}" />
+				<path refid="${pathrefs.test}" />
+
+				<pathelement location="${paths.build}/${paths.main}/${build.classes.dir}" />
+				<pathelement location="${paths.build}/${paths.main}/${paths.resources}" />
+				<pathelement location="${paths.build}/${paths.test}/${build.classes.dir}" />
+				<pathelement location="${paths.build}/${paths.test}/${paths.resources}" />
+			</classpath>
+			<formatter type="plain" useFile="false" />
+			<batchtest fork="yes">
+				<fileset dir="${paths.build}/${paths.test}/${paths.classes}">
+					<include name="**/*Test*.class" />
+					<exclude name="**/*$*.class" />
+				</fileset>
+			</batchtest>
+		</junit>
+		<fail if="_test.failure" message="There were test failures!" />
+	</target>
+
+	<target name="copy-libs" depends="init">
+		<utils:copy-libs />
+	</target>
+
+	<target name="copy-resources" depends="init" if="available.source.resources">
+		<copy todir="${paths.build}/${paths.main}/${paths.resources}">
+			<fileset dir="${paths.source}/${paths.main}/${paths.resources}" />
+		</copy>
+	</target>
+
+	<target name="copy-files" description="Deploys support files to ${paths.dist}" depends="init" if="available.source.files">
+		<copy todir="${paths.dist}">
+			<fileset dir="${paths.source}/${paths.main}/${paths.files}" />
+		</copy>
+	</target>
+
+
+	<target name="javadoc" depends="init" description="Generates javadocs for this project">
+		<utils:javadoc />
+	</target>
+
+	<target name="clean" description="Removes all generated files" depends="init">
+		<utils:clean-build-output />
+	</target>
+
+	<target name="clean-all" description="Removes all built files" depends="init">
+		<utils:clean-build-output />
+		<utils:clean-dist-output />
+	</target>
+
+</project>

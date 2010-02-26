@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<antlib xmlns:current="ant:current">
+    <macrodef name="init-property-defaults">
+        <sequential>
+	<!-- Project defaults -->
+            <basename file="${basedir}" property="project.name" />
+            <property name="project.version" value="0.1" />
+	
+   	<!-- Source, Build and Distribution paths -->
+            <property name="paths.source" value="src" />
+            <property name="paths.build" value="build" />
+            <property name="paths.dist" value="dist" />
+            <property name="paths.main" value="main" />
+            <property name="paths.test" value="test" />
+            <property name="paths.dist.lib" value="lib" />
+            <property name="paths.java" value="java" />
+            <property name="paths.resources" value="resources" />
+            <property name="paths.files" value="files" />
+            <property name="paths.classes" value="classes" />
+            <property name="paths.docs" value="docs" />
+            <property name="paths.generated" value="generated" />
+
+	 <!-- Reference ID's for various classpaths -->
+            <property name="pathrefs.build" value="build.classpath" />
+            <property name="pathrefs.runtime" value="runtime.classpath" />
+            <property name="pathrefs.test" value="test.classpath" />	 
+	 
+	 <!-- Default JavaC options -->
+            <property name="javac.maxheap" value="256m" />
+            <property name="javac.source" value="1.6" />
+            <property name="javac.target" value="1.6" />
+            <property name="javac.lint" value="" />
+	 
+	 <!-- Jar name -->
+            <property name="jar.name" value="${project.name}-${project.version}" />
+	 
+	 <!-- Path existence checks -->
+            <available property="available.source.main.java"
+                file="${paths.source}/${paths.main}/${paths.java}" />
+            <available property="available.source.main.resources"
+                file="${paths.source}/${paths.main}/${paths.resources}" />
+            <available property="available.source.main.files"
+                file="${paths.source}/${paths.main}/${paths.files}" />
+            <available property="available.source.test.java"
+                file="${paths.source}/${paths.test}/${paths.java}" />
+            <available property="available.source.test.resources"
+                file="${paths.source}/${paths.test}/${paths.resources}" />
+            <available property="available.source.test.files"
+                file="${paths.source}/${paths.test}/${paths.files}" />
+        </sequential>
+    </macrodef>
+    <macrodef name="create-build-paths">
+        <attribute name="base-path" default="." />
+        <sequential>
+            <mkdir
+                dir="@{base-path}/${paths.build}/${paths.main}/${paths.classes}" />
+            <mkdir
+                dir="@{base-path}/${paths.build}/${paths.main}/${paths.generated}" />
+            <mkdir
+                dir="@{base-path}/${paths.build}/${paths.main}/${paths.resources}" />
+            <mkdir
+                dir="@{base-path}/${paths.build}/${paths.test}/${paths.classes}" />
+            <mkdir
+                dir="@{base-path}/${paths.build}/${paths.test}/${paths.generated}" />
+            <mkdir
+                dir="@{base-path}/${paths.build}/${paths.test}/${paths.resources}" />
+        </sequential>
+    </macrodef>
+    <macrodef name="create-source-paths">
+        <attribute name="base-path" default="." />
+        <sequential>
+            <mkdir
+                dir="@{base-path}/${paths.source}/${paths.main}/${paths.java}" />
+            <mkdir
+                dir="@{base-path}/${paths.source}/${paths.main}/${paths.resources}" />
+            <mkdir
+                dir="@{base-path}/${paths.source}/${paths.main}/${paths.files}" />
+            <mkdir
+                dir="@{base-path}/${paths.source}/${paths.test}/${paths.java}" />
+            <mkdir
+                dir="@{base-path}/${paths.source}/${paths.test}/${paths.resources}" />
+            <mkdir
+                dir="@{base-path}/${paths.source}/${paths.test}/${paths.files}" />
+        </sequential>
+    </macrodef>
+    <presetdef name="configured-javac">
+        <javac source="${javac.source}" target="${javac.target}"
+            memoryMaximumSize="${javac.maxheap}" fork="true">
+            <compilerarg value="-Xlint:${javac.lint}" />
+        </javac>
+    </presetdef>
+    <macrodef name="compile-javac">
+        <attribute name="type-path" />
+        <element name="buildpath" optional="false" />
+        <sequential>
+            <current:create-build-paths />
+            <current:configured-javac
+                destdir="${paths.build}/@{type-path}/${paths.classes}"
+                srcdir="${paths.source}/@{type-path}/${paths.java}">
+                <classpath>
+                    <buildpath />
+                </classpath>
+            </current:configured-javac>
+        </sequential>
+    </macrodef>
+    <macrodef name="jar-no-manifest">
+        <sequential>
+            <mkdir dir="${paths.dist}" />
+            <jar index="false" jarfile="${paths.dist}/${jar.name}.jar">
+                <fileset dir="${paths.build}/${paths.main}/${paths.classes}">
+                    <include name="**/*" />
+                </fileset>
+                <fileset
+                    dir="${paths.build}/${paths.main}/${paths.resources}">
+                    <include name="**/*" />
+                </fileset>
+            </jar>
+        </sequential>
+    </macrodef>
+    <macrodef name="jar-with-manifest">
+        <sequential>
+            <mkdir dir="${paths.dist}/${paths.dist.lib}" />
+            <manifestclasspath property="manifest.classpath"
+                jarfile="${paths.dist}/${jar.name}.jar" maxParentLevels="0">
+                <classpath>
+                    <fileset dir="${paths.dist}/${paths.dist.lib}">
+                        <include name="**/*.jar" />
+                    </fileset>
+                </classpath>
+            </manifestclasspath>
+            <jar index="false" jarfile="${paths.dist}/${jar.name}.jar">
+                <fileset dir="${paths.build}/${paths.main}/${paths.classes}">
+                    <include name="**/*" />
+                </fileset>
+                <fileset
+                    dir="${paths.build}/${paths.main}/${paths.resources}">
+                    <include name="**/*" />
+                </fileset>
+                <manifest>
+                    <attribute name="Main-Class" value="${main.class}" />
+                    <attribute name="Class-Path" value="${manifest.classpath}" />
+                </manifest>
+            </jar>
+        </sequential>
+    </macrodef>
+    <macrodef name="copy-libs">
+        <sequential>
+            <mkdir dir="${paths.dist}/${paths.dist.lib}" />
+            <copy todir="${paths.dist}/${paths.dist.lib}" flatten="true">
+                <path refid="${pathrefs.runtime}" />
+            </copy>
+        </sequential>
+    </macrodef>
+    <macrodef name="javadoc">
+        <sequential>
+            <mkdir dir="${paths.build}/${paths.docs}" />
+            <javadoc destdir="${paths.build}/${paths.docs}"
+                verbose="false" Use="true" classpathref="${pathrefs.build}">
+                <link href="http://java.sun.com/j2se/1.4.2/docs/api/" />
+                <packageset
+                    dir="${paths.source}/${paths.main}/${paths.java}">
+                    <include name="**" />
+                </packageset>
+            </javadoc>
+        </sequential>
+    </macrodef>
+    <presetdef name="clean-build-output">
+        <delete dir="${paths.build}" quiet="true" />
+    </presetdef>
+    <presetdef name="clean-dist-output">
+        <delete dir="${paths.dist}" quiet="true" />
+    </presetdef>
+</antlib>

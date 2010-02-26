@@ -1,0 +1,89 @@
+Computer Graphics 2 Ray Tracer Assignment
+Daniel Krisher
+Submitted Feb, 2010.
+
+System Requirements
+===================
+Any system with JavaSE 1.6 (6.0) or later.  Apache Ant 1.7 (earlier versions may work) is required to build from source.
+
+Building
+========
+The source code is 100% Java, and can be built with Apache Ant. Just run 'ant' from the top level directory (where this file is found). The build process will create a raytracer-0.9.jar file in the dist/ subdirectory, and will additionally copy any third party libraries into the dist/lib/ subdirectory.
+
+
+Running
+=======
+The jar file includes a manifest describing the main class and library dependencies.
+Just run:
+
+java -jar raytracer-0.9.jar
+
+from within the dist/ directory.  While the raytracer itself uses very little memory, increasing Java's maximum heap size can reduce the load on the garbage collector, and increase performance.  You can run something like:
+
+java -Xmx512m -jar raytracer-0.9.jar
+
+The application will start with a simple UI.  Follow these steps to use the application:
+
+Enter the ray tracing parameters:
+    * image width/height 
+    * sample rate (actual number of samples per pixel is this value squared) (typically 1 is OK for a quick test, 10 for an OK but noisy image, 20-30 for a good image, 80-100 for a really good image).
+    * maximum recursion depth (0=>eye rays only, for most sample scenes there is little noticable change after about 16 bounces, but 6-8 usually produces good results)
+
+Select a scene from the list.
+
+Press Start.  The image will render into the panel to the right of the controls.  A progress bar next to the Start button will show the ETA of the completed image.
+
+Once this has completed, you can use the Tone-Mapping controls near the bottom left of the window.  Pick a TR operator, and/or modify the midpoint gray value (for Reinhard), and the image to the right will be immediately updated.  The original image is preserved so you can change the tone mapping as many times as necessary without re-tracing the scene.  You can also specify a desired white-point (as a luminance value), the image will be scaled so that pixels at or above this luminance value map to white, leaving greater range for the darker portions of the image (from Reinhard paper).
+
+Finally, press Save to save a copy of the image currently displayed in the UI to a specified png file.
+
+
+Third-Party Libraries
+=====================
+This project uses MiGLayout for the user interface (miglayout.com).
+
+I also copied a few ancillary classes from other personal projects (including some of the vector/matrix math code), but these are completely my own work.
+
+
+Major Features:
+====================
+
+Engine:
+ * Complete Monte-Carlo Path Tracer
+ * More or less energy conserving (there is one optimization that breaks this somewhat)
+ * Multi-threaded (one thread per processor with multiple work items in shared work queue, each corresponding to a small region (64x64px) of the image.  This was scaling nearly linearly with number/speed of CPUs, until the addition of a GUI which may have introduced more resource contention.
+
+Material:
+ * Material Interface allows many different materials to be defined and combined:
+  * BRDF/BTDF (Implementations for Modified Phong BRDF, Lambert, Dielectric BRDF (with extinction)x and Composite that allows mixing of BRDF/BTDF with specified probabilities)
+  * BSSDF (not implemented)
+  * Emissive (Basic emissive color)
+ * Implementations use importance sampling when evaluating which irradiance direction to sample given radiance sample direction.
+ * Optional response to direct lighting (shadow ray), and emissive material hit (path ray) to improve convergence rate.  Note that while this produces better images, the amount of light that is transmitted may be a little lower than the expected result, producing slightly darker scenes.  Energy is not completely conserved with this optimization.
+ * Texture Interface to access color based on multi-dimensional texture coordinates (3D procedural textures were quicker to implement/use at the time this was written), however no information is provided regarding the derivatives that would be necessary for a more robust texture mapping system.
+
+ 
+Geometry/Scene:
+ * Simple scene description (lists of geometry and light sources).  This was slightly more sophisticated in an earlier implementation, however a full scene graph was not really necessary for this assignment, and I did not have time to maintain it to keep up with other changes in the ray tracer.
+ * Geometry for boxes (with arbitrary orientation), Spheres, and Triangles.
+ 
+Lights:
+ * Point light with specified emssion power
+ * SphereLight with importance sampling for direct illumination calculations
+
+Camera:
+ * PinholeCamera 
+ * DoFCamera for depth of field with specified aperture and focal plane distance.
+
+Imaging:
+ * All radiance calculations done in unbounded (single-precision) float values, nothing is clamped or compressed until the final tone-mapping stage.
+ * Ward and Reinhard tone mapping operators (with user-specified midpoint for Reinhard, and max-luminance scaling for both).
+  
+
+
+Source Code
+===========
+
+Eclipse .project/.classpath files are provided so this can easily be imported into the IDE as an existing project.  All of the application source code is contained in src/main/java.  3rd-party libraries are in lib/.
+
+The application's main class is edu.rit.krisher.ui.RTDemo, which defines the scenes that are available for ray-tracing, and launches the main UI.  edu.rit.krisher.raytracer.RayEngine is the entry point to the actual ray tracing process, with edu.rit.krisher.raytracer.PathTracer implementing the path-tracing algorithm.
