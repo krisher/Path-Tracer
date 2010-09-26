@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<FindBugsFilter>
+   <Match>
+      <!-- Ignore Serialization warnings -->
+      <Bug code="Se,SnVI" />
+   </Match>
+</FindBugsFilter>

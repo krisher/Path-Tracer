@@ -7,10 +7,17 @@
 	<packaging>jar</packaging>
 	<version>0.9-SNAPSHOT</version>
 	<name>Path Tracer</name>
+	<description>Path Tracer implementation developed for Computer Graphics II @ RIT, continued development for Advance Rendering.</description>
 	<url>https://cg.krisher.homeip.net</url>
 
 
 
+	<scm>
+		<connection>scm:git:git://github.com/krisher/Path-Tracer.git</connection>
+		<url>scm:git:git://github.com/krisher/Path-Tracer.git</url>
+	</scm>
+	<organization>
+	</organization>
 	<build>
 		<plugins>
 			<plugin>
@@ -64,7 +71,39 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
 				<!-- <version>2.6</version> -->
+				<configuration>
+					<configLocation>src/build-tools/checkstyle.xml</configLocation>
+				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jxr-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<!-- <version>2.5</version> -->
+				<configuration>
+					<linkXref>true</linkXref>
+					<sourceEncoding>utf-8</sourceEncoding>
+					<minimumTokens>100</minimumTokens>
+					<targetJdk>1.6</targetJdk>
+					<rulesets>
+						<ruleset>src/build-tools/pmd-rules.xml</ruleset>
+					</rulesets>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<configuration>
+					<xmlOutput>true</xmlOutput>
+					<excludeFilterFile>src/build-tools/findbugs-exclude.xml</excludeFilterFile>
+					<xmlOutputDirectory>target/site</xmlOutputDirectory>
+				</configuration>
+				<!-- <version>2.0.1</version> -->
+			</plugin>
+
 		</plugins>
 	</reporting>
 
