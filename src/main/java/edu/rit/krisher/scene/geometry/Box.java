@@ -98,7 +98,7 @@ public class Box implements Geometry {
 
    public void setTransform(final Transform transform) {
       this.transform = transform == null ? Vec3.zero : transform;
-      this.invTransform = transform.inverted();
+      this.invTransform = this.transform.inverted();
    }
 
    @Override

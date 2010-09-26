@@ -150,8 +150,7 @@ public final class PathTracer {
          /*
           * Out of rays, push pixels back into the image...
           */
-         workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth,
-                                  workItem.blockHeight, pixels);
+         workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth, workItem.blockHeight, pixels);
       } finally {
          workItem.workDone();
       }
@@ -246,8 +245,7 @@ public final class PathTracer {
              */
             if (ray.emissiveResponse) {
 
-               hitData.material.getEmissionColor(sampleColor, ray.direction, hitData.surfaceNormal,
-                                                 hitData.materialCoords);
+               hitData.material.getEmissionColor(sampleColor, ray.direction, hitData.surfaceNormal, hitData.materialCoords);
             } else
                sampleColor.set(0, 0, 0);
 
@@ -287,8 +285,7 @@ public final class PathTracer {
                   /*
                    * Generate a random sample direction that hits the light
                    */
-                  double lightDist = light.sampleEmissiveRadiance(shadowRay.direction, lightEnergy, directLightNormal,
-                                                                  shadowRay.origin, rng);
+                  double lightDist = light.sampleEmissiveRadiance(shadowRay.direction, lightEnergy, directLightNormal, shadowRay.origin, rng);
                   /*
                    * Cosine of the angle between the geometry surface normal and
                    * the shadow ray direction
@@ -320,13 +317,11 @@ public final class PathTracer {
                          * the energy transmitted along the shadow ray with the
                          * response of the material...
                          */
-                        hitData.material.getDirectIlluminationTransport(lightResponse, ray.direction, rng,
-                                                                        shadowRay.direction, hitData.surfaceNormal,
-                                                                        hitData.materialCoords);
+                        hitData.material.getDirectIlluminationTransport(lightResponse, ray.direction, rng, shadowRay.direction, hitData.surfaceNormal, hitData.materialCoords);
 
                         final double diffAngle = (cosWi * cosWo) / (lightDist * lightDist);
-                        sampleColor.scaleAdd(lightEnergy.r * lightResponse.r, lightEnergy.g * lightResponse.g,
-                                             lightEnergy.b * lightResponse.b, diffAngle);
+                        sampleColor.scaleAdd(lightEnergy.r * lightResponse.r, lightEnergy.g * lightResponse.g, lightEnergy.b
+                                             * lightResponse.b, diffAngle);
                      }
                   }
 
@@ -337,7 +332,12 @@ public final class PathTracer {
              * If we have not reached the maximum recursion depth, generate a
              * new ray for the next path segment.
              */
-            if (rayDepth < workItem.recursionDepth) {
+            if (rayDepth < workItem.recursionDepth
+                  /*
+                   * Russion roulette for variance
+                   * reduction.
+                   */
+                  && rng.nextFloat() >= 1 / 6.0) {
                final SampleRay outRay = rays[outRayCount];
                /*
                 * Preserve the current extinction, this is only modified when
@@ -347,8 +347,7 @@ public final class PathTracer {
                outRay.extinction.set(ray.extinction);
                outRay.origin.set(hitPoint);
                outRay.reset();
-               hitData.material.sampleIrradiance(outRay, rng, new Vec3(ray.direction), hitData.surfaceNormal,
-                                                 hitData.materialCoords);
+               hitData.material.sampleIrradiance(outRay, rng, new Vec3(ray.direction), hitData.surfaceNormal, hitData.materialCoords);
                if (!outRay.transmissionSpectrum.isZero()) {
                   outRay.transmissionSpectrum.multiply(rTransmission, gTransmission, bTransmission);
 

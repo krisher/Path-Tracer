@@ -14,20 +14,7 @@ import java.awt.image.WritableRaster;
 /**
  * A set of image processing utility methods.
  */
-public class ImageUtil {
-
-   /*
-    * These conversion matrices are taken from Erik Reinhard and Mike Stark's
-    * tone mapping code at:
-    * 
-    * http://www.cs.ucf.edu/~reinhard/cdrom/
-    * 
-    * The numbers do not directly correspond to any RGB <-> CIE color conversion
-    * models that I can find, they may be adjusted for more recent displays.
-    */
-   private static final double[] RGB2XYZ = { 0.5141364, 0.3238786, 0.16036376, 0.265068, 0.67023428, 0.06409157,
-      0.0241188, 0.1228178, 0.84442666 };
-   private static final double[] XYZ2RGB = { 2.5651, -1.1665, -0.3986, -1.0217, 1.9777, 0.0439, 0.0753, -0.2543, 1.1892 };
+public final class ImageUtil {
 
    /**
     * ToneMapper that simply clamps input values to the displayable range.
@@ -43,8 +30,27 @@ public class ImageUtil {
       }
    };
 
+   /*
+    * These conversion matrices are taken from Erik Reinhard and Mike Stark's
+    * tone mapping code at:
+    * 
+    * http://www.cs.ucf.edu/~reinhard/cdrom/
+    * 
+    * The numbers do not directly correspond to any RGB <-> CIE color conversion
+    * models that I can find, they may be adjusted for more recent displays.
+    */
+   private static final double[] RGB2XYZ = { 0.5141364, 0.3238786, 0.16036376, 0.265068, 0.67023428, 0.06409157,
+      0.0241188, 0.1228178, 0.84442666 };
+   private static final double[] XYZ2RGB = { 2.5651, -1.1665, -0.3986, -1.0217, 1.9777, 0.0439, 0.0753, -0.2543, 1.1892 };
+
+   private ImageUtil() {
+      /*
+       * Prevent Construction.
+       */
+   }
+
    /**
-    * Ward tone reproduction operator
+    * Ward tone reproduction operator.
     * 
     * @author krisher
     * 
@@ -288,16 +294,14 @@ public class ImageUtil {
       final int pixelStride = 3; // assuming r, g, b, skip, r, g, b, skip...
       final int scanlineStride = 3 * size.width; // no extra padding
       final int[] bandOffsets = { 0, 1, 2 }; // r, g, b
-      final WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride,
-                                                                   pixelStride, bandOffsets, null);
+      final WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride, pixelStride, bandOffsets, null);
 
       final ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB);
       final boolean hasAlpha = false;
       final boolean isAlphaPremultiplied = false;
       final int transparency = Transparency.OPAQUE;
       final int transferType = DataBuffer.TYPE_BYTE;
-      final ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency,
-                                                            transferType);
+      final ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency, transferType);
 
       return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
    }
@@ -321,16 +325,14 @@ public class ImageUtil {
       final int pixelStride = 1;
       final int scanlineStride = size.width; // no extra padding
       final int[] bandOffsets = { 0 }; // r, g, b
-      final WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride,
-                                                                   pixelStride, bandOffsets, null);
+      final WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride, pixelStride, bandOffsets, null);
 
       final ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY);
       final boolean hasAlpha = false;
       final boolean isAlphaPremultiplied = false;
       final int transparency = Transparency.OPAQUE;
       final int transferType = DataBuffer.TYPE_BYTE;
-      final ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency,
-                                                            transferType);
+      final ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency, transferType);
 
       return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
    }

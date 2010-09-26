@@ -13,8 +13,8 @@
 
 
 	<scm>
-		<connection>scm:git:git://github.com/krisher/Path-Tracer.git</connection>
-		<url>scm:git:git://github.com/krisher/Path-Tracer.git</url>
+		<connection>scm:git://github.com/krisher/Path-Tracer.git</connection>
+		<url>http://github.com/krisher/Path-Tracer</url>
 	</scm>
 	<organization>
 	</organization>
