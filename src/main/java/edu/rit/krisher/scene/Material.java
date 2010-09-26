@@ -12,8 +12,7 @@ import edu.rit.krisher.vecmath.Vec3;
  * particular direction, and a distribution function that can be sampled
  * 
  * Note that the emissive component does not imply that the geometry that has a
- * material emits light, the geometry must also implement
- * {@link EmissiveGeometry} for this to happen.
+ * material emits light, the geometry must also implement {@link EmissiveGeometry} for this to happen.
  * 
  * @author krisher
  * 
@@ -28,13 +27,14 @@ public interface Material {
     * BRDF/BTDF function.
     * 
     * <p>
-    * The returned value represents the percentage of the incoming radiant
-    * intensity (W/sr) that is transmitted, so Color component values must range
-    * from 0 to 1.<br>
+    * The returned value represents the percentage of the incoming radiant intensity (W/sr) that is transmitted, so
+    * Color component values must range from 0 to 1.<br>
     * 
-    * TODO: return a spectral response function instead of a color for improved
-    * color accuracy and support for fluorescence.
+    * TODO: return a spectral response function instead of a color for improved color accuracy and support for
+    * fluorescence.
     * 
+    * @param colorOut
+    *           the resulting color.
     * @param sampleDirection
     *           A normalized vector toward the material intersection point from
     *           the point where the transmitted/reflected spectrum is being
@@ -49,12 +49,7 @@ public interface Material {
     *           occurred.
     * @param materialCoords
     *           Material specific coordinates.
-    * 
-    * @return A spectral response function (not implemented, for now return a
-    *         Color that will be modulated with the color of incident light).
-    *         Response will be used to weight irradiance spectrum, so typically
-    *         weights are in the range 0-1.
-    */
+    **/
    public void getDirectIlluminationTransport(Color colorOut, Vec3 sampleDirection, Random rng,
          Vec3 incidentLightDirection, Vec3 surfaceNormal, double... materialCoords);
 

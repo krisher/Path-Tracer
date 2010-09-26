@@ -17,13 +17,13 @@ import java.util.regex.Pattern;
  * href="http://people.cs.kuleuven.be/~ares.lagae/libply/ply-0.1/doc/PLY_FILES.txt">http://people.cs.kuleuven.be
  * /~ares.lagae/libply/ply-0.1/doc/PLY_FILES.txt</a>.
  * <p>
- * In its present form, this may only be able to load a limited subset of PLY models, in particular, it is known to work
- * with the Stanford Bunny model.
+ * This is quick and dirty in its present form, this may only be able to load a limited subset of PLY models, in
+ * particular, it is known to work with the Stanford Bunny model.
  * 
  * @author krisher
  * 
  */
-public class PLYParser {
+public final class PLYParser {
 
    private static final String headerStart = "ply";
    private static final String headerEnd = "end_header";
@@ -56,94 +56,149 @@ public class PLYParser {
     * is given as the first value of the field, with the list values immediately following.
     */
 
+   /**
+    * Format of the PLY file content, ascii or binary.
+    */
    public static enum FORMAT {
-      ascii, binary_little_endian, binary_big_endian
+      /**
+       * Format for ascii representation of element data.
+       */
+      ascii,
+      /**
+       * Format for binary representation of element data.
+       */
+      binary_little_endian,
+      /**
+       * Format for binary representation of element data.
+       */
+      binary_big_endian
    }
 
+   /**
+    * The various data types that scalar values may be specified in.
+    * 
+    * @author krisher
+    * 
+    */
    public static enum DATA_TYPE {
-      int8 {
-         @Override
-         public int sizeBytes() {
-            return 1;
-         }
-      },
+      /**
+       * 8bit unsigned int (short in Java).
+       */
       uint8 {
          @Override
-         public int sizeBytes() {
+         public int getSizeBytes() {
             return 1;
          }
-      },
-      int16 {
+
          @Override
-         public int sizeBytes() {
-            return 2;
+         public boolean isSigned() {
+            return false;
          }
       },
-      uint16 {
-         @Override
-         public int sizeBytes() {
-            return 2;
-         }
-      },
+      /**
+       * 32bit signed int (int in Java).
+       */
       int32 {
          @Override
-         public int sizeBytes() {
+         public int getSizeBytes() {
             return 4;
          }
-      },
-      uint32 {
+
          @Override
-         public int sizeBytes() {
-            return 4;
+         public boolean isSigned() {
+            return true;
          }
       },
+      /**
+       * 32bit float (float in Java).
+       */
       float32 {
          @Override
-         public int sizeBytes() {
+         public int getSizeBytes() {
             return 4;
          }
-      },
-      float64 {
+
          @Override
-         public int sizeBytes() {
-            return 8;
+         public boolean isSigned() {
+            return true;
          }
       };
 
       /**
        * The size in bytes of the data type, as it would be represented in the binary version of the file.
        * 
-       * @return
+       * @return The size in bytes of the data type as it would be represented in the binary version of the file.
        */
-      public abstract int sizeBytes();
+      public abstract int getSizeBytes();
+
+      /**
+       * Accessor to determine whether the data type represents signed values (<code>true</code>), or unsigned (
+       * <code>false</code>).
+       * 
+       * @return true or false...
+       */
+      public abstract boolean isSigned();
 
       // public abstract Number parseAscii(String asciiRepresentation);
       //
       // public abstract Number parseBinary(byte[] binaryRepresentation);
    }
 
-   static class ElementDefinition {
+   /**
+    * Definition/Metadata for a single content element type in the PLY file (defined in the header).
+    * 
+    * @author krisher
+    * 
+    */
+   public static class ElementDefinition {
       /**
        * The name of the element. This can be anything, but common names
        * include 'vertex', 'face', and 'edge'.
        */
       public final String name;
+      /**
+       * The number of elements of this type in the file.
+       */
       public final int count;
+      /**
+       * The properties that make up the element.
+       */
       private final List<ElementPropertyDefinition> properties = new ArrayList<ElementPropertyDefinition>();
 
+      /**
+       * Creates a new ElementDefinition with the specified element name, and number of elements.
+       * 
+       * @param name
+       *           The non-null element name.
+       * @param count
+       *           The number of elements of this type that appear in the file.
+       */
       public ElementDefinition(final String name, final int count) {
          this.name = name;
          this.count = count;
       }
 
+      /**
+       * The list of properties that make up an element of this type. The order of the elements
+       * in the returned list corresponds to the order of the elements in the file.
+       * 
+       * @return A non-null list of properties.
+       */
       public List<ElementPropertyDefinition> getProperties() {
          return Collections.unmodifiableList(properties);
       }
    }
 
-   static class ElementPropertyDefinition {
+   /**
+    * Definition/Metadata for a property of an element. Each property corresponds to one component (which may have
+    * multiple scalar values) of an element instance in the file.
+    * 
+    * @author krisher
+    * 
+    */
+   public static class ElementPropertyDefinition {
       /**
-       * The name of the property
+       * The name of the property.
        */
       public final String name;
       /**
@@ -156,6 +211,17 @@ public class PLYParser {
        */
       public final DATA_TYPE valueType;
 
+      /**
+       * Defines a property.
+       * 
+       * @param name
+       *           A non-null name for the property.
+       * @param listIndexType
+       *           A possibly null data type for the size parameter of the property (for vector valued properties). If
+       *           null, then this property is a scalar property.
+       * @param valueType
+       *           The data type for the property value components.
+       */
       public ElementPropertyDefinition(final String name, final DATA_TYPE listIndexType, final DATA_TYPE valueType) {
          super();
          this.name = name;
@@ -167,11 +233,22 @@ public class PLYParser {
       }
    }
 
-   static class ContentDefinition {
+   /**
+    * Content definition metadata for a PLY file, as defined by its header. This must be initialized from a provided
+    * Reader that represents a PLY file.
+    * 
+    * @author krisher
+    * 
+    */
+   public static class ContentDefinition {
       private FORMAT format;
       private String versionString;
       private final List<String> comments = new ArrayList<String>();
       private final List<ElementDefinition> elements = new ArrayList<ElementDefinition>();
+
+      public ContentDefinition(final BufferedReader reader) throws IOException {
+         parse(reader);
+      }
 
       public FORMAT getFormat() {
          return format;
@@ -189,7 +266,7 @@ public class PLYParser {
          return Collections.unmodifiableList(elements);
       }
 
-      public void parse(final BufferedReader reader) throws IOException {
+      private void parse(final BufferedReader reader) throws IOException {
          /*
           * The file begins with an ascii header section, regardless of the content format. Note that the format
           * specifies ascii data, but who knows whether this is actually followed in the implementation.
@@ -281,8 +358,8 @@ public class PLYParser {
    static void parsePLY(final InputStream stream) throws IOException {
       final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, Charset.forName("US-ASCII")));
       try {
-         final ContentDefinition content = new ContentDefinition();
-         content.parse(reader);
+         final ContentDefinition content = new ContentDefinition(reader);
+
       } finally {
          reader.close();
       }

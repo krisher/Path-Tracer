@@ -166,14 +166,12 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
    @Override
    public synchronized T remove(final int idx) {
       final int oldSize = size();
-      final T[] array = (T[]) Array.newInstance(getComponentType(),
-                                                oldSize - 1);
+      final T[] array = (T[]) Array.newInstance(getComponentType(), oldSize - 1);
       if (oldSize > 1) {
          if (idx > 0)
             System.arraycopy(this.array, 0, array, 0, idx);
          if (idx < oldSize - 1)
-            System.arraycopy(this.array, idx + 1, array, idx, oldSize - idx
-                             - 1);
+            System.arraycopy(this.array, idx + 1, array, idx, oldSize - idx - 1);
       }
       final T oldValue = this.array[idx];
       this.array = array;
@@ -217,8 +215,7 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
             }
          }
       }
-      final T[] newArray = (T[]) Array.newInstance(getComponentType(),
-                                                   array.length - count);
+      final T[] newArray = (T[]) Array.newInstance(getComponentType(), array.length - count);
       for (int oldIdx = 0, newIdx = 0; oldIdx < removed.length; oldIdx++) {
          if (!removed[oldIdx]) {
             newArray[newIdx++] = array[oldIdx];
@@ -253,8 +250,7 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
             }
          }
       }
-      final T[] newArray = (T[]) Array.newInstance(getComponentType(),
-                                                   array.length - count);
+      final T[] newArray = (T[]) Array.newInstance(getComponentType(), array.length - count);
       for (int oldIdx = 0, newIdx = 0; oldIdx < retained.length; oldIdx++) {
          if (retained[oldIdx]) {
             newArray[newIdx++] = array[oldIdx];
@@ -268,8 +264,7 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
    @Override
    public synchronized T set(final int idx, final T value) {
       final T[] oldArray = this.array;
-      final T[] array = (T[]) Array.newInstance(getComponentType(),
-                                                oldArray.length);
+      final T[] array = (T[]) Array.newInstance(getComponentType(), oldArray.length);
       System.arraycopy(oldArray, 0, array, 0, array.length);
       array[idx] = value;
       this.array = array;
@@ -279,8 +274,7 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
    public synchronized T[] set(final T[] array) {
       final T[] oldArray = this.array;
       if (array != null) {
-         final T[] newArray = (T[]) Array.newInstance(getComponentType(),
-                                                      array.length);
+         final T[] newArray = (T[]) Array.newInstance(getComponentType(), array.length);
          if (newArray.length > 0)
             System.arraycopy(array, 0, newArray, 0, array.length);
       } else {
@@ -302,8 +296,7 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
    @Override
    public Object[] toArray() {
       final T[] oldArray = this.array;
-      final T[] array = (T[]) Array.newInstance(getComponentType(),
-                                                oldArray.length);
+      final T[] array = (T[]) Array.newInstance(getComponentType(), oldArray.length);
       System.arraycopy(oldArray, 0, array, 0, array.length);
       return array;
    }
@@ -312,23 +305,19 @@ public class CopyOnWriteArrayList<T> implements List<T>, RandomAccess {
    public <X> X[] toArray(X[] array) {
       final T[] oldArray = this.array;
       if (array.length != oldArray.length)
-         ;
-      array = (X[]) Array.newInstance(array.getClass().getComponentType(),
-                                      oldArray.length);
+         array = (X[]) Array.newInstance(array.getClass().getComponentType(), oldArray.length);
       System.arraycopy(oldArray, 0, array, 0, array.length);
       return array;
    }
 
    protected T[] addAll(final int idx, final Object[] array) {
-      final T[] newArray = (T[]) Array.newInstance(getComponentType(),
-                                                   this.array.length + array.length);
+      final T[] newArray = (T[]) Array.newInstance(getComponentType(), this.array.length + array.length);
       if (idx > 0)
          System.arraycopy(this.array, 0, newArray, 0, idx);
       if (array.length > 0)
          System.arraycopy(array, 0, newArray, idx, array.length);
       if (idx < this.array.length)
-         System.arraycopy(this.array, idx, newArray, idx + array.length,
-                          this.array.length - idx);
+         System.arraycopy(this.array, idx, newArray, idx + array.length, this.array.length - idx);
       return newArray;
    }
 

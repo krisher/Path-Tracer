@@ -55,7 +55,6 @@ public class DefaultImageBuffer implements ImageBuffer {
    @Override
    public void setPixels(final int sx, final int sy, final int w, final int h, final float[] pixels) {
       synchronized (bImage) {
-         // TODO Auto-generated method stub
          for (int y = 0; y < h; y++) {
             final int dstRow = imSize.height - (sy + y) - 1;
             final int dstPixelStart = (dstRow * imSize.width + sx) * 3;

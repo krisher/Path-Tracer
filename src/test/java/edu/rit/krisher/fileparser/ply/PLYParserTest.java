@@ -20,7 +20,7 @@ public class PLYParserTest {
 
    @Test
    public void testParseBunnyHeader() throws IOException {
-      final ContentDefinition content = new ContentDefinition();
+      final ContentDefinition content;
       /*
        * Assumes that the ply file is the first entry in the zip...
        */
@@ -29,7 +29,7 @@ public class PLYParserTest {
          zis.getNextEntry();
          final BufferedReader reader = new BufferedReader(new InputStreamReader(zis, Charset.forName("US-ASCII")));
          try {
-            content.parse(reader);
+            content = new ContentDefinition(reader);
          } finally {
             reader.close();
          }

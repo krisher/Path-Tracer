@@ -56,7 +56,6 @@ public class ToneMapPanel extends JPanel {
       //
       // @Override
       // public void focusLost(FocusEvent e) {
-      // // TODO Auto-generated method stub
       // super.focusLost(e);
       // }
       //         
