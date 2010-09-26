@@ -246,22 +246,57 @@ public final class PLYParser {
       private final List<String> comments = new ArrayList<String>();
       private final List<ElementDefinition> elements = new ArrayList<ElementDefinition>();
 
+      /**
+       * Initializes the content definition from the specified reader (which must provide access to the beginning of a
+       * PLY stream). The reader is left open after the ContentDefinition is initialized, and is positioned to the first
+       * location after the header (which should contain element data).
+       * 
+       * @param reader
+       *           A non-null reader that is open, and positioned at the beginning of a PLY stream.
+       * @throws IOException
+       *            If there is any problem reading from the stream, or if the stream does not contain the expected
+       *            data.
+       */
       public ContentDefinition(final BufferedReader reader) throws IOException {
          parse(reader);
       }
 
+      /**
+       * Accessor for the format of the element content (after the header).
+       * 
+       * @return Non-null element content.
+       */
       public FORMAT getFormat() {
          return format;
       }
 
+      /**
+       * Accessor for the PLY format version string as declared in the header.
+       * 
+       * @return A non-null String.
+       */
       public String getPLYVersion() {
          return versionString;
       }
 
+      /**
+       * Accessor for a list of the comments that were encountered in the header, in the order that they appeared.
+       * 
+       * @return A non-null (but possibly empty) list of comments.
+       */
       public List<String> getComments() {
          return Collections.unmodifiableList(comments);
       }
 
+      /**
+       * Accessor for the list of element definitions declared in the header. Each element has a list of associated
+       * properties that define the content of the elements, as well as the number of each element expected to appear in
+       * the content area of the PLY file. The order of the element definitions returned here corresponds to the order
+       * that the elements will appear in the content area of the file.
+       * 
+       * @return A non-null, but possibly empty list of elements (an empty list indicates that the file contains no
+       *         content).
+       */
       public List<ElementDefinition> getElements() {
          return Collections.unmodifiableList(elements);
       }
