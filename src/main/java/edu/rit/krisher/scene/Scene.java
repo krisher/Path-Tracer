@@ -9,9 +9,9 @@ public class Scene {
 
    private final CopyOnWriteArrayList<Geometry> objects = new CopyOnWriteArrayList<Geometry>(Geometry.class);
    private final CopyOnWriteArrayList<EmissiveGeometry> lights = new CopyOnWriteArrayList<EmissiveGeometry>(
-                                                                                                            EmissiveGeometry.class);
+         EmissiveGeometry.class);
 
-   public void add(Geometry geometry) {
+   public void add(final Geometry geometry) {
       objects.add(geometry);
       if (geometry instanceof EmissiveGeometry) {
          lights.add((EmissiveGeometry) geometry);
@@ -30,7 +30,7 @@ public class Scene {
       return bgColor;
    }
 
-   public void setBackground(Color bg) {
+   public void setBackground(final Color bg) {
       this.bgColor.set(bg);
    }
 

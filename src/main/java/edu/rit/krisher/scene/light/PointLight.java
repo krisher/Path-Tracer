@@ -15,19 +15,19 @@ public class PointLight implements EmissiveGeometry {
    private final Color material;
    private double intensity = 100.0;
 
-   public PointLight(Vec3 position, float r, float g, float b) {
+   public PointLight(final Vec3 position, final float r, final float g, final float b) {
       this.position = position;
       this.material = new Color(r, g, b);
    }
 
-   public PointLight(Vec3 position, float r, float g, float b, double intensity) {
+   public PointLight(final Vec3 position, final float r, final float g, final float b, final double intensity) {
       this.position = position;
       this.material = new Color(r, g, b);
       this.intensity = intensity;
    }
 
    @Override
-   public double sampleEmissiveRadiance(Vec3 directionOut, Color radianceOut, Vec3 normalOut, Vec3 origin, Random rng) {
+   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 normalOut, final Vec3 origin, final Random rng) {
       directionOut.set(position).subtract(origin).normalize();
       radianceOut.set(material);
       normalOut.set(origin).subtract(position);
@@ -37,13 +37,13 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public void getHitData(HitData data, Ray ray, double isectDist) {
+   public void getHitData(final HitData data, final Ray ray, final double isectDist) {
       data.material = material;
       data.surfaceNormal = ray.direction.inverted();
    }
 
    @Override
-   public double intersects(Ray ray) {
+   public double intersects(final Ray ray) {
       return -1;
    }
 
@@ -51,10 +51,10 @@ public class PointLight implements EmissiveGeometry {
       return intensity;
    }
 
-   public void setIntensity(double intensity) {
+   public void setIntensity(final double intensity) {
       this.intensity = intensity;
    }
-   
+
    public double getSurfaceArea() {
       return 0;
    }
@@ -69,6 +69,6 @@ public class PointLight implements EmissiveGeometry {
       bounds.maxXYZ.set(position);
       return bounds;
    }
-   
-   
+
+
 }

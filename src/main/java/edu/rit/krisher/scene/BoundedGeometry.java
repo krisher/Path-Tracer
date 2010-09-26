@@ -14,21 +14,21 @@ import edu.rit.krisher.vecmath.Vec3;
 public class BoundedGeometry implements Geometry {
 
    private final CopyOnWriteArrayList<Geometry> children = new CopyOnWriteArrayList<Geometry>(Geometry.class);
-   
+
    private final AxisAlignedBoundingBox box = new AxisAlignedBoundingBox();
    private final Vec3 boxCenter = new Vec3();
    private final Vec3 boxSpans = new Vec3();
-   
-   public void add(Geometry geom) {
+
+   public void add(final Geometry geom) {
       children.add(geom);
       if (children.size() == 1) box.set(geom.getBounds());
       else box.union(geom.getBounds());
-      
+
       boxSpans.set(box.maxXYZ).subtract(box.minXYZ);
       boxCenter.set(box.minXYZ).scaleAdd(boxSpans, 0.5);
       boxSpans.multiply(0.5);
    }
-   
+
    public Geometry[] getChildren() {
       return children.array;
    }
@@ -37,8 +37,8 @@ public class BoundedGeometry implements Geometry {
     * @see edu.rit.krisher.scene.Geometry#getHitData(edu.rit.krisher.raytracer.rays.HitData, edu.rit.krisher.vecmath.Ray, double)
     */
    @Override
-   public void getHitData(HitData data, Ray ray, double isectDist) {
-      for (Geometry geom : children) {
+   public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+      for (final Geometry geom : children) {
          if (isectDist == geom.intersects(ray)) {
             geom.getHitData(data, ray, isectDist);
             return;
@@ -50,10 +50,10 @@ public class BoundedGeometry implements Geometry {
     * @see edu.rit.krisher.scene.Geometry#intersects(edu.rit.krisher.vecmath.Ray)
     */
    @Override
-   public double intersects(Ray ray) {
+   public double intersects(final Ray ray) {
       if (ray.intersectsBox(boxCenter, boxSpans.x, boxSpans.y, boxSpans.z) > 0) {
          double intersectDist = 0;
-         for (Geometry geom : children) {
+         for (final Geometry geom : children) {
             final double d = geom.intersects(ray);
             if (d > 0 && (intersectDist <= 0 || d < intersectDist)) {
                intersectDist = d;
@@ -71,6 +71,6 @@ public class BoundedGeometry implements Geometry {
    public AxisAlignedBoundingBox getBounds() {
       return box;
    }
-   
-   
+
+
 }

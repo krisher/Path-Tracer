@@ -23,7 +23,7 @@ public class DefaultImageBuffer implements ImageBuffer {
 
    protected ToneMapper toneMapper = ImageUtil.clampTM;
 
-   public DefaultImageBuffer(int width, int height) {
+   public DefaultImageBuffer(final int width, final int height) {
       imSize = new Dimension(width, height);
 
       bImage = new byte[imSize.width * imSize.height * 3];
@@ -53,11 +53,11 @@ public class DefaultImageBuffer implements ImageBuffer {
    }
 
    @Override
-   public void setPixels(int sx, int sy, int w, int h, float[] pixels) {
+   public void setPixels(final int sx, final int sy, final int w, final int h, final float[] pixels) {
       synchronized (bImage) {
          // TODO Auto-generated method stub
          for (int y = 0; y < h; y++) {
-            int dstRow = imSize.height - (sy + y) - 1;
+            final int dstRow = imSize.height - (sy + y) - 1;
             final int dstPixelStart = (dstRow * imSize.width + sx) * 3;
             final int srcPixelStart = y * w * 3;
             System.arraycopy(pixels, srcPixelStart, image, dstPixelStart, w * 3);
@@ -66,7 +66,7 @@ public class DefaultImageBuffer implements ImageBuffer {
       }
    }
 
-   public void setToneMapper(ToneMapper tm) {
+   public void setToneMapper(final ToneMapper tm) {
       this.toneMapper = tm;
 
       toneMapper.toneMap(image, bImage);

@@ -13,7 +13,7 @@ public class RefractiveBRDF implements Material {
    private final Color transmissionFilter;
    private final double exp;
 
-   public RefractiveBRDF(double refractiveIndex, Color opacity, double blurExp) {
+   public RefractiveBRDF(final double refractiveIndex, final Color opacity, final double blurExp) {
       this.refractiveIndex = refractiveIndex;
       this.transmissionFilter = opacity;
       /*
@@ -28,13 +28,13 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, Vec3 surfaceNormal, double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
       emissionOut.clear();
    }
 
    @Override
-   public void getDirectIlluminationTransport(Color colorOut, Vec3 sampleDirection, Random rng,
-         Vec3 incidentLightDirection, Vec3 surfaceNormal, double... materialCoords) {
+   public void getDirectIlluminationTransport(final Color colorOut, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
       /*
        * Like Phong specular, do not compute direct illumination, this will be
        * handled by highly specular bounces from irradiance sampling.
@@ -55,13 +55,14 @@ public class RefractiveBRDF implements Material {
       colorOut.clear();
    }
 
+   @Override
    public boolean shouldSampleDirectIllumination() {
       return false;
    }
 
    @Override
-   public void sampleIrradiance(SampleRay sampleOut, Random rng, Vec3 radianceSampleDirection, Vec3 surfaceNormal,
-         double... materialCoords) {
+   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, final Vec3 surfaceNormal,
+         final double... materialCoords) {
       final Vec3 sNormal = new Vec3(surfaceNormal);
       double cosSampleAndNormal = radianceSampleDirection.dot(sNormal);
 

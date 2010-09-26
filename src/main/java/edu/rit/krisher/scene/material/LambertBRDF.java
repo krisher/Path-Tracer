@@ -10,18 +10,18 @@ public class LambertBRDF implements Material, Cloneable {
 
    private Texture diffuse;
 
-   public LambertBRDF(Texture diffuse) {
+   public LambertBRDF(final Texture diffuse) {
       this.diffuse = diffuse;
    }
 
    @Override
-   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, Vec3 surfaceNormal, double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
       emissionOut.set(0, 0, 0);
    }
 
    @Override
-   public void getDirectIlluminationTransport(Color radiance, Vec3 sampleDirection, Random rng,
-         Vec3 incidentLightDirection, Vec3 surfaceNormal, double... materialCoords) {
+   public void getDirectIlluminationTransport(final Color radiance, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
       /*
        * BRDF = 1/pi * diffuse
        */
@@ -29,8 +29,8 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleIrradiance(SampleRay sampleOut, Random rng, Vec3 radianceSampleDirection, Vec3 surfaceNormal,
-         double... materialCoords) {
+   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, Vec3 surfaceNormal,
+         final double... materialCoords) {
       if (radianceSampleDirection.dot(surfaceNormal) > 0) {
          surfaceNormal = surfaceNormal.inverted();
       }
@@ -92,10 +92,11 @@ public class LambertBRDF implements Material, Cloneable {
       return diffuse;
    }
 
-   public void setDiffuse(Texture diffuse) {
+   public void setDiffuse(final Texture diffuse) {
       this.diffuse = diffuse;
    }
 
+   @Override
    public boolean shouldSampleDirectIllumination() {
       return true;
    }

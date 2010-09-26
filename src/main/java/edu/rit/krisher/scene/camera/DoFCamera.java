@@ -14,7 +14,7 @@ public class DoFCamera extends PinholeCamera implements Camera {
       return aperture;
    }
 
-   public void setAperture(double aperture) {
+   public void setAperture(final double aperture) {
       this.aperture = aperture;
    }
 
@@ -22,7 +22,7 @@ public class DoFCamera extends PinholeCamera implements Camera {
       return focalDist;
    }
 
-   public void setFocalDist(double focalDist) {
+   public void setFocalDist(final double focalDist) {
       this.focalDist = focalDist;
    }
 
@@ -32,7 +32,7 @@ public class DoFCamera extends PinholeCamera implements Camera {
     * @see edu.rit.krisher.scene.Camera#generateRays(double, double, double)
     */
    @Override
-   public void initializeRay(Ray rayOut, double x, double y, Random rng) {
+   public void initializeRay(final Ray rayOut, final double x, final double y, final Random rng) {
       /*
        * X and Y sample locations will be scaled so they correspond to locations
        * on the focal plane.
@@ -50,13 +50,13 @@ public class DoFCamera extends PinholeCamera implements Camera {
        * Jittered sample distance from the center of the lense with diameter
        * 'aperture' (focalLength / aperture #)
        */
-      double r = 0.5 * aperture * rng.nextDouble();
+      final double r = 0.5 * aperture * rng.nextDouble();
       /*
        * Jittered sample angle around the lense
        */
-      double sampleJittered = 2 * Math.PI * (rng.nextDouble());
-      double sampleX = r * Math.cos(sampleJittered);
-      double sampleY = r * Math.sin(sampleJittered);
+      final double sampleJittered = 2 * Math.PI * (rng.nextDouble());
+      final double sampleX = r * Math.cos(sampleJittered);
+      final double sampleY = r * Math.sin(sampleJittered);
 
       /*
        * Ray origin is computed by transforming the x/y sample (assuming a 0,0,0
@@ -77,7 +77,7 @@ public class DoFCamera extends PinholeCamera implements Camera {
     * .Vec3, double, double, double)
     */
    @Override
-   public void lookAt(Vec3 target, double elevationDeg, double azimuthDeg, double distance) {
+   public void lookAt(final Vec3 target, final double elevationDeg, final double azimuthDeg, final double distance) {
       super.lookAt(target, elevationDeg, azimuthDeg, distance);
       setFocalDist(distance);
    }

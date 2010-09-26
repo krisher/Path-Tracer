@@ -26,7 +26,7 @@ public class Quat implements Transform {
     * @param angle
     *           The angle to rotate by.
     */
-   public Quat(Vec3 axis, double angle) {
+   public Quat(final Vec3 axis, final double angle) {
       final double halfAngle = angle / 2.;
       final double sinHalfAngle = Math.sin(halfAngle);
 
@@ -37,14 +37,14 @@ public class Quat implements Transform {
 
    }
 
-   public Quat(double a, double b, double c, double d) {
+   public Quat(final double a, final double b, final double c, final double d) {
       this.a = a;
       this.b = b;
       this.c = c;
       this.d = d;
    }
 
-   public void set(Vec3 axis, double angle) {
+   public void set(final Vec3 axis, final double angle) {
       final double halfAngle = angle / 2.;
       final double sinHalfAngle = Math.sin(halfAngle);
 
@@ -85,14 +85,14 @@ public class Quat implements Transform {
       return new Quat(a, -b, -c, -d);
    }
 
-   public Quat multiply(Quat _quat) {
+   public Quat multiply(final Quat _quat) {
       return new Quat(a * _quat.a - b * _quat.b - c * _quat.c - d * _quat.d,
                       a * _quat.b + b * _quat.a + c * _quat.d - d * _quat.c, a
-            * _quat.c + c * _quat.a + d * _quat.b - b * _quat.d, a
-            * _quat.d + d * _quat.a + b * _quat.c - c * _quat.b);
+                      * _quat.c + c * _quat.a + d * _quat.b - b * _quat.d, a
+                      * _quat.d + d * _quat.a + b * _quat.c - c * _quat.b);
    }
 
-   public void multiplyBy(Quat _quat) {
+   public void multiplyBy(final Quat _quat) {
       final double w = a * _quat.a - b * _quat.b - c * _quat.c - d * _quat.d;
       final double x = a * _quat.b + b * _quat.a + c * _quat.d - d * _quat.c;
       final double y = a * _quat.c + c * _quat.a + d * _quat.b - b * _quat.d;
@@ -104,16 +104,17 @@ public class Quat implements Transform {
       this.d = z;
    }
 
-   public Vec3 transformVec(Vec3 _vec) {
+   @Override
+   public Vec3 transformVec(final Vec3 _vec) {
 
       /*
        * First, multiply the vector (with a 4th component == 0) by the
        * conjugate of this Quaternion
        */
-      double w = 0 - _vec.x * -b - _vec.y * -c - _vec.z * -d;
-      double x = 0 + _vec.x * a + _vec.y * -d - _vec.z * -c;
-      double y = 0 + _vec.y * a + _vec.z * -b - _vec.x * -d;
-      double z = 0 + _vec.z * a + _vec.x * -c - _vec.y * -b;
+      final double w = 0 - _vec.x * -b - _vec.y * -c - _vec.z * -d;
+      final double x = 0 + _vec.x * a + _vec.y * -d - _vec.z * -c;
+      final double y = 0 + _vec.y * a + _vec.z * -b - _vec.x * -d;
+      final double z = 0 + _vec.z * a + _vec.x * -c - _vec.y * -b;
 
       /*
        * Then multiply the result by this quaternion
@@ -130,10 +131,11 @@ public class Quat implements Transform {
    }
 
    @Override
-   public Vec3 transformPoint(Vec3 vec) {
+   public Vec3 transformPoint(final Vec3 vec) {
       return transformVec(vec);
    }
 
+   @Override
    public Quat inverted() {
       return getConjugate();
    }

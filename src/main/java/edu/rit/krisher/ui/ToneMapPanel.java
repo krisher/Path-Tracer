@@ -36,7 +36,8 @@ public class ToneMapPanel extends JPanel {
 
       noTRButton.setSelected(true);
       final ActionListener delegatingActionListener = new ActionListener() {
-         public void actionPerformed(ActionEvent evt) {
+         @Override
+         public void actionPerformed(final ActionEvent evt) {
             fireActionEvent();
          }
       };
@@ -47,7 +48,7 @@ public class ToneMapPanel extends JPanel {
       midpointValue.setColumns(4);
       midpointValue.setValue(0.18);
       midpointValue.addActionListener(delegatingActionListener);
-      
+
       maxLumValue.setValue(0.0);
       maxLumValue.setColumns(6);
       maxLumValue.addActionListener(delegatingActionListener);
@@ -102,21 +103,21 @@ public class ToneMapPanel extends JPanel {
       return ((Number) midpointValue.getValue()).doubleValue();
    }
 
-   public void setReinhardMidpoint(double value) {
+   public void setReinhardMidpoint(final double value) {
       midpointValue.setValue(value);
    }
 
-   public void addActionListener(ActionListener listener) {
+   public void addActionListener(final ActionListener listener) {
       this.actionListeners.addIfAbsent(listener);
    }
 
-   public void removeActionListener(ActionListener listener) {
+   public void removeActionListener(final ActionListener listener) {
       this.actionListeners.remove(listener);
    }
 
    protected void fireActionEvent() {
       final ActionEvent actionE = new ActionEvent(this, 0, null);
-      for (ActionListener listener : actionListeners) {
+      for (final ActionListener listener : actionListeners) {
          listener.actionPerformed(actionE);
       }
    }

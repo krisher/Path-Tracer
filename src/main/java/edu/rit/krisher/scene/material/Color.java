@@ -24,7 +24,7 @@ public class Color implements Material, Texture {
       b = f;
    }
 
-   public Color(Color other) {
+   public Color(final Color other) {
       this.r = other.r;
       this.g = other.g;
       this.b = other.b;
@@ -85,7 +85,7 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void sampleIrradiance(SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection,
+   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection,
          final Vec3 surfaceNormal, final double... materialCoords) {
       sampleOut.transmissionSpectrum.clear();
       // No lighting response...
@@ -112,21 +112,21 @@ public class Color implements Material, Texture {
       return this;
    }
 
-   public Color scaleAdd(final Color other, double scale) {
+   public Color scaleAdd(final Color other, final double scale) {
       this.r += other.r * scale;
       this.g += other.g * scale;
       this.b += other.b * scale;
       return this;
    }
 
-   public Color add(double r, double g, double b) {
+   public Color add(final double r, final double g, final double b) {
       this.r += r;
       this.g += g;
       this.b += b;
       return this;
    }
 
-   public Color scaleAdd(double r, double g, double b, double scale) {
+   public Color scaleAdd(final double r, final double g, final double b, final double scale) {
       this.r += r * scale;
       this.g += g * scale;
       this.b += b * scale;
@@ -162,7 +162,7 @@ public class Color implements Material, Texture {
       return r == 0 && g == 0 && b == 0;
    }
 
-   public boolean isAlmostZero(double small) {
+   public boolean isAlmostZero(final double small) {
       return r < small && g < small && b < small;
    }
 
@@ -175,6 +175,7 @@ public class Color implements Material, Texture {
       return false;
    }
 
+   @Override
    public boolean shouldSampleDirectIllumination() {
       return false;
    }

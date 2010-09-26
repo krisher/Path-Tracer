@@ -22,15 +22,15 @@ public class Box implements Geometry {
    private Transform invTransform;
    private boolean invertNormals = false;
 
-   public Box(double xSize, double ySize, double zSize, boolean invertNormals) {
+   public Box(final double xSize, final double ySize, final double zSize, final boolean invertNormals) {
       this(xSize, ySize, zSize, new LambertBRDF(Color.white), null, invertNormals);
    }
 
-   public Box(double xSize, double ySize, double zSize, Material mat, boolean invertNormals) {
+   public Box(final double xSize, final double ySize, final double zSize, final Material mat, final boolean invertNormals) {
       this(xSize, ySize, zSize, mat, null, invertNormals);
    }
 
-   public Box(double xSize, double ySize, double zSize, Material mat, Transform transform, boolean invertNormals) {
+   public Box(final double xSize, final double ySize, final double zSize, final Material mat, final Transform transform, final boolean invertNormals) {
       this.xSize = xSize / 2.0;
       this.ySize = ySize / 2.0;
       this.zSize = zSize / 2.0;
@@ -40,8 +40,8 @@ public class Box implements Geometry {
    }
 
    @Override
-   public void getHitData(HitData data, Ray ray, double isectDist) {
-      Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(isectDist));
+   public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+      final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(isectDist));
       // Figure out which face the intersection occurred on
       Vec3 isectNormal;
       final double xDist = Math.abs(Math.abs(hitPt.x) - xSize);
@@ -80,7 +80,7 @@ public class Box implements Geometry {
    }
 
    @Override
-   public double intersects(Ray ray) {
+   public double intersects(final Ray ray) {
       return ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
    }
 
@@ -88,7 +88,7 @@ public class Box implements Geometry {
       return material;
    }
 
-   public void setMaterial(Material material) {
+   public void setMaterial(final Material material) {
       this.material = material;
    }
 
@@ -96,11 +96,12 @@ public class Box implements Geometry {
       return transform;
    }
 
-   public void setTransform(Transform transform) {
+   public void setTransform(final Transform transform) {
       this.transform = transform == null ? Vec3.zero : transform;
       this.invTransform = transform.inverted();
    }
 
+   @Override
    public AxisAlignedBoundingBox getBounds() {
       final Vec3[] corners = new Vec3[8];
       corners[0] = new Vec3(-xSize, -ySize, -zSize);
@@ -111,7 +112,7 @@ public class Box implements Geometry {
       corners[5] = new Vec3(-xSize, ySize, zSize);
       corners[6] = new Vec3(xSize, -ySize, zSize);
       corners[7] = new Vec3(xSize, ySize, zSize);
-      for (Vec3 corner : corners) {
+      for (final Vec3 corner : corners) {
          transform.transformPoint(corner);
       }
       final AxisAlignedBoundingBox bounds =new AxisAlignedBoundingBox();
@@ -119,14 +120,14 @@ public class Box implements Geometry {
          final Vec3 corner = corners[i];
          if (corner.x < bounds.minXYZ.x) bounds.minXYZ.x = corner.x;
          else if (corner.x > bounds.maxXYZ.x) bounds.maxXYZ.x = corner.x;
-         
+
          if (corner.y < bounds.minXYZ.y) bounds.minXYZ.y = corner.y;
          else if (corner.y > bounds.maxXYZ.y) bounds.maxXYZ.y = corner.y;
-         
+
          if (corner.z < bounds.minXYZ.z) bounds.minXYZ.z = corner.z;
          else if (corner.z > bounds.maxXYZ.z) bounds.maxXYZ.z = corner.z;
       }
       return bounds;
-      
+
    }
 }

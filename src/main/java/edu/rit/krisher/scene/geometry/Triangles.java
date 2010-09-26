@@ -15,7 +15,7 @@ public class Triangles implements Geometry {
    private final int[] indexBuffer;
    private Material material = new LambertBRDF(Color.white);
 
-   public Triangles(Vec3[] verts, int... indices) {
+   public Triangles(final Vec3[] verts, final int... indices) {
       this.vertexBuffer = verts;
       this.indexBuffer = indices;
       if (indices.length % 3 != 0)
@@ -23,12 +23,12 @@ public class Triangles implements Geometry {
    }
 
    @Override
-   public void getHitData(HitData hitData, Ray ray, double isectDist) {
+   public void getHitData(final HitData hitData, final Ray ray, final double isectDist) {
       for (int idx = 0; idx < indexBuffer.length; idx += 3) {
-         Vec3 v0 = vertexBuffer[indexBuffer[idx]];
-         Vec3 e1 = new Vec3(vertexBuffer[indexBuffer[idx + 1]]).subtract(v0);
-         Vec3 e2 = new Vec3(vertexBuffer[indexBuffer[idx + 2]]).subtract(v0);
-         double t = ray.intersectsTriangle(v0, e1, e2);
+         final Vec3 v0 = vertexBuffer[indexBuffer[idx]];
+         final Vec3 e1 = new Vec3(vertexBuffer[indexBuffer[idx + 1]]).subtract(v0);
+         final Vec3 e2 = new Vec3(vertexBuffer[indexBuffer[idx + 2]]).subtract(v0);
+         final double t = ray.intersectsTriangle(v0, e1, e2);
          if (t == isectDist) {
             hitData.material = material;
             hitData.materialCoords = null;
@@ -39,14 +39,14 @@ public class Triangles implements Geometry {
    }
 
    @Override
-   public double intersects(Ray ray) {
+   public double intersects(final Ray ray) {
       double isectDist = Double.POSITIVE_INFINITY;
       int isectTri = -1;
       for (int idx = 0; idx < indexBuffer.length; idx += 3) {
-         Vec3 v0 = vertexBuffer[indexBuffer[idx]];
-         Vec3 e1 = new Vec3(vertexBuffer[indexBuffer[idx + 1]]).subtract(v0);
-         Vec3 e2 = new Vec3(vertexBuffer[indexBuffer[idx + 2]]).subtract(v0);
-         double t = ray.intersectsTriangle(v0, e1, e2);
+         final Vec3 v0 = vertexBuffer[indexBuffer[idx]];
+         final Vec3 e1 = new Vec3(vertexBuffer[indexBuffer[idx + 1]]).subtract(v0);
+         final Vec3 e2 = new Vec3(vertexBuffer[indexBuffer[idx + 2]]).subtract(v0);
+         final double t = ray.intersectsTriangle(v0, e1, e2);
          if (t > 0 && t < isectDist) {
             isectDist = t;
             isectTri = idx;
@@ -58,11 +58,11 @@ public class Triangles implements Geometry {
       return 0;
    }
 
-   private Vec3 normalFor(int idx, Vec3 rayDirection) {
-      Vec3 v0 = vertexBuffer[indexBuffer[idx]];
-      Vec3 e1 = new Vec3(vertexBuffer[indexBuffer[idx + 1]]).subtract(v0);
-      Vec3 e2 = new Vec3(vertexBuffer[indexBuffer[idx + 2]]).subtract(v0);
-      Vec3 normal = e1.cross(e2).normalize();
+   private Vec3 normalFor(final int idx, final Vec3 rayDirection) {
+      final Vec3 v0 = vertexBuffer[indexBuffer[idx]];
+      final Vec3 e1 = new Vec3(vertexBuffer[indexBuffer[idx + 1]]).subtract(v0);
+      final Vec3 e2 = new Vec3(vertexBuffer[indexBuffer[idx + 2]]).subtract(v0);
+      final Vec3 normal = e1.cross(e2).normalize();
       if (rayDirection.dot(normal) > 0)
          return normal.inverted();
       return normal;
@@ -72,7 +72,7 @@ public class Triangles implements Geometry {
       return material;
    }
 
-   public void setMaterial(Material material) {
+   public void setMaterial(final Material material) {
       this.material = material;
    }
 
@@ -80,7 +80,7 @@ public class Triangles implements Geometry {
    public AxisAlignedBoundingBox getBounds() {
       double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY, minZ = Double.POSITIVE_INFINITY, maxZ = Double.NEGATIVE_INFINITY;
 
-      for (Vec3 vec : vertexBuffer) {
+      for (final Vec3 vec : vertexBuffer) {
          if (vec.x < minX)
             minX = vec.x;
          if (vec.x > maxX)

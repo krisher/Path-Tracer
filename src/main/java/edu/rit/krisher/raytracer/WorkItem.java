@@ -32,8 +32,8 @@ public final class WorkItem {
 
    final AtomicInteger doneSignal;
 
-   public WorkItem(ImageBuffer image, Scene scene, Camera camera, int blockStartX, int blockStartY, int blockWidth,
-         int blockHeight, int pixelSampleRate, int recursionDepth, AtomicInteger doneSignal) {
+   public WorkItem(final ImageBuffer image, final Scene scene, final Camera camera, final int blockStartX, final int blockStartY, final int blockWidth,
+         final int blockHeight, final int pixelSampleRate, final int recursionDepth, final AtomicInteger doneSignal) {
       super();
       this.image = image;
       this.scene = scene;

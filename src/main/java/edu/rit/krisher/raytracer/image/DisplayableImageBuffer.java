@@ -22,7 +22,7 @@ public class DisplayableImageBuffer extends DefaultImageBuffer implements ImageB
 
    private final JComponent imageComponent = new JComponent() {
       @Override
-      protected void paintComponent(Graphics g) {
+      protected void paintComponent(final Graphics g) {
          super.paintComponent(g);
          synchronized (bImage) {
             ((Graphics2D) g).drawImage(raster, new AffineTransform(1f, 0f, 0f, 1f, 0, 0), null);
@@ -30,7 +30,7 @@ public class DisplayableImageBuffer extends DefaultImageBuffer implements ImageB
       }
    };
 
-   public DisplayableImageBuffer(int width, int height) {
+   public DisplayableImageBuffer(final int width, final int height) {
       super(width, height);
       imageComponent.setPreferredSize(new Dimension(imSize));
       imageComponent.setMaximumSize(new Dimension(imSize));
@@ -54,14 +54,14 @@ public class DisplayableImageBuffer extends DefaultImageBuffer implements ImageB
    }
 
    @Override
-   public void setPixels(int sx, int sy, int w, int h, float[] pixels) {
+   public void setPixels(final int sx, final int sy, final int w, final int h, final float[] pixels) {
       super.setPixels(sx, sy, w, h, pixels);
       // repaint();
       imageComponent.repaint(sx, imSize.height - sy - h, w, h);
    }
 
    @Override
-   public void setToneMapper(ToneMapper tm) {
+   public void setToneMapper(final ToneMapper tm) {
       super.setToneMapper(tm);
       imageComponent.repaint();
    }

@@ -263,7 +263,7 @@ public class RTDemo {
    }
 
 
-   private static SceneDescription whittedScene(double lightPower) {
+   private static SceneDescription whittedScene(final double lightPower) {
       final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
       scene.add(new Box(10, 2.5, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1),
@@ -284,7 +284,7 @@ public class RTDemo {
       return new SceneDescription("Whitted Scene (Light = " + lightPower + ")", scene, cam);
 
    }
-   
+
    private static SceneDescription dofScene() {
       final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
@@ -306,7 +306,7 @@ public class RTDemo {
       return new SceneDescription("DoF Scene", scene, cam);
 
    }
-   
+
    private static SceneDescription causticScene() {
       final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
@@ -315,27 +315,27 @@ public class RTDemo {
       scene.add(new Sphere(new Vec3(0, 2, 0), 1, blueGreenMixedRefractive));
       scene.add(new Box(2,2,2, redRefractive, new Vec3(-2, 1, 2), false));
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 5));
-      
+
       cam.lookAt(new Vec3(-1,1,1), 35, -25, 8);
       cam.setAperture(1 / 22.0);
       cam.setFOVAngle(56.14);
       return new SceneDescription("Caustics Scene", scene, cam);
 
    }
-   
+
    private static SceneDescription multiLightScene() {
       final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
       scene.add(new Box(20, 20, 20, whiteLambert, new Vec3(0, 10, 0), true));
       scene.add(new Box(1.99, 1.99, 1.99, new LambertBRDF(yellowRedCheckerTexture), new Vec3(4, 1, 2), false));
-      
+
       scene.add(new Sphere(new Vec3(0, 1, 0), 1, whiteShiny));
       scene.add(new Sphere(new Vec3(-1, 1, Math.sqrt(3)), 1, mixedOrangeMat));
       scene.add(new Sphere(new Vec3(1, 1, Math.sqrt(3)), 1, new LambertBRDF(new Color(0.25, 0.25, 1.0))));
       scene.add(new SphereLight(new Vec3(-3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 0.55f), 3));
       scene.add(new SphereLight(new Vec3(3, 6, 0), 1.0, new Color(0.55f, 0.55f, 1.0f), 3));
       scene.add(new SphereLight(new Vec3(1, 7, -3.5), 0.25, new Color(1.0f, 1.0f, 1.0f), 40));
-      
+
       cam.lookAt(new Vec3(0,1,0), 45, -20, 8);
       cam.setAperture(1 / 22.0);
       cam.setFOVAngle(56.14);
@@ -343,7 +343,7 @@ public class RTDemo {
 
    }
 
-   public static void main(String[] args) {
+   public static void main(final String[] args) {
       final RTFrame frame = new RTFrame();
 
       frame.setScenes(new SceneDescription[] { whittedScene(75), whittedScene(150), whittedScene(500),
@@ -353,10 +353,11 @@ public class RTDemo {
             diffuseTest1(), diffuseTest2(), diffuseTest3(), specularTest1(),
             specularTest2(), specularTest3(),
 
-//      threeBalls(), niceScene(), checkpoint6(), projectCP(),
-           });
+            //      threeBalls(), niceScene(), checkpoint6(), projectCP(),
+      });
 
       SwingUtilities.invokeLater(new Runnable() {
+         @Override
          public void run() {
 
             frame.setVisible(true);

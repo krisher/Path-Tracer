@@ -39,7 +39,7 @@ public class PinholeCamera implements Camera {
       return position;
    }
 
-   public void setPosition(Vec3 position) {
+   public void setPosition(final Vec3 position) {
       this.position = position;
    }
 
@@ -52,7 +52,7 @@ public class PinholeCamera implements Camera {
       return orientation;
    }
 
-   public void setOrientation(Quat orientation) {
+   public void setOrientation(final Quat orientation) {
       this.orientation = orientation;
    }
 
@@ -61,7 +61,7 @@ public class PinholeCamera implements Camera {
     * 
     * @param FOVDegrees
     */
-   public void setFOVAngle(double FOVDegrees) {
+   public void setFOVAngle(final double FOVDegrees) {
       this.fieldOfView = FOVDegrees;
       rayZDist = 1.0 / Math.tan(Math.toRadians(getFOVAngle()) / 2.0);
    }
@@ -75,7 +75,8 @@ public class PinholeCamera implements Camera {
     * 
     * @see edu.rit.krisher.scene.Camera#generateRays(double, double, double)
     */
-   public void initializeRay(Ray rayOut, double x, double y, Random rng) {
+   @Override
+   public void initializeRay(final Ray rayOut, final double x, final double y, final Random rng) {
       rayOut.direction.set(x, y, -rayZDist).normalize();
       orientation.transformVec(rayOut.direction);
       rayOut.origin.set(position);
@@ -95,7 +96,7 @@ public class PinholeCamera implements Camera {
     * @param azimuthDeg
     * @param distance
     */
-   public void lookAt(Vec3 target, double elevationDeg, double azimuthDeg, double distance) {
+   public void lookAt(final Vec3 target, final double elevationDeg, final double azimuthDeg, final double distance) {
       /*
        * Initialize a quaternion to the appropriate rotations about the y
        * (azimuth) and x (elevation) axes.

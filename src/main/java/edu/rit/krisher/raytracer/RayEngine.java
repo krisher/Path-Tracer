@@ -68,9 +68,9 @@ public class RayEngine {
                      tracer.pathTrace(workQueue.take());
 
                   }
-               } catch (InterruptedException ie) {
+               } catch (final InterruptedException ie) {
                   return;
-               } catch (Throwable t) {
+               } catch (final Throwable t) {
                   t.printStackTrace();
                }
             }
@@ -103,7 +103,7 @@ public class RayEngine {
     *           The maximum length of a ray path. 0 means trace eye rays and
     *           direct illumination only.
     */
-   public static void rayTrace(ImageBuffer image, Camera camera, Scene scene, int pixelSampleRate, int recursionDepth) {
+   public static void rayTrace(final ImageBuffer image, final Camera camera, final Scene scene, final int pixelSampleRate, final int recursionDepth) {
       /*
        * Imaging parameters
        */
@@ -142,10 +142,10 @@ public class RayEngine {
             final int blockStartY = j * BLOCK_SIZE;
             workQueue.add(new WorkItem(image, scene, camera, blockStartX, blockStartY, Math.min(BLOCK_SIZE,
                                                                                                 imageSize.width
-                                                                                                      - blockStartX),
-                                       Math.min(BLOCK_SIZE, imageSize.height - blockStartY), pixelSampleRate,
+                                                                                                - blockStartX),
+                                                                                                Math.min(BLOCK_SIZE, imageSize.height - blockStartY), pixelSampleRate,
 
-                                       recursionDepth, doneSignal));
+                                                                                                recursionDepth, doneSignal));
          }
       }
 
@@ -163,12 +163,12 @@ public class RayEngine {
     * 
     * @param target
     */
-   public static void cancel(ImageBuffer target) {
+   public static void cancel(final ImageBuffer target) {
       final ArrayList<WorkItem> drained = new ArrayList<WorkItem>();
       workQueue.drainTo(drained);
       AtomicInteger remaining = null;
       int removed = 0;
-      for (Iterator<WorkItem> itr = drained.iterator(); itr.hasNext();) {
+      for (final Iterator<WorkItem> itr = drained.iterator(); itr.hasNext();) {
          final WorkItem itm = itr.next();
          if (itm.image == target) {
             itr.remove();

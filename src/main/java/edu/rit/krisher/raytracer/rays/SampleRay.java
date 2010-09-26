@@ -11,7 +11,7 @@ public class SampleRay extends Ray {
    public int pixelX, pixelY;
    public boolean emissiveResponse;
 
-   public SampleRay(Vec3 origin, Vec3 direction, double weight, int x, int y) {
+   public SampleRay(final Vec3 origin, final Vec3 direction, final double weight, final int x, final int y) {
       super(origin, direction);
       transmissionSpectrum = new Color(weight, weight, weight);
       emissiveResponse = true;
@@ -22,6 +22,6 @@ public class SampleRay extends Ray {
    public void reset() {
       transmissionSpectrum.clear();
       emissiveResponse = true;
-//      extinction.clear();
+      //      extinction.clear();
    }
 }

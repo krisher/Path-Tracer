@@ -34,12 +34,12 @@ public final class PathTracer {
       private final static long mask = (1L << 48) - 1;
 
       @Override
-      public void setSeed(long seed) {
+      public void setSeed(final long seed) {
          this.seed = (seed ^ multiplier) & mask;
       }
 
       @Override
-      protected int next(int bits) {
+      protected int next(final int bits) {
          seed = (seed * multiplier + addend) & mask;
          return (int) (seed >>> (48 - bits));
       }
@@ -116,9 +116,9 @@ public final class PathTracer {
                       * width, so the FoV represents a horizontal range.
                       */
                      final double x = ((pixelX + workItem.blockStartX + (sampleDelta * (sampleX + xSRand))) - xCenter)
-                           / xCenter;
+                     / xCenter;
                      final double y = ((pixelY + workItem.blockStartY + (sampleDelta * (sampleY + ySRand))) - yCenter)
-                           / xCenter;
+                     / xCenter;
                      final SampleRay ray = rays[rayIdx++];
                      /*
                       * Reset the ray state since we are probably re-using each
@@ -157,7 +157,7 @@ public final class PathTracer {
       }
    }
 
-   private final void processRays(final WorkItem workItem, SampleRay[] rays) {
+   private final void processRays(final WorkItem workItem, final SampleRay[] rays) {
 
       final Color sampleColor = new Color(0, 0, 0);
       final Color lightResponse = new Color(0, 0, 0);
@@ -196,7 +196,7 @@ public final class PathTracer {
             double intersectDist = 0;
             Geometry hit = null;
 
-            for (Geometry geom : geometry) {
+            for (final Geometry geom : geometry) {
                final double d = geom.intersects(ray);
                if (d > 0 && (intersectDist <= 0 || d < intersectDist)) {
                   intersectDist = d;
@@ -256,11 +256,11 @@ public final class PathTracer {
              * is reused for the next path segment below.
              */
             final double rTransmission = ray.transmissionSpectrum.r
-                  * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
+            * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
             final double gTransmission = ray.transmissionSpectrum.g
-                  * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * intersectDist));
+            * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * intersectDist));
             final double bTransmission = ray.transmissionSpectrum.b
-                  * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
+            * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
 
             /*
              * The intersection point. Saved because this data may be
@@ -299,7 +299,7 @@ public final class PathTracer {
                       * Determine whether the light source is visible from the
                       * irradiated point
                       */
-                     for (Geometry geom : geometry) {
+                     for (final Geometry geom : geometry) {
                         if (geom != light) {
                            final double t = geom.intersects(shadowRay);
                            if (t > 0 && t < lightDist) {

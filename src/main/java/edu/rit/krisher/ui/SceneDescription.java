@@ -9,7 +9,7 @@ public class SceneDescription {
    private final Scene scene;
    private final Camera camera;
 
-   public SceneDescription(String name, Scene scene, Camera camera) {
+   public SceneDescription(final String name, final Scene scene, final Camera camera) {
       this.name = name;
       this.scene = scene;
       this.camera = camera;

@@ -63,12 +63,13 @@ public class RTFrame extends JFrame {
          }
 
          @Override
-         public boolean accept(File f) {
+         public boolean accept(final File f) {
             return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
          }
       });
       saveButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent evt) {
+         @Override
+         public void actionPerformed(final ActionEvent evt) {
             if (saveChooser.showSaveDialog(RTFrame.this) == JFileChooser.APPROVE_OPTION) {
                File selected = saveChooser.getSelectedFile();
                if (!selected.getName().toLowerCase().endsWith(".png")) {
@@ -76,7 +77,7 @@ public class RTFrame extends JFrame {
                }
                try {
                   ImageIO.write(rtImage.getImage(), "png", selected);
-               } catch (Exception e) {
+               } catch (final Exception e) {
                   JOptionPane.showMessageDialog(RTFrame.this, "Save Failed!", "Error", JOptionPane.ERROR_MESSAGE);
 
                }
@@ -89,14 +90,14 @@ public class RTFrame extends JFrame {
       pack();
    }
 
-   public void setScenes(SceneDescription[] scenes) {
+   public void setScenes(final SceneDescription[] scenes) {
       rtControls.setScenes(scenes);
    }
 
    private final ActionListener rtControlListener = new ActionListener() {
 
       @Override
-      public void actionPerformed(ActionEvent e) {
+      public void actionPerformed(final ActionEvent e) {
          final String cmd = e.getActionCommand();
          if (RTControlPanel.ACTION_CMD_START == cmd) {
             /*
@@ -112,8 +113,8 @@ public class RTFrame extends JFrame {
             }
 
             final SceneDescription selectedScene = rtControls.getSelectedScene();
-            rayTracer.rayTrace(progressBuffer, selectedScene.getCamera(), selectedScene.getScene(),
-                                   rtControls.getSampleRate(), rtControls.getRecursionDepth());
+            RayEngine.rayTrace(progressBuffer, selectedScene.getCamera(), selectedScene.getScene(),
+                               rtControls.getSampleRate(), rtControls.getRecursionDepth());
          } else {
             RayEngine.cancel(progressBuffer);
          }
@@ -124,7 +125,7 @@ public class RTFrame extends JFrame {
    private final ActionListener tmControlListener = new ActionListener() {
 
       @Override
-      public void actionPerformed(ActionEvent e) {
+      public void actionPerformed(final ActionEvent e) {
          rtImage.setToneMapper(imageControls.getSelectedToneMapper());
       }
 
@@ -133,9 +134,10 @@ public class RTFrame extends JFrame {
    private final ImageBuffer progressBuffer = new ImageBuffer() {
 
       @Override
-      public void setPixels(int x, int y, final int w, final int h, float[] pixels) {
+      public void setPixels(final int x, final int y, final int w, final int h, final float[] pixels) {
          rtImage.setPixels(x, y, w, h, pixels);
          SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                rtControls.worked(w * h);
             }
@@ -146,6 +148,7 @@ public class RTFrame extends JFrame {
       public void imagingStarted() {
          final Dimension size = getResolution();
          SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                rtControls.workStarted(size.width * size.height);
             }
@@ -156,6 +159,7 @@ public class RTFrame extends JFrame {
       public void imagingDone() {
          rtImage.imagingDone();
          SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                rtControls.workCompleted();
             }

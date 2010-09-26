@@ -22,13 +22,14 @@ public class CompositeBRDF implements Material, Cloneable {
    public CompositeBRDF() {
    }
 
-   public CompositeBRDF(Material diffuse, double kd, Material spec, double ks) {
+   public CompositeBRDF(final Material diffuse, final double kd, final Material spec, final double ks) {
       addMaterial(kd, diffuse);
       addMaterial(ks, spec);
    }
 
+   @Override
    public boolean shouldSampleDirectIllumination() {
-      for (Material mat : materials.array) {
+      for (final Material mat : materials.array) {
          if (mat.shouldSampleDirectIllumination())
             return true;
       }
@@ -36,9 +37,9 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, Vec3 surfaceNormal, double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
       double r = 0, g = 0, b = 0;
-      for (Material mat : materials.array) {
+      for (final Material mat : materials.array) {
          mat.getEmissionColor(emissionOut, sampleDirection, surfaceNormal, materialCoords);
          r += emissionOut.r;
          g += emissionOut.g;
@@ -48,8 +49,8 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getDirectIlluminationTransport(Color radiance, Vec3 sampleDirection, Random rng,
-         Vec3 incidentLightDirection, Vec3 surfaceNormal, double... materialCoords) {
+   public void getDirectIlluminationTransport(final Color radiance, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
 
       // final double rand = rng.nextDouble();
       // if (rand < kd) {
@@ -68,8 +69,8 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleIrradiance(SampleRay sampleOut, Random rng, Vec3 radianceSampleDirection, Vec3 surfaceNormal,
-         double... materialCoords) {
+   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, final Vec3 surfaceNormal,
+         final double... materialCoords) {
 
       final double sampleType = rng.nextDouble();
       double cumP = 0;
@@ -85,7 +86,7 @@ public class CompositeBRDF implements Material, Cloneable {
 
    }
 
-   public synchronized void addMaterial(double prob, Material mat) {
+   public synchronized void addMaterial(final double prob, final Material mat) {
       materials.add(mat);
       probabilities.add(prob);
    }

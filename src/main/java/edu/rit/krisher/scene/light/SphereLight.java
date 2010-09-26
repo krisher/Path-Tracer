@@ -11,16 +11,16 @@ import edu.rit.krisher.vecmath.Vec3;
 
 public class SphereLight extends Sphere implements EmissiveGeometry {
 
-   public SphereLight(Vec3 center, double radius, Material material) {
+   public SphereLight(final Vec3 center, final double radius, final Material material) {
       super(center, radius, material);
    }
 
-   public SphereLight(Vec3 center, double radius, Color emission, double power) {
+   public SphereLight(final Vec3 center, final double radius, final Color emission, final double power) {
       super(center, radius, new Color(emission).multiply(power));
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Vec3 directionOut, Color radianceOut, Vec3 normalOut, final Vec3 origin,
+   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 normalOut, final Vec3 origin,
          final Random rng) {
 
       directionOut.set(center).subtract(origin);
@@ -55,7 +55,7 @@ public class SphereLight extends Sphere implements EmissiveGeometry {
       final Vec3 nv = new Vec3(directionOut).cross(nu);
 
       directionOut.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth)
-                  .scaleAdd(nv, Math.sin(randomPolar) * sinRandomAzimuth);
+      .scaleAdd(nv, Math.sin(randomPolar) * sinRandomAzimuth);
 
       material.getEmissionColor(radianceOut, directionOut, directionOut.inverted(), null);
 
@@ -67,8 +67,8 @@ public class SphereLight extends Sphere implements EmissiveGeometry {
        * Multiply by 1/distribution of light samples
        */
       radianceOut
-                 .multiply((isectDist * isectDist * (2.0 * Math.PI * (1.0 - cosMaxAngle)) / -normalOut
-                                                                                                      .dot(directionOut)));
+      .multiply((isectDist * isectDist * (2.0 * Math.PI * (1.0 - cosMaxAngle)) / -normalOut
+            .dot(directionOut)));
       return isectDist;
    }
 

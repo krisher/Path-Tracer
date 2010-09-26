@@ -26,7 +26,7 @@ public class ImageUtil {
     * models that I can find, they may be adjusted for more recent displays.
     */
    private static final double[] RGB2XYZ = { 0.5141364, 0.3238786, 0.16036376, 0.265068, 0.67023428, 0.06409157,
-                                            0.0241188, 0.1228178, 0.84442666 };
+      0.0241188, 0.1228178, 0.84442666 };
    private static final double[] XYZ2RGB = { 2.5651, -1.1665, -0.3986, -1.0217, 1.9777, 0.0439, 0.0753, -0.2543, 1.1892 };
 
    /**
@@ -35,9 +35,9 @@ public class ImageUtil {
    public static final ToneMapper clampTM = new ToneMapper() {
 
       @Override
-      public void toneMap(float[] image, byte[] rgbOut) {
+      public void toneMap(final float[] image, final byte[] rgbOut) {
          for (int i = 0; i < image.length; i++) {
-            float clamped = Math.max(0, Math.min(1f, image[i]));
+            final float clamped = Math.max(0, Math.min(1f, image[i]));
             rgbOut[i] = (byte) (0xFF & (short) (clamped * 255.0));
          }
       }
@@ -61,12 +61,12 @@ public class ImageUtil {
        *           luminance). May be null, in which case the maximum value is
        *           computed from the max luminance in the image.
        */
-      public WardTM(Double whitePoint) {
+      public WardTM(final Double whitePoint) {
          this.whitePoint = whitePoint;
       }
 
       @Override
-      public void toneMap(float[] image, byte[] rgbOut) {
+      public void toneMap(final float[] image, final byte[] rgbOut) {
          wardTR(image, rgbOut, whitePoint);
       }
    };
@@ -95,13 +95,13 @@ public class ImageUtil {
        *           luminance). May be null, in which case the maximum value is
        *           computed from the max luminance in the image.
        */
-      public ReinhardTM(Double midpoint, Double whitePoint) {
+      public ReinhardTM(final Double midpoint, final Double whitePoint) {
          this.midpoint = midpoint;
          this.whitePoint = whitePoint;
       }
 
       @Override
-      public void toneMap(float[] image, byte[] rgbOut) {
+      public void toneMap(final float[] image, final byte[] rgbOut) {
          reinhardStarkTR(image, rgbOut, midpoint, whitePoint);
       }
    }
@@ -118,7 +118,7 @@ public class ImageUtil {
     * @param whitePt
     * @return
     */
-   public static void reinhardStarkTR(float[] rgb, byte[] rgbOut, Double midPoint, Double whitePoint) {
+   public static void reinhardStarkTR(final float[] rgb, final byte[] rgbOut, Double midPoint, final Double whitePoint) {
       // final float[] result = new float[rgb.length];
 
       /*
@@ -164,7 +164,7 @@ public class ImageUtil {
     *           will be mapped to a luminance of 1. May be 0, in which case max
     *           luminance is assumed to be infinite.
     */
-   private static final void scaleLum(double scale, float[] rgb, byte[] rgbOut, double whiteLum) {
+   private static final void scaleLum(final double scale, final float[] rgb, final byte[] rgbOut, final double whiteLum) {
       final double whiteSq = whiteLum * scale * whiteLum * scale;
       for (int pix = 0; pix < rgb.length; pix += 3) {
          double Y = RGB2XYZ[3] * rgb[pix] + RGB2XYZ[4] * rgb[pix + 1] + RGB2XYZ[5] * rgb[pix + 2];
@@ -174,7 +174,7 @@ public class ImageUtil {
 
             final double sum = Y + x + z;
             x = (float) (x / sum);
-            double y = (float) (Y / sum);
+            final double y = (float) (Y / sum);
 
             Y *= scale;
             /*
@@ -203,9 +203,9 @@ public class ImageUtil {
              * some r, g, b values will be clamped because the desired luminance
              * can not be achieved.
              */
-            float r = (float) Math.min(1.0, (XYZ2RGB[0] * x + XYZ2RGB[1] * Y + XYZ2RGB[2] * z));
-            float g = (float) Math.min(1.0, (XYZ2RGB[3] * x + XYZ2RGB[4] * Y + XYZ2RGB[5] * z));
-            float b = (float) Math.min(1.0, (XYZ2RGB[6] * x + XYZ2RGB[7] * Y + XYZ2RGB[8] * z));
+            final float r = (float) Math.min(1.0, (XYZ2RGB[0] * x + XYZ2RGB[1] * Y + XYZ2RGB[2] * z));
+            final float g = (float) Math.min(1.0, (XYZ2RGB[3] * x + XYZ2RGB[4] * Y + XYZ2RGB[5] * z));
+            final float b = (float) Math.min(1.0, (XYZ2RGB[6] * x + XYZ2RGB[7] * Y + XYZ2RGB[8] * z));
 
             rgbOut[pix] = (byte) (0xFF & (short) (r * 255.0));
             rgbOut[pix + 1] = (byte) (0xFF & (short) (g * 255.0));
@@ -223,7 +223,7 @@ public class ImageUtil {
     *           A non-null array of rgb values.
     * @param whitePt
     */
-   public static void wardTR(float[] rgb, byte[] rgbOut, Double whitePoint) {
+   public static void wardTR(final float[] rgb, final byte[] rgbOut, final Double whitePoint) {
       /*
        * Compute the log average of the luminance values.
        */
@@ -244,11 +244,11 @@ public class ImageUtil {
       scaleLum(scale, rgb, rgbOut, (whitePoint == null) ? max : whitePoint);
    }
 
-   public static void floatRGB2Byte(float[] frgb, byte[] rgb, int offset, int count) {
+   public static void floatRGB2Byte(final float[] frgb, final byte[] rgb, final int offset, final int count) {
       for (int i = 0; i < count; i++) {
          final int pixOffs = offset + i * 3;
          for (int comp = 0; comp < 3; comp++) {
-            float pixComp = frgb[pixOffs + comp];
+            final float pixComp = frgb[pixOffs + comp];
             if (pixComp > 1.0)
                rgb[pixOffs + comp] = (byte) (255 | 0xFF);
             else if (pixComp < 0.0)
@@ -260,7 +260,7 @@ public class ImageUtil {
       }
    }
 
-   public static BufferedImage getLuminanceImage(float[] rgb, Dimension size) {
+   public static BufferedImage getLuminanceImage(final float[] rgb, final Dimension size) {
       final byte[] bImage = new byte[rgb.length / 3];
       for (int isrc = 0, idst = 0; isrc < rgb.length; isrc += 3, idst++) {
          final double y = RGB2XYZ[3] * rgb[isrc] + RGB2XYZ[4] * rgb[isrc + 1] + RGB2XYZ[5] * rgb[isrc + 2];
@@ -281,23 +281,23 @@ public class ImageUtil {
     *           The dimensions of the image to create.
     * @return A non-null BufferedImage that wraps the specified byte array.
     */
-   public static final BufferedImage createRGBImageFromBuffer(byte[] bImage, Dimension size) {
+   public static final BufferedImage createRGBImageFromBuffer(final byte[] bImage, final Dimension size) {
 
-      DataBuffer buffer = new DataBufferByte(bImage, size.width * size.height);
+      final DataBuffer buffer = new DataBufferByte(bImage, size.width * size.height);
 
-      int pixelStride = 3; // assuming r, g, b, skip, r, g, b, skip...
-      int scanlineStride = 3 * size.width; // no extra padding
-      int[] bandOffsets = { 0, 1, 2 }; // r, g, b
-      WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride,
-                                                             pixelStride, bandOffsets, null);
+      final int pixelStride = 3; // assuming r, g, b, skip, r, g, b, skip...
+      final int scanlineStride = 3 * size.width; // no extra padding
+      final int[] bandOffsets = { 0, 1, 2 }; // r, g, b
+      final WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride,
+                                                                   pixelStride, bandOffsets, null);
 
-      ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB);
-      boolean hasAlpha = false;
-      boolean isAlphaPremultiplied = false;
-      int transparency = Transparency.OPAQUE;
-      int transferType = DataBuffer.TYPE_BYTE;
-      ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency,
-                                                      transferType);
+      final ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB);
+      final boolean hasAlpha = false;
+      final boolean isAlphaPremultiplied = false;
+      final int transparency = Transparency.OPAQUE;
+      final int transferType = DataBuffer.TYPE_BYTE;
+      final ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency,
+                                                            transferType);
 
       return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
    }
@@ -314,23 +314,23 @@ public class ImageUtil {
     *           The dimensions of the image to create.
     * @return A non-null BufferedImage that wraps the specified byte array.
     */
-   public static final BufferedImage createGrayImageFromBuffer(byte[] bImage, Dimension size) {
+   public static final BufferedImage createGrayImageFromBuffer(final byte[] bImage, final Dimension size) {
 
-      DataBuffer buffer = new DataBufferByte(bImage, size.width * size.height);
+      final DataBuffer buffer = new DataBufferByte(bImage, size.width * size.height);
 
-      int pixelStride = 1;
-      int scanlineStride = size.width; // no extra padding
-      int[] bandOffsets = { 0 }; // r, g, b
-      WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride,
-                                                             pixelStride, bandOffsets, null);
+      final int pixelStride = 1;
+      final int scanlineStride = size.width; // no extra padding
+      final int[] bandOffsets = { 0 }; // r, g, b
+      final WritableRaster raster = Raster.createInterleavedRaster(buffer, size.width, size.height, scanlineStride,
+                                                                   pixelStride, bandOffsets, null);
 
-      ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-      boolean hasAlpha = false;
-      boolean isAlphaPremultiplied = false;
-      int transparency = Transparency.OPAQUE;
-      int transferType = DataBuffer.TYPE_BYTE;
-      ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency,
-                                                      transferType);
+      final ColorSpace colorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+      final boolean hasAlpha = false;
+      final boolean isAlphaPremultiplied = false;
+      final int transparency = Transparency.OPAQUE;
+      final int transferType = DataBuffer.TYPE_BYTE;
+      final ColorModel colorModel = new ComponentColorModel(colorSpace, hasAlpha, isAlphaPremultiplied, transparency,
+                                                            transferType);
 
       return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
    }

@@ -89,7 +89,7 @@ public class RTControlPanel extends JPanel {
       startRTButton.addActionListener(new ActionListener() {
 
          @Override
-         public void actionPerformed(ActionEvent e) {
+         public void actionPerformed(final ActionEvent e) {
             if (worked < workload)
                fireActionEvent(ACTION_CMD_CANCEL);
             else
@@ -103,7 +103,7 @@ public class RTControlPanel extends JPanel {
       return ((Number) widthField.getValue()).intValue();
    }
 
-   public void setImageWidth(int value) {
+   public void setImageWidth(final int value) {
       widthField.setValue(value);
    }
 
@@ -111,7 +111,7 @@ public class RTControlPanel extends JPanel {
       return ((Number) heightField.getValue()).intValue();
    }
 
-   public void setImageHeight(int height) {
+   public void setImageHeight(final int height) {
       heightField.setValue(height);
    }
 
@@ -119,7 +119,7 @@ public class RTControlPanel extends JPanel {
       return ((Number) sampleRateField.getValue()).intValue();
    }
 
-   public void setSampleRate(int sampleRate) {
+   public void setSampleRate(final int sampleRate) {
       sampleRateField.setValue(sampleRate);
    }
 
@@ -127,19 +127,19 @@ public class RTControlPanel extends JPanel {
       return ((Number) recursionDepthField.getValue()).intValue();
    }
 
-   public void setRecursionDepth(int depth) {
+   public void setRecursionDepth(final int depth) {
       recursionDepthField.setValue(depth);
    }
 
-   public void addActionListener(ActionListener listener) {
+   public void addActionListener(final ActionListener listener) {
       this.actionListeners.addIfAbsent(listener);
    }
 
-   public void removeActionListener(ActionListener listener) {
+   public void removeActionListener(final ActionListener listener) {
       this.actionListeners.remove(listener);
    }
 
-   public void setScenes(SceneDescription[] scenes) {
+   public void setScenes(final SceneDescription[] scenes) {
       sceneList.setListData(scenes);
       if (scenes.length > 0)
          sceneList.setSelectedIndex(0);
@@ -149,11 +149,11 @@ public class RTControlPanel extends JPanel {
       return (SceneDescription) sceneList.getSelectedValue();
    }
 
-   public void workStarted(int workLoad) {
+   public void workStarted(final int workLoad) {
       this.workload = workLoad;
       this.worked = 0;
 
-      for (Component comp : getComponents()) {
+      for (final Component comp : getComponents()) {
          if (comp != startRTButton) {
             comp.setEnabled(false);
          }
@@ -167,7 +167,7 @@ public class RTControlPanel extends JPanel {
       startTime = System.currentTimeMillis();
    }
 
-   public void worked(int amount) {
+   public void worked(final int amount) {
       this.worked += amount;
       progress.setValue(worked);
       final int remainingWork = workload - worked;
@@ -178,7 +178,7 @@ public class RTControlPanel extends JPanel {
 
    public void workCompleted() {
       this.worked = workload;
-      for (Component comp : getComponents()) {
+      for (final Component comp : getComponents()) {
          if (comp != startRTButton) {
             comp.setEnabled(true);
          }
@@ -188,9 +188,9 @@ public class RTControlPanel extends JPanel {
       startRTButton.setText("Start");
    }
 
-   protected void fireActionEvent(String command) {
+   protected void fireActionEvent(final String command) {
       final ActionEvent actionE = new ActionEvent(this, 0, command);
-      for (ActionListener listener : actionListeners) {
+      for (final ActionListener listener : actionListeners) {
          listener.actionPerformed(actionE);
       }
    }
