@@ -199,7 +199,8 @@ public class Ray {
       translatedOrigin.subtract(v0);
       final Vec3 q = new Vec3(translatedOrigin).cross(e1);
       /*
-       * Barycentric coords also result from this formulation:
+       * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
+       * defined at the vertex locations:
        */
       final double e1Factor = p.dot(translatedOrigin) / divisor;
       if (e1Factor < 0 || e1Factor > 1) {

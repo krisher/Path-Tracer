@@ -66,6 +66,9 @@ public interface Material {
     * visible spectrum, in Watts/Steradian. The Color components may range from
     * 0 to positive infinity.
     * 
+    * @param emissionOut
+    *           out variable (non-null) used to store the color that is emitted back toward the sample source (in the
+    *           opposite direction as the sampleDirection).
     * @param sampleDirection
     *           A normalized vector pointing toward the material intersection
     *           (the opposite direction as the light that will be emitted)
@@ -74,8 +77,6 @@ public interface Material {
     *           the geometry.
     * @param materialCoords
     *           A material-specific array of coordinates.
-    * @return The color that is emitted back toward the sample source (in the
-    *         opposite direction as the sampleDirection).
     */
    public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, Vec3 surfaceNormal, double... materialCoords);
 
@@ -86,7 +87,8 @@ public interface Material {
     * illumination in a very small portion of the reflectance hemisphere, which
     * will typically be well sampled through other means.
     * 
-    * @return
+    * @return true if direct illuminant sampling should be performed for this material (in addition to casting secondary
+    *         rays), false if only the secondary rays should be processed.
     */
    public boolean shouldSampleDirectIllumination();
 
