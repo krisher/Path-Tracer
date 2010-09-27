@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
+import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
+
 /**
  * Simple parser implementation for the Stanford PLY model format. This is based on the format description
  * from: <a
@@ -20,11 +22,12 @@ import java.nio.charset.Charset;
  */
 public final class PLYParser {
 
-   static void parsePLY(final InputStream stream) throws IOException {
+   static void parsePLY(final InputStream stream, final Vec3Buffer vertexBuffer) throws IOException {
       final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, Charset.forName("US-ASCII")));
       try {
          final PLYContentDescription content = new PLYContentDescription(reader);
-
+         // TODO: find the element section that specifies vertex data and parse it into the provided buffer.
+         // TODO: find the element section that specifies face data and parse it into the (un)provided index buffer.
       } finally {
          reader.close();
       }
