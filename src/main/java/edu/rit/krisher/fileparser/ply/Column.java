@@ -7,7 +7,7 @@ package edu.rit.krisher.fileparser.ply;
  * @author krisher
  * 
  */
-public class ElementPropertyDefinition {
+public class Column {
    /**
     * The name of the property.
     */
@@ -33,7 +33,7 @@ public class ElementPropertyDefinition {
     * @param valueType
     *           The data type for the property value components.
     */
-   ElementPropertyDefinition(final String name, final DataType listIndexType, final DataType valueType) {
+   Column(final String name, final DataType listIndexType, final DataType valueType) {
       super();
       this.name = name;
       this.listIndexType = listIndexType;

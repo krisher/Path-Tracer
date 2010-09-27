@@ -41,7 +41,7 @@ public class PLYParserTest {
 
       Assert.assertEquals(2, content.getElements().size());
 
-      final ElementDefinition vertexElt = content.getElements().get(0);
+      final ElementSchema vertexElt = content.getElements().get(0);
       Assert.assertEquals("vertex", vertexElt.name);
       Assert.assertEquals(35947, vertexElt.count);
       Assert.assertEquals(5, vertexElt.getProperties().size());
@@ -61,7 +61,7 @@ public class PLYParserTest {
       Assert.assertEquals(DataType.float32, vertexElt.getProperties().get(4).valueType);
       Assert.assertEquals(null, vertexElt.getProperties().get(4).listIndexType);
 
-      final ElementDefinition facesElt = content.getElements().get(1);
+      final ElementSchema facesElt = content.getElements().get(1);
       Assert.assertEquals("face", facesElt.name);
       Assert.assertEquals(69451, facesElt.count);
       Assert.assertEquals(1, facesElt.getProperties().size());

@@ -10,7 +10,7 @@ import java.util.List;
  * @author krisher
  * 
  */
-public class ElementDefinition {
+public class ElementSchema {
    /**
     * The name of the element. This can be anything, but common names
     * include 'vertex', 'face', and 'edge'.
@@ -23,7 +23,7 @@ public class ElementDefinition {
    /**
     * The properties that make up the element.
     */
-   private final List<ElementPropertyDefinition> properties = new ArrayList<ElementPropertyDefinition>();
+   private final List<Column> properties = new ArrayList<Column>();
 
    /**
     * Creates a new ElementDefinition with the specified element name, and number of elements.
@@ -33,7 +33,7 @@ public class ElementDefinition {
     * @param count
     *           The number of elements of this type that appear in the file.
     */
-   ElementDefinition(final String name, final int count) {
+   ElementSchema(final String name, final int count) {
       this.name = name;
       this.count = count;
    }
@@ -44,11 +44,11 @@ public class ElementDefinition {
     * 
     * @return A non-null list of properties.
     */
-   public List<ElementPropertyDefinition> getProperties() {
+   public List<Column> getProperties() {
       return Collections.unmodifiableList(properties);
    }
 
-   void addProperty(final ElementPropertyDefinition prop) {
+   void addProperty(final Column prop) {
       properties.add(prop);
    }
 }

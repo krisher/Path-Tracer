@@ -31,7 +31,7 @@ public class PLYContentDescription {
    private PLYFormat format;
    private String versionString;
    private final List<String> comments = new ArrayList<String>();
-   private final List<ElementDefinition> elements = new ArrayList<ElementDefinition>();
+   private final List<ElementSchema> elements = new ArrayList<ElementSchema>();
 
    /**
     * Initializes the content definition from the specified reader (which must provide access to the beginning of a
@@ -84,7 +84,7 @@ public class PLYContentDescription {
     * @return A non-null, but possibly empty list of elements (an empty list indicates that the file contains no
     *         content).
     */
-   public List<ElementDefinition> getElements() {
+   public List<ElementSchema> getElements() {
       return Collections.unmodifiableList(elements);
    }
 
@@ -107,7 +107,7 @@ public class PLYContentDescription {
                                + "\", but found \"" + line + "\"");
       }
 
-      ElementDefinition eltDef = null;
+      ElementSchema eltDef = null;
       /*
        * Next comes the format definition, followed by any number of element defintions.
        */
@@ -128,7 +128,7 @@ public class PLYContentDescription {
             if (!elementMatcher.matches()) {
                throw new IOException("Invalid element declaration in PLY header: " + line + ".");
             }
-            eltDef = new ElementDefinition(elementMatcher.group(1), Integer.parseInt(elementMatcher.group(2)));
+            eltDef = new ElementSchema(elementMatcher.group(1), Integer.parseInt(elementMatcher.group(2)));
             elements.add(eltDef);
          } else if (line.startsWith(PLYContentDescription.propertyDelimiter)) {
             if (eltDef == null)
@@ -150,7 +150,7 @@ public class PLYContentDescription {
                propType = DataType.parseType(propertyMatcher.group(1));
                propName = propertyMatcher.group(2);
             }
-            eltDef.addProperty(new ElementPropertyDefinition(propName, listSizeType, propType));
+            eltDef.addProperty(new Column(propName, listSizeType, propType));
          } else if (line.startsWith(PLYContentDescription.formatDelimiter)) {
             final Matcher formatMatcher = PLYContentDescription.formatPattern.matcher(line);
             if (!formatMatcher.matches()) {
