@@ -43,6 +43,9 @@ public final class Vec3 implements Transform {
    public double z;
 
    public Vec3() {
+      /*
+       * Initialize to 0 vector.
+       */
    }
 
    public Vec3(final double x, final double y, final double z) {
