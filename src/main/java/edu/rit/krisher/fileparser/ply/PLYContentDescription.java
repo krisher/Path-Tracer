@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
  * Content definition metadata for a PLY file, as defined by its header. This must be initialized from a provided
  * Reader that represents a PLY file.
@@ -30,8 +29,9 @@ public class PLYContentDescription {
 
    private PLYFormat format;
    private String versionString;
+   private int headerSizeBytes;
    private final List<String> comments = new ArrayList<String>();
-   private final List<ElementSchema> elements = new ArrayList<ElementSchema>();
+   private final List<Element> elements = new ArrayList<Element>();
 
    /**
     * Initializes the content definition from the specified reader (which must provide access to the beginning of a
@@ -84,7 +84,7 @@ public class PLYContentDescription {
     * @return A non-null, but possibly empty list of elements (an empty list indicates that the file contains no
     *         content).
     */
-   public List<ElementSchema> getElements() {
+   public List<Element> getElements() {
       return Collections.unmodifiableList(elements);
    }
 
@@ -103,11 +103,11 @@ public class PLYContentDescription {
        */
       String line = reader.readLine();
       if (!PLYContentDescription.headerStart.equals(line)) {
-         throw new IOException("The provided stream does not appear to contain PLY data, expected \"" + PLYContentDescription.headerStart
-                               + "\", but found \"" + line + "\"");
+         throw new IOException("The provided stream does not appear to contain PLY data, expected \""
+                               + PLYContentDescription.headerStart + "\", but found \"" + line + "\"");
       }
 
-      ElementSchema eltDef = null;
+      Element eltDef = null;
       /*
        * Next comes the format definition, followed by any number of element defintions.
        */
@@ -128,7 +128,7 @@ public class PLYContentDescription {
             if (!elementMatcher.matches()) {
                throw new IOException("Invalid element declaration in PLY header: " + line + ".");
             }
-            eltDef = new ElementSchema(elementMatcher.group(1), Integer.parseInt(elementMatcher.group(2)));
+            eltDef = new Element(elementMatcher.group(1), Integer.parseInt(elementMatcher.group(2)));
             elements.add(eltDef);
          } else if (line.startsWith(PLYContentDescription.propertyDelimiter)) {
             if (eltDef == null)
@@ -150,7 +150,7 @@ public class PLYContentDescription {
                propType = DataType.parseType(propertyMatcher.group(1));
                propName = propertyMatcher.group(2);
             }
-            eltDef.addProperty(new Column(propName, listSizeType, propType));
+            eltDef.addProperty(new ElementAttribute(propName, listSizeType, propType));
          } else if (line.startsWith(PLYContentDescription.formatDelimiter)) {
             final Matcher formatMatcher = PLYContentDescription.formatPattern.matcher(line);
             if (!formatMatcher.matches()) {
@@ -162,5 +162,136 @@ public class PLYContentDescription {
             throw new IOException("Unexpected delimiter in PLY header: " + line + ".");
          }
       }
+   }
+
+   /**
+    * Format of the PLY file content, ascii or binary.
+    */
+   public static enum PLYFormat {
+      /**
+       * Format for ascii representation of element data.
+       */
+      ascii,
+      /**
+       * Format for binary representation of element data.
+       */
+      binary_little_endian,
+      /**
+       * Format for binary representation of element data.
+       */
+      binary_big_endian
+   }
+
+   /**
+    * The various data types that scalar values may be specified in.
+    * 
+    * @author krisher
+    * 
+    */
+   public static enum DataType {
+      /**
+       * 8bit unsigned int (short in Java).
+       */
+      uint8 {
+         @Override
+         public int getSizeBytes() {
+            return 1;
+         }
+
+         @Override
+         public boolean isSigned() {
+            return false;
+         }
+
+         @Override
+         public Number parseAscii(final String asciiRepresentation) {
+            return Short.parseShort(asciiRepresentation);
+         }
+      },
+      /**
+       * 32bit signed int (int in Java).
+       */
+      int32 {
+         @Override
+         public int getSizeBytes() {
+            return 4;
+         }
+
+         @Override
+         public boolean isSigned() {
+            return true;
+         }
+
+         @Override
+         public Number parseAscii(final String asciiRepresentation) {
+            return Integer.parseInt(asciiRepresentation);
+         }
+      },
+      /**
+       * 32bit float (float in Java).
+       */
+      float32 {
+         @Override
+         public int getSizeBytes() {
+            return 4;
+         }
+
+         @Override
+         public boolean isSigned() {
+            return true;
+         }
+
+         @Override
+         public Number parseAscii(final String asciiRepresentation) {
+            return Float.parseFloat(asciiRepresentation);
+         }
+      };
+
+      /**
+       * The size in bytes of the data type, as it would be represented in the binary version of the file.
+       * 
+       * @return The size in bytes of the data type as it would be represented in the binary version of the file.
+       */
+      public abstract int getSizeBytes();
+
+      /**
+       * Accessor to determine whether the data type represents signed values (<code>true</code>), or unsigned (
+       * <code>false</code>).
+       * 
+       * @return true or false...
+       */
+      public abstract boolean isSigned();
+
+      /**
+       * Accessor for the DataType constant representing the specified named type (as specified in a PLY header).
+       * 
+       * @param name
+       *           A name.
+       * @return The DataType corresponding to the specified name.
+       * @throws IllegalArgumentException
+       *            if the specified name does not match a known data type.
+       */
+      public static final DataType parseType(final String name) throws IllegalArgumentException {
+         if ("float".equals(name)) {
+            return float32;
+         } else if ("int".equals(name)) {
+            return int32;
+         } else if ("uchar".equals(name)) {
+            return uint8;
+         } else {
+            throw new IllegalArgumentException("Unsupported data type: " + name);
+         }
+      }
+
+      /**
+       * Parses the data value from the specified text representation.
+       * 
+       * @param asciiRepresentation
+       *           The string representing the value to parse.
+       * @return the numeric value of the specified string.
+       */
+      public abstract Number parseAscii(String asciiRepresentation);
+      //
+      // public abstract Number parseBinary(byte[] binaryRepresentation);
    }
 }

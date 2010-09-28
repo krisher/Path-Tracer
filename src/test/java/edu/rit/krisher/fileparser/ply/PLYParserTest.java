@@ -1,21 +1,24 @@
 package edu.rit.krisher.fileparser.ply;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.rit.krisher.fileparser.ply.PLYContentDescription.DataType;
+import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
+import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
+import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 
 public class PLYParserTest {
 
    private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply.zip";
 
    @Test
-   public void testParseBunnyHeader() throws IOException {
+   public void readBunnyShouldParseKnownHeader() throws IOException {
       final PLYContentDescription content;
       /*
        * Assumes that the ply file is the first entry in the zip...
@@ -23,12 +26,7 @@ public class PLYParserTest {
       final ZipInputStream zis = new ZipInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
       try {
          zis.getNextEntry();
-         final BufferedReader reader = new BufferedReader(new InputStreamReader(zis, Charset.forName("US-ASCII")));
-         try {
-            content = new PLYContentDescription(reader);
-         } finally {
-            reader.close();
-         }
+         content = PLYParser.getPLYContentDescription(zis);
       } finally {
          zis.close();
       }
@@ -41,32 +39,74 @@ public class PLYParserTest {
 
       Assert.assertEquals(2, content.getElements().size());
 
-      final ElementSchema vertexElt = content.getElements().get(0);
+      final Element vertexElt = content.getElements().get(0);
       Assert.assertEquals("vertex", vertexElt.name);
       Assert.assertEquals(35947, vertexElt.count);
-      Assert.assertEquals(5, vertexElt.getProperties().size());
-      Assert.assertEquals("x", vertexElt.getProperties().get(0).name);
-      Assert.assertEquals(DataType.float32, vertexElt.getProperties().get(0).valueType);
-      Assert.assertEquals(null, vertexElt.getProperties().get(0).listIndexType);
-      Assert.assertEquals("y", vertexElt.getProperties().get(1).name);
-      Assert.assertEquals(DataType.float32, vertexElt.getProperties().get(1).valueType);
-      Assert.assertEquals(null, vertexElt.getProperties().get(1).listIndexType);
-      Assert.assertEquals("z", vertexElt.getProperties().get(2).name);
-      Assert.assertEquals(DataType.float32, vertexElt.getProperties().get(2).valueType);
-      Assert.assertEquals(null, vertexElt.getProperties().get(2).listIndexType);
-      Assert.assertEquals("confidence", vertexElt.getProperties().get(3).name);
-      Assert.assertEquals(DataType.float32, vertexElt.getProperties().get(3).valueType);
-      Assert.assertEquals(null, vertexElt.getProperties().get(3).listIndexType);
-      Assert.assertEquals("intensity", vertexElt.getProperties().get(4).name);
-      Assert.assertEquals(DataType.float32, vertexElt.getProperties().get(4).valueType);
-      Assert.assertEquals(null, vertexElt.getProperties().get(4).listIndexType);
+      final ElementAttribute[] vertexEltProperties = vertexElt.getProperties();
+      Assert.assertEquals(5, vertexEltProperties.length);
+      Assert.assertEquals("x", vertexEltProperties[0].name);
+      Assert.assertEquals(DataType.float32, vertexEltProperties[0].valueType);
+      Assert.assertEquals(null, vertexEltProperties[0].listIndexType);
+      Assert.assertEquals("y", vertexEltProperties[1].name);
+      Assert.assertEquals(DataType.float32, vertexEltProperties[1].valueType);
+      Assert.assertEquals(null, vertexEltProperties[1].listIndexType);
+      Assert.assertEquals("z", vertexEltProperties[2].name);
+      Assert.assertEquals(DataType.float32, vertexEltProperties[2].valueType);
+      Assert.assertEquals(null, vertexEltProperties[2].listIndexType);
+      Assert.assertEquals("confidence", vertexEltProperties[3].name);
+      Assert.assertEquals(DataType.float32, vertexEltProperties[3].valueType);
+      Assert.assertEquals(null, vertexEltProperties[3].listIndexType);
+      Assert.assertEquals("intensity", vertexEltProperties[4].name);
+      Assert.assertEquals(DataType.float32, vertexEltProperties[4].valueType);
+      Assert.assertEquals(null, vertexEltProperties[4].listIndexType);
 
-      final ElementSchema facesElt = content.getElements().get(1);
+      final Element facesElt = content.getElements().get(1);
       Assert.assertEquals("face", facesElt.name);
       Assert.assertEquals(69451, facesElt.count);
-      Assert.assertEquals(1, facesElt.getProperties().size());
-      Assert.assertEquals("vertex_indices", facesElt.getProperties().get(0).name);
-      Assert.assertEquals(DataType.int32, facesElt.getProperties().get(0).valueType);
-      Assert.assertEquals(DataType.uint8, facesElt.getProperties().get(0).listIndexType);
+      final ElementAttribute[] faceEltProperties = facesElt.getProperties();
+      Assert.assertEquals(1, faceEltProperties.length);
+      Assert.assertEquals("vertex_indices", faceEltProperties[0].name);
+      Assert.assertEquals(DataType.int32, faceEltProperties[0].valueType);
+      Assert.assertEquals(DataType.uint8, faceEltProperties[0].listIndexType);
+   }
+
+   @Test
+   public void readBunnyVertexData() throws IOException {
+      final VertexReceiver receiver = new VertexReceiver();
+      final Map<String, ElementReceiver> elementReceivers = new HashMap<String, ElementReceiver>();
+      elementReceivers.put("vertex", receiver);
+      final ZipInputStream zis = new ZipInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
+      try {
+         zis.getNextEntry();
+
+         PLYParser.parsePLY(zis, elementReceivers);
+
+      } finally {
+         zis.close();
+      }
+      final Vec3fBuffer buffer = receiver.getBuffer();
+      Assert.assertEquals(35947, buffer.capacity());
+      Assert.assertEquals(35947, buffer.limit());
+      Assert.assertEquals(0, buffer.position());
+   }
+
+   @Test
+   public void readBunnyIndexData() throws IOException {
+      final TrianglesIndexBufferReceiver receiver = new TrianglesIndexBufferReceiver();
+      final Map<String, ElementReceiver> elementReceivers = new HashMap<String, ElementReceiver>();
+      elementReceivers.put("face", receiver);
+      final ZipInputStream zis = new ZipInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
+      try {
+         zis.getNextEntry();
+
+         PLYParser.parsePLY(zis, elementReceivers);
+
+      } finally {
+         zis.close();
+      }
+      final IndexBuffer buffer = receiver.getBuffer();
+      Assert.assertEquals(69451 * 3, buffer.capacity());
+      Assert.assertEquals(69451 * 3, buffer.limit());
+      Assert.assertEquals(0, buffer.position());
    }
 }

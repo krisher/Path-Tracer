@@ -1,7 +1,6 @@
 package edu.rit.krisher.fileparser.ply;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -10,7 +9,7 @@ import java.util.List;
  * @author krisher
  * 
  */
-public class ElementSchema {
+public class Element {
    /**
     * The name of the element. This can be anything, but common names
     * include 'vertex', 'face', and 'edge'.
@@ -23,7 +22,7 @@ public class ElementSchema {
    /**
     * The properties that make up the element.
     */
-   private final List<Column> properties = new ArrayList<Column>();
+   private final List<ElementAttribute> properties = new ArrayList<ElementAttribute>();
 
    /**
     * Creates a new ElementDefinition with the specified element name, and number of elements.
@@ -33,7 +32,7 @@ public class ElementSchema {
     * @param count
     *           The number of elements of this type that appear in the file.
     */
-   ElementSchema(final String name, final int count) {
+   Element(final String name, final int count) {
       this.name = name;
       this.count = count;
    }
@@ -44,11 +43,21 @@ public class ElementSchema {
     * 
     * @return A non-null list of properties.
     */
-   public List<Column> getProperties() {
-      return Collections.unmodifiableList(properties);
+   public ElementAttribute[] getProperties() {
+      return properties.toArray(new ElementAttribute[properties.size()]);
    }
 
-   void addProperty(final Column prop) {
+   void addProperty(final ElementAttribute prop) {
       properties.add(prop);
+   }
+
+   public int indexOf(final String attrName) {
+      int idx = 0;
+      for (final ElementAttribute attr : properties) {
+         if (attr.name.equals(attrName))
+            return idx;
+         ++idx;
+      }
+      return -1;
    }
 }

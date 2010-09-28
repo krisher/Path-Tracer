@@ -1,5 +1,7 @@
 package edu.rit.krisher.fileparser.ply;
 
+import edu.rit.krisher.fileparser.ply.PLYContentDescription.DataType;
+
 /**
  * Definition/Metadata for a property of an element. Each property corresponds to one component (which may have
  * multiple scalar values) of an element instance in the file.
@@ -7,7 +9,7 @@ package edu.rit.krisher.fileparser.ply;
  * @author krisher
  * 
  */
-public class Column {
+public class ElementAttribute {
    /**
     * The name of the property.
     */
@@ -33,7 +35,7 @@ public class Column {
     * @param valueType
     *           The data type for the property value components.
     */
-   Column(final String name, final DataType listIndexType, final DataType valueType) {
+   ElementAttribute(final String name, final DataType listIndexType, final DataType valueType) {
       super();
       this.name = name;
       this.listIndexType = listIndexType;
