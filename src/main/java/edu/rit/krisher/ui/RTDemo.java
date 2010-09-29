@@ -295,7 +295,7 @@ public class RTDemo {
          final TriangleMesh bunnyMesh = PLYParser.parseTriangleMesh(stream);
          scene.add(bunnyMesh);
          final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
-         cam.lookAt(bounds.center(), 35, 180, bounds.diagonalLength());
+         cam.lookAt(bounds.center(), 35, 180, bounds.diagonalLength() * 0.8);
 
       } catch (final IOException ioe) {
          ioe.printStackTrace();

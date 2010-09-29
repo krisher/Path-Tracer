@@ -36,8 +36,8 @@ public class AxisAlignedBoundingBox implements Cloneable {
    }
 
    public Vec3 center() {
-      return new Vec3(minXYZ.x + (maxXYZ.x - minXYZ.x * 0.5), minXYZ.y + (maxXYZ.y - minXYZ.y * 0.5), minXYZ.z
-                      + (maxXYZ.z - minXYZ.z * 0.5));
+      return new Vec3(minXYZ.x + (maxXYZ.x - minXYZ.x) * 0.5, minXYZ.y + (maxXYZ.y - minXYZ.y) * 0.5, minXYZ.z
+            + (maxXYZ.z - minXYZ.z) * 0.5);
    }
 
    public double xSpan() {
