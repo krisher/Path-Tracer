@@ -35,6 +35,31 @@ public class AxisAlignedBoundingBox implements Cloneable {
       this.maxXYZ.set(other.maxXYZ);
    }
 
+   public Vec3 center() {
+      return new Vec3(minXYZ.x + (maxXYZ.x - minXYZ.x * 0.5), minXYZ.y + (maxXYZ.y - minXYZ.y * 0.5), minXYZ.z
+                      + (maxXYZ.z - minXYZ.z * 0.5));
+   }
+
+   public double xSpan() {
+      return Math.abs(maxXYZ.x - minXYZ.x);
+   }
+
+   public double ySpan() {
+      return Math.abs(maxXYZ.y - minXYZ.y);
+   }
+
+   public double zSpan() {
+      return Math.abs(maxXYZ.z - minXYZ.z);
+   }
+
+   public double diagonalLength() {
+      final double xSpan = (maxXYZ.x - minXYZ.x);
+      final double ySpan = (maxXYZ.y - minXYZ.y);
+      final double zSpan = (maxXYZ.z - minXYZ.z);
+
+      return Math.sqrt(xSpan * xSpan + ySpan * ySpan + zSpan * zSpan);
+   }
+
    @Override
    public AxisAlignedBoundingBox clone() {
       try {

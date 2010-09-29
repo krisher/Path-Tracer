@@ -6,12 +6,14 @@ import java.util.zip.ZipInputStream;
 import javax.swing.SwingUtilities;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
+import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.camera.DoFCamera;
 import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.Box;
 import edu.rit.krisher.scene.geometry.Sphere;
+import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
@@ -30,15 +32,10 @@ public class RTDemo {
    private static final Color blue = new Color(0.25, 0.25, 1.0);
    private static final Color green = new Color(0.25, 1.0, 0.4);
 
-   private static final RingsPattern yellowGreenSphereTexture = new RingsPattern(new Color(1, 0.8f, 0), new Color(0.1f,
-                                                                                                                  1,
-                                                                                                                  0.1f));
-   private static final CheckerboardPattern yellowRedCheckerTexture = new CheckerboardPattern(new Color(1, 0.25, 0.35),
-                                                                                              new Color(0.75, 0.75,
-                                                                                                        0.35));
+   private static final RingsPattern yellowGreenSphereTexture = new RingsPattern(new Color(1, 0.8f, 0), new Color(0.1f, 1, 0.1f));
+   private static final CheckerboardPattern yellowRedCheckerTexture = new CheckerboardPattern(new Color(1, 0.25, 0.35), new Color(0.75, 0.75, 0.35));
 
-   private static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35),
-                                                                                     new Color(0.85, 0.85, 0.35));
+   private static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
 
    private static Material whiteLambert = new LambertBRDF(Color.white);
    private static Material blueLambert = new LambertBRDF(blue);
@@ -51,15 +48,12 @@ public class RTDemo {
    private static Material greenSpecular = new PhongSpecularBRDF(green, 100);
 
    public static final CompositeBRDF mixedWhiteMat = new CompositeBRDF(whiteLambert, 0.5, whiteMirror, 0.5);
-   public static final CompositeBRDF mixedOrangeMat = new CompositeBRDF(new LambertBRDF(orange), 0.6,
-                                                                        new PhongSpecularBRDF(Color.white, 75), 0.4);
-   public static final CompositeBRDF whiteSpecular80 = new CompositeBRDF(whiteLambert, 0.2,
-                                                                         new PhongSpecularBRDF(Color.white, 1000), 0.80);
+   public static final CompositeBRDF mixedOrangeMat = new CompositeBRDF(new LambertBRDF(orange), 0.6, new PhongSpecularBRDF(Color.white, 75), 0.4);
+   public static final CompositeBRDF whiteSpecular80 = new CompositeBRDF(whiteLambert, 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.80);
 
    private static final RefractiveBRDF clearRefractive = new RefractiveBRDF(0.95, Color.black, 100000);
    private static final CompositeBRDF clearBlurRefractive = new CompositeBRDF();
-   private static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.95, 0.95),
-                                                                                100000);
+   private static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.95, 0.95), 100000);
    private static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
    private static final RefractiveBRDF blueRefractive = new RefractiveBRDF(1.4, new Color(0.55, 0.55, 0.75), 100000);
    private static final RefractiveBRDF redRefractive = new RefractiveBRDF(1.4, new Color(0.95, 0.65, 0.65), 100000);
@@ -268,12 +262,10 @@ public class RTDemo {
       return new SceneDescription("Checkpoint 6", scene, cam);
    }
 
-
    private static SceneDescription whittedScene(final double lightPower) {
       final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
-      scene.add(new Box(10, 2.5, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1),
-                        new Vec3(-2, -1.25, 0), false));
+      scene.add(new Box(10, 2.5, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
 
       scene.add(new Sphere(new Vec3(0, 2, 0), 1, mixedRefractive));
 
@@ -300,7 +292,11 @@ public class RTDemo {
       try {
          stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
          stream.getNextEntry();
-         scene.add(PLYParser.parseTriangleMesh(stream));
+         final TriangleMesh bunnyMesh = PLYParser.parseTriangleMesh(stream);
+         scene.add(bunnyMesh);
+         final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
+         cam.lookAt(bounds.center(), 35, 180, bounds.diagonalLength());
+
       } catch (final IOException ioe) {
          ioe.printStackTrace();
       } finally {
@@ -313,7 +309,6 @@ public class RTDemo {
 
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), lightPower));
 
-      cam.lookAt(new Vec3(0, 0, 0), 35, 180, 0.25);
       cam.setFOVAngle(56.14);
       scene.setBackground(new Color(0.25, 0.25, 0.65));
       return new SceneDescription("Bunny Scene (Light = " + lightPower + ")", scene, cam);
@@ -325,11 +320,11 @@ public class RTDemo {
       final Scene scene = new Scene();
       scene.add(new Box(20, 20, 20, whiteLambert, new Vec3(0, 10, 0), true));
 
-      scene.add(new Sphere(new Vec3(- 2 * Math.sqrt(2), 1, 2 * Math.sqrt(2)), 1, redLambert));
+      scene.add(new Sphere(new Vec3(-2 * Math.sqrt(2), 1, 2 * Math.sqrt(2)), 1, redLambert));
       scene.add(new Sphere(new Vec3(-Math.sqrt(2), 1, Math.sqrt(2)), 1, blueGreenMixedRefractive));
       scene.add(new Sphere(new Vec3(0, 1, 0), 1, whiteSpecular80));
       scene.add(new Sphere(new Vec3(Math.sqrt(2), 1, -Math.sqrt(2)), 1, blueGreenMixedRefractive));
-      scene.add(new Sphere(new Vec3(2 *Math.sqrt(2), 1, -2 * Math.sqrt(2)), 1, redLambert));
+      scene.add(new Sphere(new Vec3(2 * Math.sqrt(2), 1, -2 * Math.sqrt(2)), 1, redLambert));
 
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 10));
 
@@ -348,10 +343,10 @@ public class RTDemo {
       scene.add(new Box(20, 20, 20, whiteLambert, new Vec3(0, 10, 0), true));
 
       scene.add(new Sphere(new Vec3(0, 2, 0), 1, blueGreenMixedRefractive));
-      scene.add(new Box(2,2,2, redRefractive, new Vec3(-2, 1, 2), false));
+      scene.add(new Box(2, 2, 2, redRefractive, new Vec3(-2, 1, 2), false));
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 5));
 
-      cam.lookAt(new Vec3(-1,1,1), 35, -25, 8);
+      cam.lookAt(new Vec3(-1, 1, 1), 35, -25, 8);
       cam.setAperture(1 / 22.0);
       cam.setFOVAngle(56.14);
       return new SceneDescription("Caustics Scene", scene, cam);
@@ -371,7 +366,7 @@ public class RTDemo {
       scene.add(new SphereLight(new Vec3(3, 6, 0), 1.0, new Color(0.55f, 0.55f, 1.0f), 3));
       scene.add(new SphereLight(new Vec3(1, 7, -3.5), 0.25, new Color(1.0f, 1.0f, 1.0f), 40));
 
-      cam.lookAt(new Vec3(0,1,0), 45, -20, 8);
+      cam.lookAt(new Vec3(0, 1, 0), 45, -20, 8);
       cam.setAperture(1 / 22.0);
       cam.setFOVAngle(56.14);
       return new SceneDescription("Multi Light Scene", scene, cam);
@@ -382,13 +377,10 @@ public class RTDemo {
       final RTFrame frame = new RTFrame();
 
       frame.setScenes(new SceneDescription[] { bunnyScene(75), whittedScene(75), whittedScene(150), whittedScene(500),
-            dofScene(),
-            causticScene(),
-            multiLightScene(),
-            diffuseTest1(), diffuseTest2(), diffuseTest3(), specularTest1(),
-            specularTest2(), specularTest3(),
+            dofScene(), causticScene(), multiLightScene(), diffuseTest1(), diffuseTest2(), diffuseTest3(),
+            specularTest1(), specularTest2(), specularTest3(),
 
-            //      threeBalls(), niceScene(), checkpoint6(), projectCP(),
+            // threeBalls(), niceScene(), checkpoint6(), projectCP(),
       });
 
       SwingUtilities.invokeLater(new Runnable() {
