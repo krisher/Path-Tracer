@@ -9,9 +9,16 @@
 	<name>Path Tracer</name>
 	<description>Path Tracer implementation developed for Computer Graphics II @ RIT, continued development for Advance Rendering.</description>
 	<url>https://cg.krisher.homeip.net</url>
-
-
-
+	<developers>
+		<developer>
+			<name>Daniel Krisher</name>
+			<email>daniel.krisher - at - gmail.com</email>
+		</developer>
+	</developers>
+	<ciManagement>
+		<system>Hudson</system>
+		<url>https://hudson.krisher.homeip.net/</url>
+	</ciManagement>
 	<scm>
 		<connection>scm:git://github.com/krisher/Path-Tracer.git</connection>
 		<url>http://github.com/krisher/Path-Tracer</url>
