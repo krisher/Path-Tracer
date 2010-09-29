@@ -215,4 +215,9 @@ public class Ray {
       return q.dot(e2) / divisor;
    }
 
+   @Override
+   public String toString() {
+      return "Ray [origin=" + origin + ", direction=" + direction + "]";
+   }
+
 }

@@ -3,6 +3,7 @@ package edu.rit.krisher.scene.geometry.buffer;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 
+import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -69,6 +70,11 @@ public class Vec3fBuffer extends BaseBuffer implements Vec3Buffer {
       buffer[offs + 1] = (float) value.y;
       buffer[offs + 2] = (float) value.z;
       return this;
+   }
+
+   @Override
+   public final AxisAlignedBoundingBox computeBounds() {
+      return Vec3dBuffer.computeBoundsInt(this);
    }
 
 }

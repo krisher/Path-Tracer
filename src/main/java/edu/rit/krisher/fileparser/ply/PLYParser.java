@@ -6,10 +6,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.rit.krisher.fileparser.ply.ElementReceiver.ElementAttributeValues;
 import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
+import edu.rit.krisher.scene.geometry.TriangleMesh;
 
 /**
  * Simple parser implementation for the Stanford PLY model format. This is based on the format description
@@ -53,6 +55,18 @@ public final class PLYParser {
       } finally {
          reader.close();
       }
+   }
+
+   public static TriangleMesh parseTriangleMesh(final InputStream stream) throws IOException {
+      final Map<String, ElementReceiver> elementReceivers = new HashMap<String, ElementReceiver>();
+      final VertexReceiver vReceiver = new VertexReceiver();
+      elementReceivers.put("vertex", vReceiver);
+      final TrianglesIndexBufferReceiver iReceiver = new TrianglesIndexBufferReceiver();
+      elementReceivers.put("face", iReceiver);
+
+      parsePLY(stream, elementReceivers);
+
+      return new TriangleMesh(vReceiver.getBuffer(), iReceiver.getBuffer());
    }
 
    private static final class ASCIIElementAttributeValues implements ElementAttributeValues {

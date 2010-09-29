@@ -3,6 +3,7 @@ package edu.rit.krisher.scene.geometry.buffer;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 
+import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -14,6 +15,7 @@ import edu.rit.krisher.vecmath.Vec3;
 public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
 
    private final double[] buffer;
+
    public Vec3dBuffer(final int capacity) {
       this.buffer = new double[capacity * 3];
       limit(capacity);
@@ -70,4 +72,39 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       return this;
    }
 
+   @Override
+   public final AxisAlignedBoundingBox computeBounds() {
+      return computeBoundsInt(this);
+   }
+
+   final static AxisAlignedBoundingBox computeBoundsInt(final Vec3Buffer buff) {
+
+      double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY, minZ = Double.POSITIVE_INFINITY, maxZ = Double.NEGATIVE_INFINITY;
+
+      final int verts = buff.limit();
+      final Vec3 vec = new Vec3();
+      for (int i = verts - 3; i >= 0; --i) {
+         buff.get(i, vec);
+         if (vec.x < minX)
+            minX = vec.x;
+         if (vec.x > maxX)
+            maxX = vec.x;
+
+         if (vec.y < minY)
+            minY = vec.y;
+         if (vec.y > maxY)
+            maxY = vec.y;
+
+         if (vec.z < minZ)
+            minZ = vec.z;
+         if (vec.z > maxZ)
+            maxZ = vec.z;
+      }
+
+      final AxisAlignedBoundingBox box = new AxisAlignedBoundingBox();
+      box.minXYZ = new Vec3(minX, minY, minZ);
+      box.maxXYZ = new Vec3(maxX, maxY, maxZ);
+      return box;
+
+   }
 }
