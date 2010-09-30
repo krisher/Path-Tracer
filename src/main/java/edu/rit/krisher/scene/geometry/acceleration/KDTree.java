@@ -8,7 +8,6 @@ import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.vecmath.Ray;
-import edu.rit.krisher.vecmath.Vec3;
 
 public class KDTree implements Geometry {
 
@@ -31,7 +30,7 @@ public class KDTree implements Geometry {
       }
 
       List<Geometry> primitivesList = new ArrayList<Geometry>();
-      treeBounds = content[0].getBounds().clone();
+      treeBounds = new AxisAlignedBoundingBox(content[0].getBounds());
       for (int i = 0; i < content.length; ++i) {
          final Geometry[] prims = content[i].getPrimitives();
          for (final Geometry prim : prims) {
@@ -61,7 +60,7 @@ public class KDTree implements Geometry {
    public double intersects(final Ray ray) {
       if (root != null) {
          final double[] params = new double[2];
-         if (ray.intersectsBoxParametric(params, treeBounds.minXYZ, treeBounds.maxXYZ))
+         if (treeBounds.rayIntersectsParametric(ray, params))
             return root.intersects(ray, params[0], params[1]);
       }
       return 0;
@@ -69,7 +68,7 @@ public class KDTree implements Geometry {
 
    @Override
    public AxisAlignedBoundingBox getBounds() {
-      return treeBounds.clone();
+      return new AxisAlignedBoundingBox(treeBounds);
    }
 
    public void visitTreeNodes(final KDNodeVisitor visitor) throws Exception {
@@ -108,27 +107,11 @@ public class KDTree implements Geometry {
       final int[] lessPrims = new int[members.length];
       final int[] greaterPrims = new int[members.length];
       int lidx = 0, gidx = 0;
-      if (splitAxis == 0) {
-         for (final int prim : members) {
-            if (bounds[prim].minXYZ.x < split)
-               lessPrims[lidx++] = prim;
-            if (bounds[prim].maxXYZ.x >= split)
-               greaterPrims[gidx++] = prim;
-         }
-      } else if (splitAxis == 1) {
-         for (final int prim : members) {
-            if (bounds[prim].minXYZ.y < split)
-               lessPrims[lidx++] = prim;
-            if (bounds[prim].maxXYZ.y >= split)
-               greaterPrims[gidx++] = prim;
-         }
-      } else if (splitAxis == 2) {
-         for (final int prim : members) {
-            if (bounds[prim].minXYZ.z < split)
-               lessPrims[lidx++] = prim;
-            if (bounds[prim].maxXYZ.z >= split)
-               greaterPrims[gidx++] = prim;
-         }
+      for (final int prim : members) {
+         if (bounds[prim].minXYZ[splitAxis] < split)
+            lessPrims[lidx++] = prim;
+         if (bounds[prim].maxXYZ[splitAxis] >= split)
+            greaterPrims[gidx++] = prim;
       }
       lgPrims = new int[][] { Arrays.copyOf(lessPrims, lidx), Arrays.copyOf(greaterPrims, gidx) };
       return lgPrims;
@@ -136,50 +119,25 @@ public class KDTree implements Geometry {
 
    private float findSplitLocationMedianMin(final int[] members, final AxisAlignedBoundingBox[] bounds,
          final byte splitAxis, final AxisAlignedBoundingBox nodeBounds) {
-      // TODO: need to ensure the split actually occurs within the bounds of the kd-node!
       final float[] splitCandidates = new float[members.length];
       int idx = 0;
-      if (splitAxis == 0) {
-         for (final int prim : members) {
-            splitCandidates[idx++] = (float) bounds[prim].minXYZ.x;
-         }
-      } else if (splitAxis == 1) {
-         for (final int prim : members) {
-            splitCandidates[idx++] = (float) bounds[prim].minXYZ.y;
-         }
-      } else if (splitAxis == 2) {
-         for (final int prim : members) {
-            splitCandidates[idx++] = (float) bounds[prim].minXYZ.z;
-         }
+      for (final int prim : members) {
+         splitCandidates[idx++] = (float) bounds[prim].minXYZ[splitAxis];
       }
       Arrays.sort(splitCandidates);
       final float split = splitCandidates[splitCandidates.length / 2];
-      if (splitAxis == 0) {
-         if (split >= nodeBounds.maxXYZ.x || split <= nodeBounds.minXYZ.x)
-            return Float.POSITIVE_INFINITY;
-      } else if (splitAxis == 1) {
-         if (split >= nodeBounds.maxXYZ.y || split <= nodeBounds.minXYZ.y)
-            return Float.POSITIVE_INFINITY;
-      } else {
-         if (split >= nodeBounds.maxXYZ.z || split <= nodeBounds.minXYZ.z)
-            return Float.POSITIVE_INFINITY;
-      }
+      // TODO: need to ensure the split actually occurs within the bounds of the kd-node!,
+      //But this generates a really bad tree.
+      if (split >= nodeBounds.maxXYZ[splitAxis] || split <= nodeBounds.minXYZ[splitAxis])
+         return Float.POSITIVE_INFINITY;
       return split;
    }
 
    private static AxisAlignedBoundingBox boundsForChild(final AxisAlignedBoundingBox nodeBounds,
          final double splitLocation, final byte axis, final boolean lessChild) {
-      final AxisAlignedBoundingBox childBounds = new AxisAlignedBoundingBox();
-      childBounds.minXYZ.set(nodeBounds.minXYZ);
-      childBounds.maxXYZ.set(nodeBounds.maxXYZ);
-      final Vec3 minMaxLimit = (lessChild) ? childBounds.maxXYZ : childBounds.minXYZ;
-      if (axis == X_AXIS) {
-         minMaxLimit.x = splitLocation;
-      } else if (axis == Y_AXIS) {
-         minMaxLimit.y = splitLocation;
-      } else {
-         minMaxLimit.z = splitLocation;
-      }
+      final AxisAlignedBoundingBox childBounds = new AxisAlignedBoundingBox(nodeBounds);
+      final double[] minMaxLimit = (lessChild) ? childBounds.maxXYZ : childBounds.minXYZ;
+      minMaxLimit[axis] = splitLocation;
       return childBounds;
    }
 

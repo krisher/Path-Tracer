@@ -30,13 +30,13 @@ public class KDTreeTest {
             if (!leaf) {
                if (splitAxis == KDTree.X_AXIS) {
                   Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
-                        + " for split axis X.", splitLocation < bounds.maxXYZ.x && splitLocation > bounds.minXYZ.x);
+                        + " for split axis X.", splitLocation < bounds.maxXYZ[0] && splitLocation > bounds.minXYZ[0]);
                } else if (splitAxis == KDTree.Y_AXIS) {
                   Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
-                        + " for split axis Y.", splitLocation < bounds.maxXYZ.y && splitLocation > bounds.minXYZ.y);
+                        + " for split axis Y.", splitLocation < bounds.maxXYZ[1] && splitLocation > bounds.minXYZ[1]);
                } else {
                   Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
-                        + " for split axis Z.", splitLocation < bounds.maxXYZ.z && splitLocation > bounds.minXYZ.z);
+                        + " for split axis Z.", splitLocation < bounds.maxXYZ[2] && splitLocation > bounds.minXYZ[2]);
                }
             }
          }
