@@ -21,23 +21,15 @@ public class KDTreeTest {
    @Test
    public void splitLocationsShouldBeInNodeRange() throws Exception {
       final Partitionable geometry = createOpenBoxGeometry();
-      final KDTree tree = new KDTree(new Partitionable[] { geometry }, 20, 2);
+      final KDTree tree = new KDTree(20, 2, new Partitionable[] { geometry });
       final KDNodeVisitor visitor = new KDNodeVisitor() {
 
          @Override
          public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
                final int childCount, final float splitLocation, final int splitAxis) throws Exception {
             if (!leaf) {
-               if (splitAxis == KDTree.X_AXIS) {
-                  Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
-                        + " for split axis X.", splitLocation < bounds.maxXYZ[0] && splitLocation > bounds.minXYZ[0]);
-               } else if (splitAxis == KDTree.Y_AXIS) {
-                  Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
-                        + " for split axis Y.", splitLocation < bounds.maxXYZ[1] && splitLocation > bounds.minXYZ[1]);
-               } else {
-                  Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
-                        + " for split axis Z.", splitLocation < bounds.maxXYZ[2] && splitLocation > bounds.minXYZ[2]);
-               }
+               Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds
+                                 + " for split axis " + splitAxis + ".", splitLocation < bounds.maxXYZ[splitAxis] && splitLocation > bounds.minXYZ[splitAxis]);
             }
          }
       };

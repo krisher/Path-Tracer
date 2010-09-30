@@ -312,7 +312,7 @@ public class RTDemo {
       scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.8), new Vec3(-2, -0.5, 0), false));
       final TriangleMesh bunnyMesh = loadBunny();
       final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
-      final KDTree accel = new KDTree(new Partitionable[] { bunnyMesh }, 20, 2);
+      final KDTree accel = new KDTree(20, 2, new Partitionable[] { bunnyMesh });
       kdTimer.stop().print(System.out);
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
@@ -335,12 +335,9 @@ public class RTDemo {
 
       bunnyMesh.setMaterial(blueGreenMixedRefractive);
       final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
-      final KDTree accel = new KDTree(new Partitionable[] { bunnyMesh, groundPlane(whiteLambert, true) }, 20, 2);
+      final KDTree accel = new KDTree(20, 2, new Partitionable[] { bunnyMesh, groundPlane(whiteLambert, true) });
       kdTimer.stop().print(System.out);
-      System.out.println("Min Leaf Depth: " + accel.getMinDepth());
-      System.out.println("Max Leaf Depth: " + accel.getMaxDepth());
-      System.out.println("Avg Leaf Depth: " + accel.getAvgDepth());
-      System.out.println("Avg Primitives/Leaf: " + accel.getAvgPrimitiveCount());
+      accel.printMetrics(System.out);
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
       cam.lookAt(bounds.center(), 25, 180, bounds.diagonalLength());
