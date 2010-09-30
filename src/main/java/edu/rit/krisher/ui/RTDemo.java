@@ -337,6 +337,10 @@ public class RTDemo {
       final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
       final KDTree accel = new KDTree(new Partitionable[] { bunnyMesh, groundPlane(whiteLambert, true) }, 20, 2);
       kdTimer.stop().print(System.out);
+      System.out.println("Min Leaf Depth: " + accel.getMinDepth());
+      System.out.println("Max Leaf Depth: " + accel.getMaxDepth());
+      System.out.println("Avg Leaf Depth: " + accel.getAvgDepth());
+      System.out.println("Avg Primitives/Leaf: " + accel.getAvgPrimitiveCount());
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
       cam.lookAt(bounds.center(), 25, 180, bounds.diagonalLength());
