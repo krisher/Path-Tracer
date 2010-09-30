@@ -10,7 +10,7 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 /**
  *
  */
-public class MedianPartitionStrategy implements KDPartitionStrategy {
+public final class MedianPartitionStrategy implements KDPartitionStrategy {
 
    /*
     * @see edu.rit.krisher.scene.geometry.acceleration.KDPartitionStrategy#findSplitLocation(int[],
@@ -41,7 +41,7 @@ public class MedianPartitionStrategy implements KDPartitionStrategy {
     * @param splitAxis
     * @return
     */
-   private float findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds, final int splitAxis) {
+   private final float findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds, final int splitAxis) {
       final float[] splitCandidates = new float[members.length];
       int idx = 0;
       for (final int prim : members) {
