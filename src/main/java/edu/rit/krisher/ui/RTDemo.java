@@ -24,6 +24,7 @@ import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.scene.material.PhongSpecularBRDF;
 import edu.rit.krisher.scene.material.RefractiveBRDF;
 import edu.rit.krisher.scene.material.RingsPattern;
+import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Quat;
 import edu.rit.krisher.vecmath.Vec3;
 
@@ -288,7 +289,7 @@ public class RTDemo {
    private static SceneDescription bunnyScene(final double lightPower) {
       final PinholeCamera cam = new PinholeCamera();
       final Scene scene = new Scene();
-      scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -0.5, 0), false));
+      scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.6, whiteMirror, 0.4), new Vec3(-2, -0.5, 0), false));
 
       ZipInputStream stream = null;
       try {
@@ -318,19 +319,23 @@ public class RTDemo {
    }
 
    private static SceneDescription bunnySceneKD(final double lightPower) {
-      final PinholeCamera cam = new PinholeCamera();
+      final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
-      scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -0.5, 0), false));
+      scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.8), new Vec3(-2, -0.5, 0), false));
 
       ZipInputStream stream = null;
       try {
          stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
          stream.getNextEntry();
          final TriangleMesh bunnyMesh = PLYParser.parseTriangleMesh(stream);
+         final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
          final KDTree accel = new KDTree(new Partitionable[] { bunnyMesh }, 10, 5);
+         kdTimer.stop().print(System.out);
          scene.add(accel);
          final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
-         cam.lookAt(bounds.center(), 35, 180, bounds.diagonalLength() * 0.8);
+         cam.lookAt(bounds.center(), 25, 180, bounds.diagonalLength());
+         cam.setFocalDist(bounds.diagonalLength());
+         cam.setAperture(1 / 100.0);
 
       } catch (final IOException ioe) {
          ioe.printStackTrace();
@@ -345,7 +350,7 @@ public class RTDemo {
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), lightPower));
 
       cam.setFOVAngle(56.14);
-      scene.setBackground(new Color(0.25, 0.25, 0.65));
+      // scene.setBackground(new Color(0.25, 0.25, 0.65));
       return new SceneDescription("Bunny Scene KD (Light = " + lightPower + ")", scene, cam);
 
    }
