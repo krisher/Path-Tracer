@@ -8,12 +8,13 @@ import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.vecmath.Ray;
+import edu.rit.krisher.vecmath.Vec3;
 
 public class KDTree implements Geometry {
 
-   private static final byte X_AXIS = 0;
-   private static final byte Y_AXIS = 1;
-   private static final byte Z_AXIS = 2;
+   public static final byte X_AXIS = 0;
+   public static final byte Y_AXIS = 1;
+   public static final byte Z_AXIS = 2;
 
    private final KDNode root;
    private final Geometry[] primitives;
@@ -48,7 +49,7 @@ public class KDTree implements Geometry {
          members[i] = i;
       }
 
-      root = partition(members, bounds, maxDepth, (byte) 0);
+      root = partition(members, bounds, maxDepth, (byte) 0, treeBounds);
    }
 
    @Override
@@ -71,23 +72,33 @@ public class KDTree implements Geometry {
       return treeBounds.clone();
    }
 
+   public void visitTreeNodes(final KDNodeVisitor visitor) throws Exception {
+      if (root != null) {
+         root.visit(0, treeBounds, visitor);
+      }
+   }
+
    private KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depthRemaining,
-         final byte splitAxis) {
+         byte splitAxis, final AxisAlignedBoundingBox nodeBounds) {
 
       if (members.length < minPrims || depthRemaining == 0) {
-         return new KDLeafNode(members);
+         return new KDLeafNodeImpl(members);
       }
 
-      final float split = findSplitLocationMedianMin(members, bounds, splitAxis);
+      final float split = findSplitLocationMedianMin(members, bounds, splitAxis, nodeBounds);
+      if (Float.isInfinite(split)) {
+         return new KDLeafNodeImpl(members);
+      }
 
       final int[][] lgPrims;
       lgPrims = partition(members, bounds, splitAxis, split);
 
-      final KDInteriorNode node = new KDInteriorNode(split, splitAxis);
+      final KDInteriorNodeImpl node = new KDInteriorNodeImpl(split, splitAxis);
+      splitAxis = (byte) ((splitAxis + 1) % 3);
       if (lgPrims[0].length > 0)
-         node.lessChild = partition(lgPrims[0], bounds, depthRemaining - 1, (byte) ((splitAxis + 1) % 3));
+         node.lessChild = partition(lgPrims[0], bounds, depthRemaining - 1, splitAxis, boundsForChild(nodeBounds, split, splitAxis, true));
       if (lgPrims[1].length > 0)
-         node.greaterEqChild = partition(lgPrims[1], bounds, depthRemaining - 1, (byte) ((splitAxis + 1) % 3));
+         node.greaterEqChild = partition(lgPrims[1], bounds, depthRemaining - 1, splitAxis, boundsForChild(nodeBounds, split, splitAxis, false));
       return node;
    }
 
@@ -124,8 +135,8 @@ public class KDTree implements Geometry {
    }
 
    private float findSplitLocationMedianMin(final int[] members, final AxisAlignedBoundingBox[] bounds,
-         final byte splitAxis) {
-      //TODO: need to ensure the split actually occurs within the bounds of the kd-node!
+         final byte splitAxis, final AxisAlignedBoundingBox nodeBounds) {
+      // TODO: need to ensure the split actually occurs within the bounds of the kd-node!
       final float[] splitCandidates = new float[members.length];
       int idx = 0;
       if (splitAxis == 0) {
@@ -143,24 +154,123 @@ public class KDTree implements Geometry {
       }
       Arrays.sort(splitCandidates);
       final float split = splitCandidates[splitCandidates.length / 2];
+      if (splitAxis == 0) {
+         if (split >= nodeBounds.maxXYZ.x || split <= nodeBounds.minXYZ.x)
+            return Float.POSITIVE_INFINITY;
+      } else if (splitAxis == 1) {
+         if (split >= nodeBounds.maxXYZ.y || split <= nodeBounds.minXYZ.y)
+            return Float.POSITIVE_INFINITY;
+      } else {
+         if (split >= nodeBounds.maxXYZ.z || split <= nodeBounds.minXYZ.z)
+            return Float.POSITIVE_INFINITY;
+      }
       return split;
    }
 
+   private static AxisAlignedBoundingBox boundsForChild(final AxisAlignedBoundingBox nodeBounds,
+         final double splitLocation, final byte axis, final boolean lessChild) {
+      final AxisAlignedBoundingBox childBounds = new AxisAlignedBoundingBox();
+      childBounds.minXYZ.set(nodeBounds.minXYZ);
+      childBounds.maxXYZ.set(nodeBounds.maxXYZ);
+      final Vec3 minMaxLimit = (lessChild) ? childBounds.maxXYZ : childBounds.minXYZ;
+      if (axis == X_AXIS) {
+         minMaxLimit.x = splitLocation;
+      } else if (axis == Y_AXIS) {
+         minMaxLimit.y = splitLocation;
+      } else {
+         minMaxLimit.z = splitLocation;
+      }
+      return childBounds;
+   }
 
-   private static interface KDNode {
+   public int getMaxDepth() {
+      final int[] maxDepth = new int[1];
+      try {
+         visitTreeNodes(new KDNodeVisitor() {
+            @Override
+            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
+                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+               if (leaf && depth > maxDepth[0])
+                  maxDepth[0] = depth;
+            }
+         });
+      } catch (final Exception e) {
+         // Unreachable...
+      }
+      return maxDepth[0];
+   }
+
+   public float getAvgDepth() {
+      final int[] avgDepth = new int[2];
+      try {
+         visitTreeNodes(new KDNodeVisitor() {
+            @Override
+            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
+                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+               if (leaf) {
+                  avgDepth[0] += depth;
+                  ++avgDepth[1];
+               }
+            }
+         });
+      } catch (final Exception e) {
+         // Unreachable...
+      }
+      return avgDepth[0] / (float) avgDepth[1];
+   }
+
+   public double getMinDepth() {
+      final int[] minDepth = new int[] { Integer.MAX_VALUE };
+      try {
+         visitTreeNodes(new KDNodeVisitor() {
+            @Override
+            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
+                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+               if (leaf && depth < minDepth[0])
+                  minDepth[0] = depth;
+            }
+         });
+      } catch (final Exception e) {
+         // Unreachable...
+      }
+      return minDepth[0];
+   }
+
+   public float getAvgPrimitiveCount() {
+      final int[] avgCount = new int[2];
+      try {
+         visitTreeNodes(new KDNodeVisitor() {
+            @Override
+            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
+                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+               if (leaf) {
+                  avgCount[0] += childCount;
+                  ++avgCount[1];
+               }
+            }
+         });
+      } catch (final Exception e) {
+         // Unreachable...
+      }
+      return avgCount[0] / (float) avgCount[1];
+   }
+
+   protected static interface KDNode {
 
       public double intersects(final Ray ray, final double tmin, final double tmax);
 
       public void getHitData(final HitData data, final Ray ray, final double isectDist);
+
+      public void visit(int depth, AxisAlignedBoundingBox nodeBounds, KDNodeVisitor vistor) throws Exception;
    }
 
-   private class KDInteriorNode implements KDNode {
+   protected class KDInteriorNodeImpl implements KDNode {
       KDNode lessChild;
       KDNode greaterEqChild;
       final float splitLocation;
       final byte axis;
 
-      KDInteriorNode(final float splitLocation, final byte splitAxis) {
+      KDInteriorNodeImpl(final float splitLocation, final byte splitAxis) {
          this.splitLocation = splitLocation;
          this.axis = splitAxis;
       }
@@ -247,12 +357,24 @@ public class KDTree implements Geometry {
             greaterEqChild.getHitData(data, ray, isectDist);
       }
 
+      @Override
+      public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
+            throws Exception {
+         if (lessChild != null)
+            lessChild.visit(depth + 1, boundsForChild(nodeBounds, splitLocation, axis, true), visitor);
+
+         if (greaterEqChild != null)
+            greaterEqChild.visit(depth + 1, boundsForChild(nodeBounds, splitLocation, axis, false), visitor);
+
+         visitor.visitNode(depth, nodeBounds, false, ((lessChild == null) ? 0 : 1) + ((greaterEqChild == null) ? 0 : 1), splitLocation, axis);
+      }
+
    }
 
-   private class KDLeafNode implements KDNode {
+   protected class KDLeafNodeImpl implements KDNode {
       final int[] primitives;
 
-      public KDLeafNode(final int[] primitives) {
+      public KDLeafNodeImpl(final int[] primitives) {
          this.primitives = primitives;
       }
 
@@ -277,5 +399,16 @@ public class KDTree implements Geometry {
             }
          }
       }
+
+      /*
+       * @see edu.rit.krisher.scene.geometry.acceleration.KDTree.KDNode#visit(int,
+       * edu.rit.krisher.scene.AxisAlignedBoundingBox, edu.rit.krisher.scene.geometry.acceleration.KDNodeVisitor)
+       */
+      @Override
+      public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
+            throws Exception {
+         visitor.visitNode(depth, nodeBounds, true, primitives.length, 0, -1);
+      }
+
    }
 }

@@ -37,7 +37,7 @@ public class AxisAlignedBoundingBox implements Cloneable {
 
    public Vec3 center() {
       return new Vec3(minXYZ.x + (maxXYZ.x - minXYZ.x) * 0.5, minXYZ.y + (maxXYZ.y - minXYZ.y) * 0.5, minXYZ.z
-                      + (maxXYZ.z - minXYZ.z) * 0.5);
+            + (maxXYZ.z - minXYZ.z) * 0.5);
    }
 
    public double xSpan() {
@@ -69,7 +69,16 @@ public class AxisAlignedBoundingBox implements Cloneable {
          return box;
       } catch (final CloneNotSupportedException cne) {
          assert false : "Clone should be supported!";
-      return null;
+         return null;
       }
    }
+
+   /*
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString() {
+      return "AxisAlignedBoundingBox [minXYZ=" + minXYZ + ", maxXYZ=" + maxXYZ + "]";
+   }
+
 }
