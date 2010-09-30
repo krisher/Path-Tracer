@@ -37,110 +37,93 @@ public class Ray {
    }
 
    public double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
-      final Ray ray = this;
+      final double[] result = new double[2];
+      if (intersectsBoxParametric(result, new Vec3(center.x - xSize, center.y - ySize, center.z - zSize), new Vec3(center.x
+                                                                                                                   + xSize, center.y + ySize, center.z + zSize))) {
+         return result[0] > 0 ? result[0] : result[1];
+      }
+      return 0;
+   }
+
+   public boolean intersectsBoxParametric(final double[] paramsOut, final Vec3 minXYZ, final Vec3 maxXYZ) {
       // final Vec3 rayOrigin = new Vec3(ray.origin);
       // rayOrigin.subtract(center);
-      final Vec3 rayDirection = ray.direction;
-      double nearIsect = Double.NEGATIVE_INFINITY;
-      double farIsect = Double.POSITIVE_INFINITY;
+      paramsOut[0] = Double.NEGATIVE_INFINITY;
+      paramsOut[1] = Double.POSITIVE_INFINITY;
 
       double t1, t2;
-      if (rayDirection.x != 0) {
-         t1 = (-xSize - origin.x + center.x) / rayDirection.x;
-         t2 = (xSize - origin.x + center.x) / rayDirection.x;
+      if (direction.x != 0) {
+         t1 = (minXYZ.x - origin.x) / direction.x;
+         t2 = (maxXYZ.x - origin.x) / direction.x;
          if (t1 > t2) {
-            if (t2 > nearIsect) {
-               nearIsect = t2;
-            }
-            if (t1 < farIsect) {
-               farIsect = t1;
-            }
+            paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
+            paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
          } else {
-            if (t1 > nearIsect) {
-               nearIsect = t1;
-            }
-            if (t2 < farIsect) {
-               farIsect = t2;
-            }
+            paramsOut[0] = t1 > paramsOut[0] ? t1 : paramsOut[0];
+            paramsOut[1] = t2 < paramsOut[1] ? t2 : paramsOut[1];
          }
-         if (nearIsect > farIsect || farIsect < 0) {
-            return 0;
+         if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+            return false;
          }
       } else {
          /*
           * Ray runs parallel to x, can only intersect if origin x is between
           * +/- xSize
           */
-         if (origin.x + center.x > xSize || origin.x + center.x < -xSize) {
-            return 0;
+         if (origin.x > maxXYZ.x || origin.x < minXYZ.x) {
+            return false;
          }
       }
 
-      if (rayDirection.y != 0) {
-         t1 = (-ySize - origin.y + center.y) / rayDirection.y;
-         t2 = (ySize - origin.y + center.y) / rayDirection.y;
+      if (direction.y != 0) {
+         t1 = (minXYZ.y - origin.y) / direction.y;
+         t2 = (maxXYZ.y - origin.y) / direction.y;
          if (t1 > t2) {
-            if (t2 > nearIsect) {
-               nearIsect = t2;
-            }
-            if (t1 < farIsect) {
-               farIsect = t1;
-            }
+            paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
+            paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
          } else {
-            if (t1 > nearIsect) {
-               nearIsect = t1;
-            }
-            if (t2 < farIsect) {
-               farIsect = t2;
-            }
+            paramsOut[0] = t1 > paramsOut[0] ? t1 : paramsOut[0];
+            paramsOut[1] = t2 < paramsOut[1] ? t2 : paramsOut[1];
          }
-         if (nearIsect > farIsect || farIsect < 0) {
-            return 0;
+         if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+            return false;
          }
       } else {
          /*
-          * Ray runs parallel to y, can only intersect if origin y is between
-          * +/- ySize
+          * Ray runs parallel to x, can only intersect if origin x is between
+          * +/- xSize
           */
-         if (origin.y + center.y > ySize || origin.y + center.y < -ySize) {
-            return 0;
+         if (origin.y > maxXYZ.y || origin.y < minXYZ.y) {
+            return false;
          }
       }
 
-      if (rayDirection.z != 0) {
-         t1 = (-zSize - origin.z + center.z) / rayDirection.z;
-         t2 = (zSize - origin.z + center.z) / rayDirection.z;
+      if (direction.z != 0) {
+         t1 = (minXYZ.z - origin.z) / direction.z;
+         t2 = (maxXYZ.z - origin.z) / direction.z;
          if (t1 > t2) {
-            if (t2 > nearIsect) {
-               nearIsect = t2;
-            }
-            if (t1 < farIsect) {
-               farIsect = t1;
-            }
+            paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
+            paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
          } else {
-            if (t1 > nearIsect) {
-               nearIsect = t1;
-            }
-            if (t2 < farIsect) {
-               farIsect = t2;
-            }
+            paramsOut[0] = t1 > paramsOut[0] ? t1 : paramsOut[0];
+            paramsOut[1] = t2 < paramsOut[1] ? t2 : paramsOut[1];
+         }
+         if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+            return false;
          }
       } else {
          /*
-          * Ray runs parallel to z, can only intersect if origin z is between
-          * +/- zSize
+          * Ray runs parallel to x, can only intersect if origin x is between
+          * +/- xSize
           */
-         if (origin.z + center.z > zSize || origin.z + center.z < -zSize) {
-            return 0;
+         if (origin.z > maxXYZ.z || origin.z < minXYZ.z) {
+            return false;
          }
       }
-      if (nearIsect > farIsect || farIsect < 0) {
-         return 0;
+      if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+         return false;
       }
-      if (nearIsect < 0) {
-         return farIsect;
-      }
-      return nearIsect;
+      return true;
    }
 
    public double intersectsPlane(final Vec3 planeNormal, final double planeDist) {

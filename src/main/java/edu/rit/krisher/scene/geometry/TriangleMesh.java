@@ -4,6 +4,7 @@ import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.geometry.acceleration.Partitionable;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.material.Color;
@@ -11,7 +12,7 @@ import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
-public class TriangleMesh implements Geometry {
+public class TriangleMesh implements Partitionable, Geometry {
 
    private Material material = new LambertBRDF(Color.white);
    private final Vec3Buffer vertices;
@@ -37,7 +38,7 @@ public class TriangleMesh implements Geometry {
       final Vec3 e2 = new Vec3();
       for (int idx = 0; idx < triCount; ++idx) {
 
-         getTriangle(idx * 3, v0, e1, e2);
+         getTriangleVEE(idx * 3, v0, e1, e2);
 
          final double t = ray.intersectsTriangle(v0, e1, e2);
          if (isectDist == t) {
@@ -46,9 +47,7 @@ public class TriangleMesh implements Geometry {
          }
       }
       if (isectTri >= 0) {
-         data.material = material;
-         data.materialCoords = null;
-         data.surfaceNormal = normalFor(isectTri, ray.direction);
+         getTriangleHitData(isectTri, data, ray);
          return;
       }
    }
@@ -57,7 +56,7 @@ public class TriangleMesh implements Geometry {
       final Vec3 v0 = new Vec3();
       final Vec3 e1 = new Vec3();
       final Vec3 e2 = new Vec3();
-      getTriangle(idx * 3, v0, e1, e2);
+      getTriangleVEE(idx * 3, v0, e1, e2);
       final Vec3 normal = e1.cross(e2).normalize();
       if (rayDirection.dot(normal) > 0)
          return normal.inverted();
@@ -83,7 +82,7 @@ public class TriangleMesh implements Geometry {
       final Vec3 e1 = new Vec3();
       final Vec3 e2 = new Vec3();
       for (int idx = 0; idx < triCount; ++idx) {
-         getTriangle(idx * 3, v0, e1, e2);
+         getTriangleVEE(idx * 3, v0, e1, e2);
 
          final double t = ray.intersectsTriangle(v0, e1, e2);
          if (t > 0 && t < isectDist) {
@@ -97,7 +96,7 @@ public class TriangleMesh implements Geometry {
       return 0;
    }
 
-   private final void getTriangle(final int idxOffset, final Vec3 v0, final Vec3 edge1, final Vec3 edge2) {
+   private final void getTriangleVEE(final int idxOffset, final Vec3 v0, final Vec3 edge1, final Vec3 edge2) {
       vertices.get(triangleIndices.get(idxOffset), v0);
       vertices.get(triangleIndices.get(idxOffset + 1), edge1);
       edge1.subtract(v0);
@@ -116,5 +115,60 @@ public class TriangleMesh implements Geometry {
 
    public void setMaterial(final Material material) {
       this.material = material;
+   }
+
+   @Override
+   public Geometry[] getPrimitives() {
+      final Geometry[] triangles = new Geometry[triCount];
+      for (int i = 0; i < triCount; i++) {
+         triangles[i] = new MeshTriangle(i);
+      }
+      return triangles;
+   }
+
+   private final void getTriangleHitData(final int triangleIndex, final HitData data, final Ray ray) {
+      data.material = material;
+      data.materialCoords = null;
+      data.surfaceNormal = normalFor(triangleIndex, ray.direction);
+   }
+
+   class MeshTriangle implements Geometry {
+      private final int triangleIndexOffset;
+
+      public MeshTriangle(final int triangleIndex) {
+         this.triangleIndexOffset = triangleIndex * 3;
+      }
+
+      @Override
+      public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+         getTriangleHitData(triangleIndexOffset / 3, data, ray);
+      }
+
+      @Override
+      public double intersects(final Ray ray) {
+         final Vec3 v0 = new Vec3();
+         final Vec3 e1 = new Vec3();
+         final Vec3 e2 = new Vec3();
+         getTriangleVEE(triangleIndexOffset, v0, e1, e2);
+         return ray.intersectsTriangle(v0, e1, e2);
+      }
+
+      @Override
+      public AxisAlignedBoundingBox getBounds() {
+         final AxisAlignedBoundingBox aabb = new AxisAlignedBoundingBox();
+         final Vec3 v0 = new Vec3(), v1 = new Vec3(), v2 = new Vec3();
+         vertices.get(triangleIndices.get(triangleIndexOffset), v0);
+         vertices.get(triangleIndices.get(triangleIndexOffset + 1), v1);
+         vertices.get(triangleIndices.get(triangleIndexOffset + 2), v2);
+         aabb.minXYZ.x = Math.min(v0.x, Math.min(v1.x, v2.x));
+         aabb.minXYZ.y = Math.min(v0.y, Math.min(v1.y, v2.y));
+         aabb.minXYZ.z = Math.min(v0.z, Math.min(v1.z, v2.z));
+
+         aabb.maxXYZ.x = Math.max(v0.x, Math.max(v1.x, v2.x));
+         aabb.maxXYZ.y = Math.max(v0.y, Math.max(v1.y, v2.y));
+         aabb.maxXYZ.z = Math.max(v0.z, Math.max(v1.z, v2.z));
+         return aabb;
+      }
+
    }
 }

@@ -37,19 +37,19 @@ public class AxisAlignedBoundingBox implements Cloneable {
 
    public Vec3 center() {
       return new Vec3(minXYZ.x + (maxXYZ.x - minXYZ.x) * 0.5, minXYZ.y + (maxXYZ.y - minXYZ.y) * 0.5, minXYZ.z
-            + (maxXYZ.z - minXYZ.z) * 0.5);
+                      + (maxXYZ.z - minXYZ.z) * 0.5);
    }
 
    public double xSpan() {
-      return Math.abs(maxXYZ.x - minXYZ.x);
+      return maxXYZ.x - minXYZ.x;
    }
 
    public double ySpan() {
-      return Math.abs(maxXYZ.y - minXYZ.y);
+      return maxXYZ.y - minXYZ.y;
    }
 
    public double zSpan() {
-      return Math.abs(maxXYZ.z - minXYZ.z);
+      return maxXYZ.z - minXYZ.z;
    }
 
    public double diagonalLength() {

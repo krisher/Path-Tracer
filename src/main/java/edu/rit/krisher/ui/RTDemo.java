@@ -14,6 +14,8 @@ import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.Box;
 import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
+import edu.rit.krisher.scene.geometry.acceleration.KDTree;
+import edu.rit.krisher.scene.geometry.acceleration.Partitionable;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
@@ -315,6 +317,39 @@ public class RTDemo {
 
    }
 
+   private static SceneDescription bunnySceneKD(final double lightPower) {
+      final PinholeCamera cam = new PinholeCamera();
+      final Scene scene = new Scene();
+      scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -0.5, 0), false));
+
+      ZipInputStream stream = null;
+      try {
+         stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
+         stream.getNextEntry();
+         final TriangleMesh bunnyMesh = PLYParser.parseTriangleMesh(stream);
+         final KDTree accel = new KDTree(new Partitionable[] { bunnyMesh }, 10, 5);
+         scene.add(accel);
+         final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
+         cam.lookAt(bounds.center(), 35, 180, bounds.diagonalLength() * 0.8);
+
+      } catch (final IOException ioe) {
+         ioe.printStackTrace();
+      } finally {
+         try {
+            stream.close();
+         } catch (final IOException e) {
+            e.printStackTrace();
+         }
+      }
+
+      scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), lightPower));
+
+      cam.setFOVAngle(56.14);
+      scene.setBackground(new Color(0.25, 0.25, 0.65));
+      return new SceneDescription("Bunny Scene KD (Light = " + lightPower + ")", scene, cam);
+
+   }
+
    private static SceneDescription dofScene() {
       final DoFCamera cam = new DoFCamera();
       final Scene scene = new Scene();
@@ -376,7 +411,8 @@ public class RTDemo {
    public static void main(final String[] args) {
       final RTFrame frame = new RTFrame();
 
-      frame.setScenes(new SceneDescription[] { bunnyScene(75), whittedScene(75), whittedScene(150), whittedScene(500),
+      frame.setScenes(new SceneDescription[] { bunnyScene(75), bunnySceneKD(75), whittedScene(75), whittedScene(150),
+            whittedScene(500),
             dofScene(), causticScene(), multiLightScene(), diffuseTest1(), diffuseTest2(), diffuseTest3(),
             specularTest1(), specularTest2(), specularTest3(),
 
