@@ -78,7 +78,7 @@ public class KDTree implements Geometry {
          return new KDLeafNode(members);
       }
 
-      final float split = findSplitLocation(members, bounds, splitAxis);
+      final float split = findSplitLocationMedianMin(members, bounds, splitAxis);
 
       final int[][] lgPrims;
       lgPrims = partition(members, bounds, splitAxis, split);
@@ -123,7 +123,9 @@ public class KDTree implements Geometry {
       return lgPrims;
    }
 
-   private float findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds, final byte splitAxis) {
+   private float findSplitLocationMedianMin(final int[] members, final AxisAlignedBoundingBox[] bounds,
+         final byte splitAxis) {
+      //TODO: need to ensure the split actually occurs within the bounds of the kd-node!
       final float[] splitCandidates = new float[members.length];
       int idx = 0;
       if (splitAxis == 0) {
@@ -143,6 +145,7 @@ public class KDTree implements Geometry {
       final float split = splitCandidates[splitCandidates.length / 2];
       return split;
    }
+
 
    private static interface KDNode {
 
@@ -178,11 +181,11 @@ public class KDTree implements Geometry {
 
          if (tCMin <= splitLocation) {
             if (tCMax < splitLocation) {
-		final double hitDist = (lessChild == null)?0:lessChild.intersects(ray, tmin, tmax);
+               final double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tmax);
                if (hitDist > 0)
                   return hitDist;
             } else if (tCMax == splitLocation) {
-               final double hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tmin, tmax);
+               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax);
                if (hitDist > 0)
                   return hitDist;
             } else {
@@ -194,17 +197,17 @@ public class KDTree implements Geometry {
                else
                   tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
                // less-child: use tmin, tsplit
-               double hitDist = (lessChild == null)?0:lessChild.intersects(ray, tmin, tsplit);
+               double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tsplit);
                if (hitDist > 0)
                   return hitDist;
                // greater-child: use tsplit, tmax
-               hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tsplit, tmax);
+               hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tsplit, tmax);
                if (hitDist > 0)
                   return hitDist;
             }
          } else {
             if (tCMax > splitLocation) {
-               final double hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tmin, tmax);
+               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax);
                if (hitDist > 0)
                   return hitDist;
             } else {
@@ -216,11 +219,11 @@ public class KDTree implements Geometry {
                else
                   tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
                // greater-child: use tmin, tsplit
-               double hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tmin, tsplit);
+               double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tsplit);
                if (hitDist > 0)
                   return hitDist;
                // less-child: use tsplit, tmax
-               hitDist = (lessChild == null)?0:lessChild.intersects(ray, tsplit, tmax);
+               hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tsplit, tmax);
                if (hitDist > 0)
                   return hitDist;
             }
@@ -230,22 +233,18 @@ public class KDTree implements Geometry {
 
       @Override
       public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+         final double isectCoord;
          if (axis == X_AXIS) {
-            if (ray.origin.x + ray.direction.x * isectDist < splitLocation)
-               lessChild.getHitData(data, ray, isectDist);
-            else
-               greaterEqChild.getHitData(data, ray, isectDist);
+            isectCoord = ray.origin.x + ray.direction.x * isectDist;
          } else if (axis == Y_AXIS) {
-            if (ray.origin.y + ray.direction.y * isectDist < splitLocation)
-               lessChild.getHitData(data, ray, isectDist);
-            else
-               greaterEqChild.getHitData(data, ray, isectDist);
+            isectCoord = ray.origin.y + ray.direction.y * isectDist;
          } else {
-            if (ray.origin.z + ray.direction.z * isectDist < splitLocation)
-               lessChild.getHitData(data, ray, isectDist);
-            else
-               greaterEqChild.getHitData(data, ray, isectDist);
+            isectCoord = ray.origin.z + ray.direction.z * isectDist;
          }
+         if (isectCoord < splitLocation)
+            lessChild.getHitData(data, ray, isectDist);
+         else
+            greaterEqChild.getHitData(data, ray, isectDist);
       }
 
    }
