@@ -178,11 +178,11 @@ public class KDTree implements Geometry {
 
          if (tCMin <= splitLocation) {
             if (tCMax < splitLocation) {
-               final double hitDist = lessChild.intersects(ray, tmin, tmax);
+		final double hitDist = (lessChild == null)?0:lessChild.intersects(ray, tmin, tmax);
                if (hitDist > 0)
                   return hitDist;
             } else if (tCMax == splitLocation) {
-               final double hitDist = greaterEqChild.intersects(ray, tmin, tmax);
+               final double hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tmin, tmax);
                if (hitDist > 0)
                   return hitDist;
             } else {
@@ -194,17 +194,17 @@ public class KDTree implements Geometry {
                else
                   tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
                // less-child: use tmin, tsplit
-               double hitDist = lessChild.intersects(ray, tmin, tsplit);
+               double hitDist = (lessChild == null)?0:lessChild.intersects(ray, tmin, tsplit);
                if (hitDist > 0)
                   return hitDist;
                // greater-child: use tsplit, tmax
-               hitDist = greaterEqChild.intersects(ray, tsplit, tmax);
+               hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tsplit, tmax);
                if (hitDist > 0)
                   return hitDist;
             }
          } else {
             if (tCMax > splitLocation) {
-               final double hitDist = greaterEqChild.intersects(ray, tmin, tmax);
+               final double hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tmin, tmax);
                if (hitDist > 0)
                   return hitDist;
             } else {
@@ -216,11 +216,11 @@ public class KDTree implements Geometry {
                else
                   tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
                // greater-child: use tmin, tsplit
-               double hitDist = greaterEqChild.intersects(ray, tmin, tsplit);
+               double hitDist = (greaterEqChild == null)?0:greaterEqChild.intersects(ray, tmin, tsplit);
                if (hitDist > 0)
                   return hitDist;
                // less-child: use tsplit, tmax
-               hitDist = lessChild.intersects(ray, tsplit, tmax);
+               hitDist = (lessChild == null)?0:lessChild.intersects(ray, tsplit, tmax);
                if (hitDist > 0)
                   return hitDist;
             }
