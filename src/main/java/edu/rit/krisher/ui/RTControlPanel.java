@@ -15,6 +15,8 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import edu.rit.krisher.util.Timer;
+
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -48,6 +50,8 @@ public class RTControlPanel extends JPanel {
    private final JButton startRTButton = new JButton("Start");
 
    private final JProgressBar progress = new JProgressBar();
+
+    private final Timer timer = new Timer("Total Ray Trace Time");
 
    private int workload;
    private int worked;
@@ -150,6 +154,7 @@ public class RTControlPanel extends JPanel {
    }
 
    public void workStarted(final int workLoad) {
+       timer.start();
       this.workload = workLoad;
       this.worked = 0;
 
@@ -177,6 +182,8 @@ public class RTControlPanel extends JPanel {
    }
 
    public void workCompleted() {
+       timer.stop();
+       timer.print(System.out);
       this.worked = workload;
       for (final Component comp : getComponents()) {
          if (comp != startRTButton) {

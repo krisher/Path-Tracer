@@ -101,10 +101,6 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
             maxZ = vec.z;
       }
 
-      final AxisAlignedBoundingBox box = new AxisAlignedBoundingBox();
-      box.minXYZ = new Vec3(minX, minY, minZ);
-      box.maxXYZ = new Vec3(maxX, maxY, maxZ);
-      return box;
-
+      return new AxisAlignedBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
    }
 }

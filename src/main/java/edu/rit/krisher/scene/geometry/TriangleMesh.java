@@ -110,7 +110,7 @@ public class TriangleMesh implements Partitionable, Geometry {
 
    @Override
    public AxisAlignedBoundingBox getBounds() {
-      return this.bounds.clone();
+      return new AxisAlignedBoundingBox(bounds);
    }
 
    public Material getMaterial() {
@@ -164,13 +164,8 @@ public class TriangleMesh implements Partitionable, Geometry {
          vertices.get(triangleIndices.get(triangleIndexOffset), v0);
          vertices.get(triangleIndices.get(triangleIndexOffset + 1), v1);
          vertices.get(triangleIndices.get(triangleIndexOffset + 2), v2);
-         aabb.minXYZ.x = Math.min(v0.x, Math.min(v1.x, v2.x));
-         aabb.minXYZ.y = Math.min(v0.y, Math.min(v1.y, v2.y));
-         aabb.minXYZ.z = Math.min(v0.z, Math.min(v1.z, v2.z));
-
-         aabb.maxXYZ.x = Math.max(v0.x, Math.max(v1.x, v2.x));
-         aabb.maxXYZ.y = Math.max(v0.y, Math.max(v1.y, v2.y));
-         aabb.maxXYZ.z = Math.max(v0.z, Math.max(v1.z, v2.z));
+         aabb.set(Math.min(v0.x, Math.min(v1.x, v2.x)), Math.min(v0.y, Math.min(v1.y, v2.y)), Math.min(v0.z, Math.min(v1.z, v2.z)),
+         Math.max(v0.x, Math.max(v1.x, v2.x)), Math.max(v0.y, Math.max(v1.y, v2.y)), Math.max(v0.z, Math.max(v1.z, v2.z)));
          return aabb;
       }
 

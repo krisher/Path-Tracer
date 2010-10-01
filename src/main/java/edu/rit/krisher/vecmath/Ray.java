@@ -39,13 +39,14 @@ public class Ray {
    public double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
       final double[] result = new double[2];
       if (intersectsBoxParametric(result, new Vec3(center.x - xSize, center.y - ySize, center.z - zSize), new Vec3(center.x
-                                                                                                                   + xSize, center.y + ySize, center.z + zSize))) {
+            + xSize, center.y + ySize, center.z + zSize))) {
          return result[0] > 0 ? result[0] : result[1];
       }
       return 0;
    }
 
-   public boolean intersectsBoxParametric(final double[] paramsOut, final Vec3 minXYZ, final Vec3 maxXYZ) {
+   public boolean intersectsBoxParametric(final double[] paramsOut, final double minX, final double minY,
+         final double minZ, final double maxX, final double maxY, final double maxZ) {
       // final Vec3 rayOrigin = new Vec3(ray.origin);
       // rayOrigin.subtract(center);
       paramsOut[0] = Double.NEGATIVE_INFINITY;
@@ -53,8 +54,8 @@ public class Ray {
 
       double t1, t2;
       if (direction.x != 0) {
-         t1 = (minXYZ.x - origin.x) / direction.x;
-         t2 = (maxXYZ.x - origin.x) / direction.x;
+         t1 = (minX - origin.x) / direction.x;
+         t2 = (maxX - origin.x) / direction.x;
          if (t1 > t2) {
             paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
             paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
@@ -70,14 +71,14 @@ public class Ray {
           * Ray runs parallel to x, can only intersect if origin x is between
           * +/- xSize
           */
-         if (origin.x > maxXYZ.x || origin.x < minXYZ.x) {
+         if (origin.x > maxX || origin.x < minX) {
             return false;
          }
       }
 
       if (direction.y != 0) {
-         t1 = (minXYZ.y - origin.y) / direction.y;
-         t2 = (maxXYZ.y - origin.y) / direction.y;
+         t1 = (minY - origin.y) / direction.y;
+         t2 = (maxY - origin.y) / direction.y;
          if (t1 > t2) {
             paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
             paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
@@ -93,14 +94,14 @@ public class Ray {
           * Ray runs parallel to x, can only intersect if origin x is between
           * +/- xSize
           */
-         if (origin.y > maxXYZ.y || origin.y < minXYZ.y) {
+         if (origin.y > maxY || origin.y < minY) {
             return false;
          }
       }
 
       if (direction.z != 0) {
-         t1 = (minXYZ.z - origin.z) / direction.z;
-         t2 = (maxXYZ.z - origin.z) / direction.z;
+         t1 = (minZ - origin.z) / direction.z;
+         t2 = (maxZ - origin.z) / direction.z;
          if (t1 > t2) {
             paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
             paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
@@ -116,7 +117,7 @@ public class Ray {
           * Ray runs parallel to x, can only intersect if origin x is between
           * +/- xSize
           */
-         if (origin.z > maxXYZ.z || origin.z < minXYZ.z) {
+         if (origin.z > maxZ || origin.z < minZ) {
             return false;
          }
       }
@@ -124,6 +125,10 @@ public class Ray {
          return false;
       }
       return true;
+   }
+
+   public boolean intersectsBoxParametric(final double[] paramsOut, final Vec3 minXYZ, final Vec3 maxXYZ) {
+      return intersectsBoxParametric(paramsOut, minXYZ.x, minXYZ.y, minXYZ.z, maxXYZ.x, maxXYZ.y, maxXYZ.z);
    }
 
    public double intersectsPlane(final Vec3 planeNormal, final double planeDist) {

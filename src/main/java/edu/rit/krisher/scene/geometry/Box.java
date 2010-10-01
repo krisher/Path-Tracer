@@ -118,14 +118,14 @@ public class Box implements Geometry {
       final AxisAlignedBoundingBox bounds =new AxisAlignedBoundingBox();
       for (int i=1; i < 8; i++) {
          final Vec3 corner = corners[i];
-         if (corner.x < bounds.minXYZ.x) bounds.minXYZ.x = corner.x;
-         else if (corner.x > bounds.maxXYZ.x) bounds.maxXYZ.x = corner.x;
+         if (corner.x < bounds.minXYZ[0]) bounds.minXYZ[0] = corner.x;
+         else if (corner.x > bounds.maxXYZ[0]) bounds.maxXYZ[0] = corner.x;
 
-         if (corner.y < bounds.minXYZ.y) bounds.minXYZ.y = corner.y;
-         else if (corner.y > bounds.maxXYZ.y) bounds.maxXYZ.y = corner.y;
+         if (corner.y < bounds.minXYZ[1]) bounds.minXYZ[1] = corner.y;
+         else if (corner.y > bounds.maxXYZ[1]) bounds.maxXYZ[1] = corner.y;
 
-         if (corner.z < bounds.minXYZ.z) bounds.minXYZ.z = corner.z;
-         else if (corner.z > bounds.maxXYZ.z) bounds.maxXYZ.z = corner.z;
+         if (corner.z < bounds.minXYZ[2]) bounds.minXYZ[2] = corner.z;
+         else if (corner.z > bounds.maxXYZ[2]) bounds.maxXYZ[2] = corner.z;
       }
       return bounds;
 

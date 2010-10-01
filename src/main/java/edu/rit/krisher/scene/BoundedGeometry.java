@@ -24,7 +24,7 @@ public class BoundedGeometry implements Geometry {
       if (children.size() == 1) box.set(geom.getBounds());
       else box.union(geom.getBounds());
 
-      boxSpans.set(box.maxXYZ).subtract(box.minXYZ);
+      boxSpans.set(box.maxXYZ).subtract(box.minXYZ[0], box.minXYZ[1], box.minXYZ[2]);
       boxCenter.set(box.minXYZ).scaleAdd(boxSpans, 0.5);
       boxSpans.multiply(0.5);
    }

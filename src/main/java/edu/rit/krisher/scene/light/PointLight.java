@@ -27,7 +27,8 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 normalOut, final Vec3 origin, final Random rng) {
+   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 normalOut,
+         final Vec3 origin, final Random rng) {
       directionOut.set(position).subtract(origin).normalize();
       radianceOut.set(material);
       normalOut.set(origin).subtract(position);
@@ -59,16 +60,12 @@ public class PointLight implements EmissiveGeometry {
       return 0;
    }
 
-   /* 
+   /*
     * @see edu.rit.krisher.scene.Geometry#getBounds()
     */
    @Override
    public AxisAlignedBoundingBox getBounds() {
-      final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
-      bounds.minXYZ.set(position);
-      bounds.maxXYZ.set(position);
-      return bounds;
+      return new AxisAlignedBoundingBox(position, position);
    }
-
 
 }
