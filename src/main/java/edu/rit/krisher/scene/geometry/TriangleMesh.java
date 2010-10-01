@@ -27,6 +27,10 @@ public class TriangleMesh implements Partitionable, Geometry {
       this.bounds = verts.computeBounds();
    }
 
+   public int getTriangleCount() {
+      return triCount;
+   }
+
    @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist) {
       // TODO: no need to perform the intersection again if we could store the hit data (tri index)
