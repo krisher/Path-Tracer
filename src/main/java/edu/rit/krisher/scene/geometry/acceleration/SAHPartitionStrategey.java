@@ -13,8 +13,8 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 public class SAHPartitionStrategey implements KDPartitionStrategy {
 
    private static final double kdNodeTraversalCost = 1.0;
-   private static final double geometryIntersectionCost = 100.0;
-   private static final double emptyBias = 0.00005;
+   private static final double geometryIntersectionCost = 40.0;
+   private static final double emptyBias = 0.25;
 
    @Override
    public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
