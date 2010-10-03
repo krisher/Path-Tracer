@@ -66,6 +66,10 @@ public final class Vec3 implements Transform {
       this.z = xyz[2];
    }
 
+    public final double get(final int idx) {
+	return idx == 0?x:(idx == 1?y:z);
+    }
+
    public final Vec3 add(final Vec3 vector) {
       x += vector.x;
       y += vector.y;
@@ -81,6 +85,7 @@ public final class Vec3 implements Transform {
       this.x = x;
       return this;
    }
+
 
    public double distance(final Vec3 other) {
       final double dx = other.x - x;

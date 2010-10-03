@@ -45,7 +45,7 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
       final float[] splitCandidates = new float[members.length];
       int idx = 0;
       for (final int prim : members) {
-         splitCandidates[idx++] = (float) bounds[prim].minXYZ[splitAxis];
+	  splitCandidates[idx++] = (float) bounds[prim].centerArray()[splitAxis];
       }
       Arrays.sort(splitCandidates);
       final float split = splitCandidates[splitCandidates.length / 2];

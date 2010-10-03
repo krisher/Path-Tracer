@@ -83,6 +83,11 @@ public final class AxisAlignedBoundingBox {
             + (maxXYZ[2] - minXYZ[2]) * 0.5);
    }
 
+public double[] centerArray() {
+    return new double[] {minXYZ[0] + (maxXYZ[0] - minXYZ[0]) * 0.5, minXYZ[1] + (maxXYZ[1] - minXYZ[1]) * 0.5, minXYZ[2]
+			 + (maxXYZ[2] - minXYZ[2]) * 0.5};
+   }
+
    public double xSpan() {
       return maxXYZ[0] - minXYZ[0];
    }
@@ -102,6 +107,13 @@ public final class AxisAlignedBoundingBox {
 
       return Math.sqrt(xSpan * xSpan + ySpan * ySpan + zSpan * zSpan);
    }
+
+    public double surfaceArea() {
+      final double xSpan = (maxXYZ[0] - minXYZ[0]);
+      final double ySpan = (maxXYZ[1] - minXYZ[1]);
+      final double zSpan = (maxXYZ[2] - minXYZ[2]);
+      return 2.0 * (xSpan * ySpan + xSpan * zSpan + ySpan * zSpan);
+    }
 
    public boolean rayIntersectsParametric(final Ray ray, final double[] params) {
       return ray.intersectsBoxParametric(params, minXYZ[0], minXYZ[1], minXYZ[2], maxXYZ[0], maxXYZ[1], maxXYZ[2]);

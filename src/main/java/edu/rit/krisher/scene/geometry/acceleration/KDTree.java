@@ -104,7 +104,7 @@ public class KDTree implements Geometry {
       }
    }
 
-   private KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depthRemaining,
+   private final KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depthRemaining,
          final int splitAxis, final AxisAlignedBoundingBox nodeBounds) {
       if (members.length == 0) {
          return null;
@@ -120,7 +120,7 @@ public class KDTree implements Geometry {
       }
 
       final int[][] lgPrims;
-      lgPrims = partition(members, bounds, partition.splitAxis, partition.splitLocation);
+      lgPrims = partitionPrimitives(members, bounds, partition.splitAxis, partition.splitLocation);
 
       final KDInteriorNode node = new KDInteriorNode((float)partition.splitLocation, partition.splitAxis);
       if (lgPrims[0].length > 0)
@@ -130,7 +130,7 @@ public class KDTree implements Geometry {
       return node;
    }
 
-   private int[][] partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int splitAxis,
+   private int[][] partitionPrimitives(final int[] members, final AxisAlignedBoundingBox[] bounds, final int splitAxis,
          final double split) {
       final int[][] lgPrims;
       final int[] lessPrims = new int[members.length];
