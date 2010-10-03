@@ -4,8 +4,17 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 
 public class KDTreeMetrics {
 
+   /**
+    * The maximum depth of a leaf node.
+    */
    public final int maxDepth;
+   /**
+    * The minimum depth of a leaf node.
+    */
    public final int minDepth;
+   /**
+    * The average depth of a leaf node.
+    */
    public final float avgDepth;
 
    public final int maxLeafPrimitives;
@@ -13,19 +22,52 @@ public class KDTreeMetrics {
    public final float avgLeafPrimitives;
 
    /**
-    * 
+    * The variance in the number of primitives held by leaf nodes.
     */
    public final float primCountVariance;
 
+   /**
+    * The total number of primitives referenced by leaf nodes (geometry primitives + duplciated primitives).
+    */
    public final int totalPrimitives;
+   /**
+    * The number of duplicated references to primitives in the leaf nodes; total primitives referenced - geometry
+    * defined primitives.
+    */
    public final int duplicatedPrimitives;
+
+   /**
+    * The total number of leaf nodes.
+    */
    public final int leafNodes;
+   /**
+    * The total number of intermediate nodes.
+    */
    public final int intermediateNodes;
 
+   /**
+    * The volume of the KD-Tree.
+    */
+   public final double treeVolume;
+   /**
+    * The total volume that is occupied by leaf nodes with at least one primitive.
+    */
+   public final double leafVolume;
+
+   /**
+    * Analyzes the specified KDTree to compute the metrics.
+    * 
+    * @param tree
+    *           A non-null KDTree.
+    */
    public KDTreeMetrics(final KDTree tree) {
       final KDTreeMetricVisitor visitor = new KDTreeMetricVisitor();
       try {
          tree.visitTreeNodes(visitor);
+
+         this.treeVolume = tree.getBounds().volume();
+         this.leafVolume = visitor.cumLeafVolume;
+
          this.maxDepth = visitor.maxDepth;
          this.minDepth = visitor.minDepth;
          this.avgDepth = visitor.cumDepth / (float) visitor.leafNodeCount;
@@ -33,7 +75,6 @@ public class KDTreeMetrics {
          this.maxLeafPrimitives = visitor.maxLeafPrimitives;
          this.minLeafPrimitives = visitor.minLeafPrimitives;
          this.avgLeafPrimitives = visitor.cumLeafPrimitives / (float) visitor.leafNodeCount;
-
 
          this.intermediateNodes = visitor.intermediateNodeCount;
          this.leafNodes = visitor.leafNodeCount;
@@ -59,6 +100,9 @@ public class KDTreeMetrics {
       final StringBuilder builder = new StringBuilder();
       builder.append("KDTree (Leaf Nodes): " + leafNodes + "\n");
       builder.append("KDTree (Interior Nodes): " + intermediateNodes + "\n");
+      builder.append("\n");
+      builder.append("KDTree (Total Volume): " + treeVolume + "\n");
+      builder.append("KDTree (Leaf Volume %): " + leafVolume / treeVolume + "\n");
       builder.append("\n");
       builder.append("KDTree (Max Depth): " + maxDepth + "\n");
       builder.append("KDTree (Min Depth): " + minDepth + "\n");
@@ -90,6 +134,8 @@ public class KDTreeMetrics {
       int intermediateNodeCount = 0;
       int leafNodeCount = 0;
 
+      double cumLeafVolume = 0;
+
       @Override
       public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
             final int childCount, final float splitLocation, final int splitAxis) throws Exception {
@@ -105,6 +151,7 @@ public class KDTreeMetrics {
             if (childCount < minLeafPrimitives)
                minLeafPrimitives = childCount;
             cumLeafPrimitives += childCount;
+            cumLeafVolume += bounds.volume();
          } else {
             ++intermediateNodeCount;
             if (childCount == 2) {

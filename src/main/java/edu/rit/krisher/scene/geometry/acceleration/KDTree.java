@@ -9,6 +9,12 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.vecmath.Ray;
 
+/**
+ * KD-Tree spatial partitioning structure for storing {@link Partitionable} geometry.
+ * 
+ * @author krisher
+ * 
+ */
 public class KDTree implements Geometry {
 
    public static final byte X_AXIS = 0;
@@ -21,11 +27,11 @@ public class KDTree implements Geometry {
    private final AxisAlignedBoundingBox treeBounds;
    private KDPartitionStrategy partitionStrategy = new MedianPartitionStrategy();
 
-   public KDTree(final Partitionable[] content, final int maxDepth, final int minPrims) {
+   public KDTree(final Geometry[] content, final int maxDepth, final int minPrims) {
       this(maxDepth, minPrims, content);
    }
 
-   public KDTree(final int maxDepth, final int minPrims, final Partitionable... content) {
+   public KDTree(final int maxDepth, final int minPrims, final Geometry... content) {
       this.minPrims = minPrims;
       if (content == null || content.length == 0) {
          root = null;
@@ -61,6 +67,7 @@ public class KDTree implements Geometry {
       return getBounds().surfaceArea();
    }
 
+   @Override
    public Geometry[] getPrimitives() {
       return primitives;
    }

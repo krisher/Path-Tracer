@@ -138,4 +138,9 @@ public class Box implements Geometry {
       return bounds;
 
    }
+
+   @Override
+   public Geometry[] getPrimitives() {
+      return new Geometry[] { this };
+   }
 }

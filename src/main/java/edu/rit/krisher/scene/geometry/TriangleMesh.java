@@ -4,7 +4,6 @@ import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.geometry.acceleration.Partitionable;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.material.Color;
@@ -12,7 +11,7 @@ import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
-public class TriangleMesh implements Partitionable, Geometry {
+public class TriangleMesh implements Geometry {
 
    private Material material = new LambertBRDF(Color.white);
    private final Vec3Buffer vertices;
@@ -178,9 +177,13 @@ public class TriangleMesh implements Partitionable, Geometry {
          vertices.get(triangleIndices.get(triangleIndexOffset), v0);
          vertices.get(triangleIndices.get(triangleIndexOffset + 1), v1);
          vertices.get(triangleIndices.get(triangleIndexOffset + 2), v2);
-         aabb.set(Math.min(v0.x, Math.min(v1.x, v2.x)), Math.min(v0.y, Math.min(v1.y, v2.y)), Math.min(v0.z, Math.min(v1.z, v2.z)),
-                  Math.max(v0.x, Math.max(v1.x, v2.x)), Math.max(v0.y, Math.max(v1.y, v2.y)), Math.max(v0.z, Math.max(v1.z, v2.z)));
+         aabb.set(Math.min(v0.x, Math.min(v1.x, v2.x)), Math.min(v0.y, Math.min(v1.y, v2.y)), Math.min(v0.z, Math.min(v1.z, v2.z)), Math.max(v0.x, Math.max(v1.x, v2.x)), Math.max(v0.y, Math.max(v1.y, v2.y)), Math.max(v0.z, Math.max(v1.z, v2.z)));
          return aabb;
+      }
+
+      @Override
+      public Geometry[] getPrimitives() {
+         return new Geometry[] { this };
       }
 
    }

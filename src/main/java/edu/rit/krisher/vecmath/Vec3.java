@@ -59,16 +59,16 @@ public final class Vec3 implements Transform {
       y = copy.y;
       z = copy.z;
    }
-   
+
    public Vec3(final double[] xyz) {
       this.x = xyz[0];
       this.y = xyz[1];
       this.z = xyz[2];
    }
 
-    public final double get(final int idx) {
-	return idx == 0?x:(idx == 1?y:z);
-    }
+   public final double get(final int idx) {
+      return idx == 0?x:(idx == 1?y:z);
+   }
 
    public final Vec3 add(final Vec3 vector) {
       x += vector.x;
@@ -156,7 +156,7 @@ public final class Vec3 implements Transform {
       z = from.z;
       return this;
    }
-   
+
    public Vec3 set(final double[] from) {
       x = from[0];
       y = from[1];
@@ -170,14 +170,14 @@ public final class Vec3 implements Transform {
       z -= vector.z;
       return this;
    }
-   
+
    public final Vec3 subtract(final double[] vector) {
       x -= vector[0];
       y -= vector[1];
       z -= vector[2];
       return this;
    }
-   
+
    public final Vec3 subtract(final double x, final double y, final double z) {
       this.x -= x;
       this.y -= y;

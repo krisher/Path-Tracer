@@ -39,7 +39,7 @@ public class Ray {
    public double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
       final double[] result = new double[2];
       if (intersectsBoxParametric(result, new Vec3(center.x - xSize, center.y - ySize, center.z - zSize), new Vec3(center.x
-            + xSize, center.y + ySize, center.z + zSize))) {
+                                                                                                                   + xSize, center.y + ySize, center.z + zSize))) {
          return result[0] > 0 ? result[0] : result[1];
       }
       return 0;

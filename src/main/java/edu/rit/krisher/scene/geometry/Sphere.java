@@ -71,4 +71,9 @@ public class Sphere implements Geometry {
                                         + radius, center.z + radius);
    }
 
+   @Override
+   public Geometry[] getPrimitives() {
+      return new Geometry[] { this };
+   }
+
 }

@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.EmissiveGeometry;
+import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -56,8 +57,14 @@ public class PointLight implements EmissiveGeometry {
       this.intensity = intensity;
    }
 
+   @Override
    public double getSurfaceArea() {
       return 0;
+   }
+
+   @Override
+   public Geometry[] getPrimitives() {
+      return new Geometry[] { this };
    }
 
    /*

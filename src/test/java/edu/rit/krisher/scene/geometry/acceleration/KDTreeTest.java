@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
@@ -31,8 +32,8 @@ public class KDTreeTest {
 
    @Test
    public void splitLocationsShouldBeInNodeRange() throws Exception {
-      final Partitionable geometry = createOpenBoxGeometry();
-      final KDTree tree = new KDTree(20, 2, new Partitionable[] { geometry });
+      final Geometry geometry = createOpenBoxGeometry();
+      final KDTree tree = new KDTree(20, 2, geometry);
       final KDNodeVisitor visitor = new KDNodeVisitor() {
 
          @Override
@@ -85,7 +86,7 @@ public class KDTreeTest {
       return null;
    }
 
-   private static Partitionable createOpenBoxGeometry() {
+   private static Geometry createOpenBoxGeometry() {
       final Vec3Buffer vb = new Vec3fBuffer(8);
       final IndexBuffer ib = new IndexBuffer(30);
       vb.put(new Vec3(5, 0, -5));

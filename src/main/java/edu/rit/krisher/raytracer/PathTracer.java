@@ -12,10 +12,10 @@ import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.material.Color;
+import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
-import edu.rit.krisher.util.Timer;
 
 /**
  * Non thread-safe Path Tracer.
@@ -46,7 +46,7 @@ public final class PathTracer {
       }
    };
 
-    private static final Timer timer = new Timer("Path Tracing");
+   private static final Timer timer = new Timer("Path Tracing");
 
    /*
     * Buffer to collect rgb pixel data
@@ -74,7 +74,7 @@ public final class PathTracer {
     *           The non-null item to path-trace.
     */
    public void pathTrace(final WorkItem workItem) {
-       timer.start();
+      timer.start();
       try {
          final int pixelCount = workItem.blockWidth * workItem.blockHeight * 3;
          if (pixels == null || pixels.length < pixelCount)
@@ -157,8 +157,8 @@ public final class PathTracer {
          workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth, workItem.blockHeight, pixels);
       } finally {
          workItem.workDone();
-	 timer.stop();
-	 timer.print(System.out);
+         timer.stop();
+         timer.print(System.out);
       }
    }
 
