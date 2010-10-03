@@ -54,7 +54,7 @@ public class KDTreeTest {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");
       timer.start();
-      final KDTree tree = new KDTree(20, 2, bunnyGeom);
+      final KDTree tree = new KDTree(new SAHPartitionStrategey(), 20, 2, bunnyGeom);
       timer.stop();
       timer.print(System.out);
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);

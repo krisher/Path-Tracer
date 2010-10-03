@@ -25,13 +25,16 @@ public class KDTree implements Geometry {
    private final Geometry[] primitives;
    private final int minPrims;
    private final AxisAlignedBoundingBox treeBounds;
-   private KDPartitionStrategy partitionStrategy = new MedianPartitionStrategy();
+   private final KDPartitionStrategy partitionStrategy;
 
-   public KDTree(final Geometry[] content, final int maxDepth, final int minPrims) {
-      this(maxDepth, minPrims, content);
-   }
+
 
    public KDTree(final int maxDepth, final int minPrims, final Geometry... content) {
+      this(new MedianPartitionStrategy(), maxDepth, minPrims, content);
+   }
+
+   public KDTree(final KDPartitionStrategy strategy, final int maxDepth, final int minPrims, final Geometry... content) {
+      this.partitionStrategy = strategy;
       this.minPrims = minPrims;
       if (content == null || content.length == 0) {
          root = null;
@@ -77,17 +80,6 @@ public class KDTree implements Geometry {
     */
    public KDPartitionStrategy getPartitionStrategy() {
       return partitionStrategy;
-   }
-
-   /**
-    * @param partitionStrategy
-    *           the partitionStrategy to set
-    */
-   public void setPartitionStrategy(final KDPartitionStrategy partitionStrategy) {
-      if (partitionStrategy == null)
-         this.partitionStrategy = new MedianPartitionStrategy();
-      else
-         this.partitionStrategy = partitionStrategy;
    }
 
    @Override
