@@ -102,6 +102,14 @@ public class Box implements Geometry {
    }
 
    @Override
+   public double getSurfaceArea() {
+      /*
+       * The 4.0 is because the size value represent distance from the center; half the size.
+       */
+      return 2.0 * 4.0 * (xSize * ySize + xSize * zSize + ySize * zSize);
+   }
+
+   @Override
    public AxisAlignedBoundingBox getBounds() {
       final Vec3[] corners = new Vec3[8];
       corners[0] = new Vec3(-xSize, -ySize, -zSize);

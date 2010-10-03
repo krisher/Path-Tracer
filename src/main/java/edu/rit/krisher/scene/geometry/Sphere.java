@@ -57,13 +57,18 @@ public class Sphere implements Geometry {
       this.material = material;
    }
 
+   @Override
+   public double getSurfaceArea() {
+      return 4.0 * Math.PI * radius * radius;
+   }
+
    /*
     * @see edu.rit.krisher.scene.Geometry#getBounds()
     */
    @Override
    public AxisAlignedBoundingBox getBounds() {
       return new AxisAlignedBoundingBox(center.x - radius, center.y - radius, center.z - radius, center.x + radius, center.y
-            + radius, center.z + radius);
+                                        + radius, center.z + radius);
    }
 
 }

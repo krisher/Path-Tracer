@@ -56,6 +56,11 @@ public class KDTree implements Geometry {
       root = partition(members, bounds, maxDepth, (byte) 0, treeBounds);
    }
 
+   @Override
+   public double getSurfaceArea() {
+      return getBounds().surfaceArea();
+   }
+
    public Geometry[] getPrimitives() {
       return primitives;
    }

@@ -3,6 +3,12 @@
  */
 package edu.rit.krisher.scene.geometry.acceleration;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+
 import java.io.IOException;
 import java.util.zip.ZipInputStream;
 
@@ -17,9 +23,6 @@ import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Vec3;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 /**
  *
  */
@@ -48,7 +51,7 @@ public class KDTreeTest {
    @Test
    public void treeMetricsShouldNotBeWorse() {
       final TriangleMesh bunnyGeom = loadBunny();
-      final Timer timer = new Timer("KD Construction Time (Bunny).");
+      final Timer timer = new Timer("KD Construction Time (Bunny)");
       timer.start();
       final KDTree tree = new KDTree(20, 2, bunnyGeom);
       timer.stop();

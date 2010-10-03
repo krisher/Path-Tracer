@@ -298,7 +298,7 @@ public class RTDemo {
 
       scene.add(bunnyMesh);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
-      cam.lookAt(bounds.center(), 35, 180, bounds.diagonalLength() * 0.8);
+      cam.lookAt(bounds.centerPt(), 35, 180, bounds.diagonalLength() * 0.8);
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
 
       cam.setFOVAngle(56.14);
@@ -317,7 +317,7 @@ public class RTDemo {
       kdTimer.stop().print(System.out);
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
-      cam.lookAt(bounds.center(), 25, 180, bounds.diagonalLength());
+      cam.lookAt(bounds.centerPt(), 25, 180, bounds.diagonalLength());
       cam.setFocalDist(bounds.diagonalLength());
       cam.setAperture(1 / 100.0);
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
@@ -341,7 +341,7 @@ public class RTDemo {
       System.out.println(new KDTreeMetrics(accel));
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
-      cam.lookAt(bounds.center(), 25, 180, bounds.diagonalLength());
+      cam.lookAt(bounds.centerPt(), 25, 180, bounds.diagonalLength());
       cam.setFocalDist(bounds.diagonalLength());
       cam.setAperture(1 / 100.0);
 

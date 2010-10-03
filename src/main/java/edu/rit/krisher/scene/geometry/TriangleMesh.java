@@ -32,6 +32,11 @@ public class TriangleMesh implements Partitionable, Geometry {
    }
 
    @Override
+   public double getSurfaceArea() {
+      return bounds.surfaceArea();
+   }
+
+   @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist) {
       // TODO: no need to perform the intersection again if we could store the hit data (tri index)
       // in the original intersects(...) call.
@@ -149,6 +154,15 @@ public class TriangleMesh implements Partitionable, Geometry {
       }
 
       @Override
+      public double getSurfaceArea() {
+         final Vec3 v0 = new Vec3();
+         final Vec3 e1 = new Vec3();
+         final Vec3 e2 = new Vec3();
+         getTriangleVEE(triangleIndexOffset, v0, e1, e2);
+         return 0.5 * e1.cross(e2).length();
+      }
+
+      @Override
       public double intersects(final Ray ray) {
          final Vec3 v0 = new Vec3();
          final Vec3 e1 = new Vec3();
@@ -165,7 +179,7 @@ public class TriangleMesh implements Partitionable, Geometry {
          vertices.get(triangleIndices.get(triangleIndexOffset + 1), v1);
          vertices.get(triangleIndices.get(triangleIndexOffset + 2), v2);
          aabb.set(Math.min(v0.x, Math.min(v1.x, v2.x)), Math.min(v0.y, Math.min(v1.y, v2.y)), Math.min(v0.z, Math.min(v1.z, v2.z)),
-         Math.max(v0.x, Math.max(v1.x, v2.x)), Math.max(v0.y, Math.max(v1.y, v2.y)), Math.max(v0.z, Math.max(v1.z, v2.z)));
+                  Math.max(v0.x, Math.max(v1.x, v2.x)), Math.max(v0.y, Math.max(v1.y, v2.y)), Math.max(v0.z, Math.max(v1.z, v2.z)));
          return aabb;
       }
 
