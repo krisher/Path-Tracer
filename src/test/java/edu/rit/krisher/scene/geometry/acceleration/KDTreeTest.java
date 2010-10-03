@@ -18,6 +18,8 @@ import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Vec3;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 /**
  *
  */
@@ -54,13 +56,11 @@ public class KDTreeTest {
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);
       System.out.println(metrics);
       // Sanity Check
-      Assert.assertEquals("Unexpected primitive count...", 69451, metrics.totalPrimitives
-                          - metrics.duplicatedPrimitives);
+      assertThat("Primitive Count", metrics.totalPrimitives - metrics.duplicatedPrimitives, equalTo(69451));
 
-      Assert.assertTrue("Average Depth...", 18.5 < metrics.avgDepth);
-      Assert.assertTrue("Max Primitives Per Leaf...", 824 >= metrics.maxLeafPrimitives);
-      Assert.assertTrue("Avg Primitives Per Leaf...", 4.7 > metrics.avgLeafPrimitives);
-      Assert.assertTrue("Balance...", 0.96 < metrics.balanceFactor);
+      assertThat("Average leaf depth", metrics.avgDepth, greaterThan(18.5f));
+      assertThat("Max leaf Primitives", metrics.maxLeafPrimitives, lessThanOrEqualTo(824));
+      assertThat("Avg Primitives Per Leaf...", metrics.avgLeafPrimitives, lessThan(4.7f));
    }
 
    private static TriangleMesh loadBunny() {
