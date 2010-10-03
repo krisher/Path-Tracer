@@ -36,7 +36,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? KDTree.X_AXIS
             : KDTree.Z_AXIS)
             : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
-      final SplitCandidate[] splitCandidates = new SplitCandidate[bounds.length * 2];
+      final SplitCandidate[] splitCandidates = new SplitCandidate[members.length * 2];
       for (int i = 0; i < splitCandidates.length; ++i)
          splitCandidates[i] = new SplitCandidate();
       for (int axisAttempt = 0; axisAttempt < 3; axisAttempt++) {
