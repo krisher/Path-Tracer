@@ -1,6 +1,5 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,6 +56,10 @@ public class KDTree implements Geometry {
       root = partition(members, bounds, maxDepth, (byte) 0, treeBounds);
    }
 
+   public Geometry[] getPrimitives() {
+      return primitives;
+   }
+
    /**
     * @return the partitionStrategy
     */
@@ -103,6 +106,9 @@ public class KDTree implements Geometry {
 
    private KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depthRemaining,
          final int splitAxis, final AxisAlignedBoundingBox nodeBounds) {
+      if (members.length == 0) {
+         return null;
+      }
 
       if (members.length < minPrims || depthRemaining == 0) {
          return new KDLeafNode(members);
@@ -146,85 +152,6 @@ public class KDTree implements Geometry {
       final double[] minMaxLimit = (lessChild) ? childBounds.maxXYZ : childBounds.minXYZ;
       minMaxLimit[axis] = splitLocation;
       return childBounds;
-   }
-
-   public int getMaxDepth() {
-      final int[] maxDepth = new int[1];
-      try {
-         visitTreeNodes(new KDNodeVisitor() {
-            @Override
-            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
-               if (leaf && depth > maxDepth[0])
-                  maxDepth[0] = depth;
-            }
-         });
-      } catch (final Exception e) {
-         // Unreachable...
-      }
-      return maxDepth[0];
-   }
-
-   public float getAvgDepth() {
-      final int[] avgDepth = new int[2];
-      try {
-         visitTreeNodes(new KDNodeVisitor() {
-            @Override
-            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
-               if (leaf) {
-                  avgDepth[0] += depth;
-                  ++avgDepth[1];
-               }
-            }
-         });
-      } catch (final Exception e) {
-         // Unreachable...
-      }
-      return avgDepth[0] / (float) avgDepth[1];
-   }
-
-   public double getMinDepth() {
-      final int[] minDepth = new int[] { Integer.MAX_VALUE };
-      try {
-         visitTreeNodes(new KDNodeVisitor() {
-            @Override
-            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
-               if (leaf && depth < minDepth[0])
-                  minDepth[0] = depth;
-            }
-         });
-      } catch (final Exception e) {
-         // Unreachable...
-      }
-      return minDepth[0];
-   }
-
-   public float getAvgPrimitiveCount() {
-      final int[] avgCount = new int[2];
-      try {
-         visitTreeNodes(new KDNodeVisitor() {
-            @Override
-            public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
-               if (leaf) {
-                  avgCount[0] += childCount;
-                  ++avgCount[1];
-               }
-            }
-         });
-      } catch (final Exception e) {
-         // Unreachable...
-      }
-      return avgCount[0] / (float) avgCount[1];
-   }
-   
-   public void printMetrics(final PrintStream out) {
-      out.println("Min Leaf Depth: " + getMinDepth());
-      out.println("Max Leaf Depth: " + getMaxDepth());
-      out.println("Avg Leaf Depth: " + getAvgDepth());
-      out.println("Avg Primitives/Leaf: " + getAvgPrimitiveCount());
    }
 
    private static interface KDNode {
@@ -331,7 +258,7 @@ public class KDTree implements Geometry {
 
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-            throws Exception {
+      throws Exception {
          if (lessChild != null)
             lessChild.visit(depth + 1, boundsForChild(nodeBounds, splitLocation, axis, true), visitor);
 
@@ -378,7 +305,7 @@ public class KDTree implements Geometry {
        */
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-            throws Exception {
+      throws Exception {
          visitor.visitNode(depth, nodeBounds, true, primitives.length, 0, -1);
       }
 

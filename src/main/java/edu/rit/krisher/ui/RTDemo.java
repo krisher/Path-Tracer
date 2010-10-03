@@ -15,6 +15,7 @@ import edu.rit.krisher.scene.geometry.Box;
 import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.acceleration.KDTree;
+import edu.rit.krisher.scene.geometry.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.geometry.acceleration.Partitionable;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
@@ -337,7 +338,7 @@ public class RTDemo {
       final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
       final KDTree accel = new KDTree(20, 2, new Partitionable[] { bunnyMesh, groundPlane(whiteLambert, true) });
       kdTimer.stop().print(System.out);
-      accel.printMetrics(System.out);
+      System.out.println(new KDTreeMetrics(accel));
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
       cam.lookAt(bounds.center(), 25, 180, bounds.diagonalLength());
@@ -370,13 +371,13 @@ public class RTDemo {
 
          ib.put(4).put(5).put(1);
          ib.put(4).put(1).put(0);
-         
+
          ib.put(5).put(6).put(2);
          ib.put(5).put(2).put(1);
-         
+
          ib.put(6).put(7).put(3);
          ib.put(6).put(3).put(2);
-         
+
          ib.put(7).put(4).put(0);
          ib.put(7).put(0).put(3);
       }
@@ -472,7 +473,7 @@ public class RTDemo {
             whittedScene(150), whittedScene(500), dofScene(), causticScene(), multiLightScene(), diffuseTest1(),
             diffuseTest2(), diffuseTest3(), specularTest1(), specularTest2(), specularTest3(),
 
-      // threeBalls(), niceScene(), checkpoint6(), projectCP(),
+            // threeBalls(), niceScene(), checkpoint6(), projectCP(),
       });
 
       SwingUtilities.invokeLater(new Runnable() {
