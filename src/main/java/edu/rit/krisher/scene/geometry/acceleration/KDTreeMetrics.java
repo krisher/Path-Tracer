@@ -13,13 +13,9 @@ public class KDTreeMetrics {
    public final float avgLeafPrimitives;
 
    /**
-    * A value between 0 and 1 indicating how balanced the tree is.
-    * <p>
-    * 0 indicates that the tree is a list, all intermediate nodes have 1 child. 1 indicates that all intermediate nodes
-    * have 2 children. The actual value is the number of intermediate nodes with 2 children divided by the number of
-    * intermediate nodes.
+    * 
     */
-   public final float balanceFactor;
+   public final float primCountVariance;
 
    public final int totalPrimitives;
    public final int duplicatedPrimitives;
@@ -38,13 +34,17 @@ public class KDTreeMetrics {
          this.minLeafPrimitives = visitor.minLeafPrimitives;
          this.avgLeafPrimitives = visitor.cumLeafPrimitives / (float) visitor.leafNodeCount;
 
-         this.balanceFactor = visitor.fullyPopulatedIntermediateNodes / (float) visitor.intermediateNodeCount;
 
          this.intermediateNodes = visitor.intermediateNodeCount;
          this.leafNodes = visitor.leafNodeCount;
 
          this.totalPrimitives = visitor.cumLeafPrimitives;
          this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getPrimitives().length;
+
+         final VarianceVisitor vVisitor = new VarianceVisitor(visitor.leafNodeCount
+                                                              / (double) visitor.cumLeafPrimitives);
+         tree.visitTreeNodes(vVisitor);
+         this.primCountVariance = (float) (vVisitor.variance / visitor.leafNodeCount);
       } catch (final Exception e) {
          /*
           * Unreachable...
@@ -71,8 +71,8 @@ public class KDTreeMetrics {
       builder.append("KDTree (Max Primitives/Leaf): " + maxLeafPrimitives + "\n");
       builder.append("KDTree (Min Primitives/Leaf): " + minLeafPrimitives + "\n");
       builder.append("KDTree (Avg Primitives/Leaf): " + avgLeafPrimitives + "\n");
+      builder.append("KDTree (Leaf Primitives Count Variance): " + primCountVariance + "\n");
       builder.append("\n");
-      builder.append("KDTree (Balance Factor): " + balanceFactor + "\n");
       return builder.toString();
    }
 
@@ -114,4 +114,23 @@ public class KDTreeMetrics {
       }
    }
 
+   private static class VarianceVisitor implements KDNodeVisitor {
+
+      private final double meanPrimsPerLeaf;
+      double variance;
+
+      public VarianceVisitor(final double meanPrimsPerLeaf) {
+         this.meanPrimsPerLeaf = meanPrimsPerLeaf;
+      }
+
+      @Override
+      public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
+            final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+         if (leaf) {
+            final double delta = childCount - meanPrimsPerLeaf;
+            variance += delta * delta;
+         }
+      }
+
+   }
 }
