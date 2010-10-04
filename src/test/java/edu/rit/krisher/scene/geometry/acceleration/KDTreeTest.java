@@ -4,10 +4,10 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 import java.io.IOException;
 import java.util.zip.ZipInputStream;
@@ -50,7 +50,7 @@ public class KDTreeTest {
    }
 
    @Test
-   public void treeMetricsShouldNotBeWorse() {
+   public void treeMetricsShouldNotChange() {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");
       timer.start();
@@ -62,9 +62,10 @@ public class KDTreeTest {
       // Sanity Check
       assertThat("Primitive Count", metrics.totalPrimitives - metrics.duplicatedPrimitives, equalTo(69451));
 
-      assertThat("Average leaf depth", metrics.avgDepth, greaterThan(18.5f));
-      assertThat("Max leaf Primitives", metrics.maxLeafPrimitives, lessThanOrEqualTo(102));
-      assertThat("Avg Primitives Per Leaf...", metrics.avgLeafPrimitives, lessThan(6f));
+      assertThat("Average leaf depth", metrics.avgDepth, greaterThan(23.4473f));
+      assertThat("Max leaf Primitives", metrics.maxLeafPrimitives, equalTo(11));
+      assertThat("Duplicated Primitives", metrics.duplicatedPrimitives, equalTo(2421534));
+      assertThat("Leaf Volume", metrics.leafVolume / metrics.treeVolume, allOf(greaterThan(0.2141701), lessThan(0.2141702)));
    }
 
    private static TriangleMesh loadBunny() {
