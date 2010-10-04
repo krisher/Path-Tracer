@@ -1,6 +1,8 @@
 package edu.rit.krisher.fileparser.ply;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,7 +30,7 @@ import edu.rit.krisher.scene.geometry.TriangleMesh;
 public final class PLYParser {
 
    public static PLYContentDescription getPLYContentDescription(final InputStream stream) throws IOException {
-      final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, Charset.forName("US-ASCII")));
+      final BufferedInputStream reader = new BufferedInputStream(stream);
       try {
          return new PLYContentDescription(reader);
       } finally {
@@ -37,23 +39,35 @@ public final class PLYParser {
    }
 
    public static void parsePLY(final InputStream stream, final Map<String, ElementReceiver> receivers)
-   throws IOException {
-      final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, Charset.forName("US-ASCII")));
+         throws IOException {
+
       try {
-         final PLYContentDescription content = new PLYContentDescription(reader);
-         if (content.getFormat() != PLYFormat.ascii) {
-            throw new UnsupportedOperationException("Only ASCII format is supported.");
-         }
-         for (final Element element : content.getElements()) {
-            final ElementReceiver receiver = receivers.get(element.name);
-            final ASCIIElementAttributeValues asciiParser = new ASCIIElementAttributeValues(element, reader);
-            if (receiver != null) {
-               receiver.receive(element, asciiParser);
+         final PLYContentDescription content = new PLYContentDescription(stream);
+         if (content.getFormat() == PLYFormat.ascii) {
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, Charset.forName("US-ASCII")));
+            for (final Element element : content.getElements()) {
+               final ElementReceiver receiver = receivers.get(element.name);
+               final ASCIIElementAttributeValues asciiParser = new ASCIIElementAttributeValues(element, reader);
+               if (receiver != null) {
+                  receiver.receive(element, asciiParser);
+               }
+               asciiParser.skipToEnd(); // Ensure we have reached the end of this section.
             }
-            asciiParser.skipToEnd(); // Ensure we have reached the end of this section.
+         } else if (content.getFormat() == PLYFormat.binary_big_endian) {
+
+            for (final Element element : content.getElements()) {
+               final ElementReceiver receiver = receivers.get(element.name);
+               final BinaryAttributeValues binParser = new BinaryAttributeValues(element, stream, true);
+               if (receiver != null) {
+                  receiver.receive(element, binParser);
+               }
+               binParser.skipToEnd(); // Ensure we have reached the end of this section.
+            }
+         } else {
+            throw new UnsupportedOperationException("Little-endian format is not supported.");
          }
       } finally {
-         reader.close();
+         stream.close();
       }
    }
 
@@ -105,7 +119,7 @@ public final class PLYParser {
          final Number[] values = new Number[attributeListSize[attributeIdx]];
          for (int i = 0; i < values.length; i++) {
             values[i] = attributes[attributeIdx].valueType.parseAscii(elementComponents[attributeStart[attributeIdx]
-                                                                                                       + i]);
+                  + i]);
          }
          // TODO Auto-generated method stub
          return values;
@@ -141,8 +155,66 @@ public final class PLYParser {
       }
 
       void skipToEnd() throws IOException {
-         while (count++ < element.count && reader.readLine() != null) {
+         while (count++ < element.count && reader.readLine() != null)
+            ;
+      }
+   }
 
+   private static final class BinaryAttributeValues implements ElementAttributeValues {
+      private int count = 0;
+      private final DataInputStream stream;
+      private final Element element;
+      private final ElementAttribute[] attributes;
+      private final Number[] scalarValues;
+      private final Number[][] listValues;
+      private final boolean bigEndian;
+
+      public BinaryAttributeValues(final Element element, final InputStream stream, final boolean bigEndian) {
+         this.stream = new DataInputStream(stream);
+         this.element = element;
+         this.attributes = element.getProperties();
+         this.bigEndian = bigEndian;
+         scalarValues = new Number[attributes.length];
+         listValues = new Number[attributes.length][];
+      }
+
+      @Override
+      public Number getScalarComponent(final int attributeIdx) {
+         return scalarValues[attributeIdx];
+      }
+
+      @Override
+      public Number[] getVectorComponent(final int attributeIdx) {
+         return listValues[attributeIdx];
+      }
+
+      @Override
+      public void nextElement() {
+         if (count < element.count) {
+            try {
+               for (int attrIdx = 0; attrIdx < attributes.length; ++attrIdx) {
+                  if (attributes[attrIdx].listIndexType == null) { // Scalar attribute
+                     scalarValues[attrIdx] = attributes[attrIdx].valueType.parseBinary(stream, bigEndian);
+                  } else {
+                     final Number componentCount = attributes[attrIdx].listIndexType.parseBinary(stream, bigEndian);
+                     final Number[] values = new Number[componentCount.intValue()];
+                     for (int i = 0; i < values.length; i++) {
+                        values[i] = attributes[i].valueType.parseBinary(stream, bigEndian);
+                     }
+                     listValues[attrIdx] = values;
+                  }
+               }
+               ++count;
+            } catch (final IOException ioe) {
+               throw new IllegalStateException("Error reading PLY stream.", ioe);
+            }
+         } else
+            throw new BufferUnderflowException();
+      }
+
+      void skipToEnd() throws IOException {
+         while (count < element.count) {
+            nextElement();
          }
       }
    }

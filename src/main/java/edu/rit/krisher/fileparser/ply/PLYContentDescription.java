@@ -1,7 +1,9 @@
 package edu.rit.krisher.fileparser.ply;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,10 +28,12 @@ public class PLYContentDescription {
    private static final Pattern listPropertyPattern = Pattern.compile("property[ \t]+list[ \t]+(\\S+)[ \t]+(\\S+)[ \t]+(\\S+)");
    private static final Pattern elementPattern = Pattern.compile("element[ \t]+(.+?)[ \t]+(\\d+)");
    private static final Pattern formatPattern = Pattern.compile("format[ \t]+(.+?)[ \t]+([0-9\\.]+)");
+   
+   private static final Charset charset = Charset.forName("US-ASCII");
 
    private PLYFormat format;
    private String versionString;
-   private int headerSizeBytes;
+   private int headerSizeChars;
    private final List<String> comments = new ArrayList<String>();
    private final List<Element> elements = new ArrayList<Element>();
 
@@ -44,8 +48,8 @@ public class PLYContentDescription {
     *            If there is any problem reading from the stream, or if the stream does not contain the expected
     *            data.
     */
-   PLYContentDescription(final BufferedReader reader) throws IOException {
-      parse(reader);
+   PLYContentDescription(final InputStream stream) throws IOException {
+      parse(stream);
    }
 
    /**
@@ -88,7 +92,11 @@ public class PLYContentDescription {
       return Collections.unmodifiableList(elements);
    }
 
-   private void parse(final BufferedReader reader) throws IOException {
+   public int getHeaderSizeChars() {
+      return headerSizeChars;
+   }
+
+   private void parse(final InputStream reader) throws IOException {
       /*
        * The file begins with an ascii header section, regardless of the content format. Note that the format
        * specifies ascii data, but who knows whether this is actually followed in the implementation.
@@ -101,23 +109,25 @@ public class PLYContentDescription {
        * be part of the spec, but this would only be a problem if someone used the \n character in an element or
        * property name.
        */
-      String line = reader.readLine();
+      String line = readLine(reader);
+      headerSizeChars += line.length() + 1;
       if (!PLYContentDescription.headerStart.equals(line)) {
          throw new IOException("The provided stream does not appear to contain PLY data, expected \""
-                               + PLYContentDescription.headerStart + "\", but found \"" + line + "\"");
+               + PLYContentDescription.headerStart + "\", but found \"" + line + "\"");
       }
 
       Element eltDef = null;
       /*
        * Next comes the format definition, followed by any number of element defintions.
        */
-      while (!PLYContentDescription.headerEnd.equals((line = reader.readLine()))) {
+      while (!PLYContentDescription.headerEnd.equals((line = readLine(reader)))) {
          if (line == null) {
             /*
              * Premature end of file.
              */
             throw new IOException("Premature end of stream while parsing PLY header.");
          }
+         headerSizeChars += line.length() + 1;
          /*
           * Line can be a comment, element, or property definition.
           */
@@ -133,7 +143,7 @@ public class PLYContentDescription {
          } else if (line.startsWith(PLYContentDescription.propertyDelimiter)) {
             if (eltDef == null)
                throw new IOException("Unexpected property declaration in PLY header, no element has been defined yet: "
-                                     + line + ".");
+                     + line + ".");
             Matcher propertyMatcher = PLYContentDescription.listPropertyPattern.matcher(line);
             final String propName;
             final DataType propType;
@@ -162,6 +172,20 @@ public class PLYContentDescription {
             throw new IOException("Unexpected delimiter in PLY header: " + line + ".");
          }
       }
+      headerSizeChars += line.length() + 1;
+   }
+
+   private static String readLine(final InputStream reader) throws IOException {
+      int c;
+      while ((c = reader.read()) == '\n' || c == '\r')
+         ;
+      if (c < 0)
+         return null;
+      final StringBuffer buff = new StringBuffer();
+      do {
+         buff.append((char) c);
+      } while ((c = reader.read()) >= 0 && (c != '\r' && c != '\n'));
+      return buff.toString();
    }
 
    /**
@@ -207,6 +231,11 @@ public class PLYContentDescription {
          public Number parseAscii(final String asciiRepresentation) {
             return Short.parseShort(asciiRepresentation);
          }
+
+         @Override
+         public Number parseBinary(final DataInputStream input, final boolean bigEndian) throws IOException {
+            return input.readUnsignedByte();
+         }
       },
       /**
        * 32bit signed int (int in Java).
@@ -226,6 +255,11 @@ public class PLYContentDescription {
          public Number parseAscii(final String asciiRepresentation) {
             return Integer.parseInt(asciiRepresentation);
          }
+
+         @Override
+         public Number parseBinary(final DataInputStream input, final boolean bigEndian) throws IOException {
+            return input.readInt();
+         }
       },
       /**
        * 32bit float (float in Java).
@@ -244,6 +278,11 @@ public class PLYContentDescription {
          @Override
          public Number parseAscii(final String asciiRepresentation) {
             return Float.parseFloat(asciiRepresentation);
+         }
+
+         @Override
+         public Number parseBinary(final DataInputStream input, final boolean bigEndian) throws IOException {
+            return input.readFloat();
          }
       };
 
@@ -291,7 +330,7 @@ public class PLYContentDescription {
        * @return the numeric value of the specified string.
        */
       public abstract Number parseAscii(String asciiRepresentation);
-      //
-      // public abstract Number parseBinary(byte[] binaryRepresentation);
+
+      public abstract Number parseBinary(final DataInputStream input, final boolean bigEndian) throws IOException;
    }
 }
