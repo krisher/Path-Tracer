@@ -22,6 +22,7 @@ import net.miginfocom.swing.MigLayout;
 import edu.rit.krisher.raytracer.ImageBuffer;
 import edu.rit.krisher.raytracer.RayEngine;
 import edu.rit.krisher.raytracer.image.DisplayableImageBuffer;
+import edu.rit.krisher.scene.Scene;
 
 /**
  * Main RayTracer UI window.
@@ -90,7 +91,7 @@ public class RTFrame extends JFrame {
       pack();
    }
 
-   public void setScenes(final SceneDescription[] scenes) {
+   public void setScenes(final Scene[] scenes) {
       rtControls.setScenes(scenes);
    }
 
@@ -112,9 +113,8 @@ public class RTFrame extends JFrame {
                rtImagePanel.revalidate();
             }
 
-            final SceneDescription selectedScene = rtControls.getSelectedScene();
-            RayEngine.rayTrace(progressBuffer, selectedScene.getCamera(), selectedScene.getScene(),
-                               rtControls.getSampleRate(), rtControls.getRecursionDepth());
+            final Scene selectedScene = rtControls.getSelectedScene();
+            RayEngine.rayTrace(progressBuffer, selectedScene.getCamera(), selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
          } else {
             RayEngine.cancel(progressBuffer);
          }

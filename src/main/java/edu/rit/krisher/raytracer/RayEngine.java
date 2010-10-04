@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.rit.krisher.scene.Camera;
+import edu.rit.krisher.scene.DefaultScene;
 import edu.rit.krisher.scene.Scene;
 
 /**
@@ -34,7 +35,7 @@ import edu.rit.krisher.scene.Scene;
  * 
  * <p>
  * The results of the rendering are returned asynchronously with the
- * {@link #rayTrace(ImageBuffer, Camera, Scene, int, int)} call. The appropriate
+ * {@link #rayTrace(ImageBuffer, Camera, DefaultScene, int, int)} call. The appropriate
  * methods in {@link ImageBuffer} are called whenever pixel data is ready, and
  * when the rendering is complete.
  * 

@@ -3,6 +3,8 @@
  */
 package edu.rit.krisher.scene;
 
+import java.util.Arrays;
+
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
@@ -201,7 +203,7 @@ public final class AxisAlignedBoundingBox {
     */
    @Override
    public String toString() {
-      return "AxisAlignedBoundingBox [minXYZ=" + minXYZ + ", maxXYZ=" + maxXYZ + "]";
+      return "AxisAlignedBoundingBox [minXYZ=" + Arrays.toString(minXYZ) + ", maxXYZ=" + Arrays.toString(maxXYZ) + "]";
    }
 
 }

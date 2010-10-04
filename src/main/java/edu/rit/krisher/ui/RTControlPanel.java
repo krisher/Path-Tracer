@@ -16,6 +16,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import net.miginfocom.swing.MigLayout;
+import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.util.Timer;
 
 /**
@@ -142,14 +143,14 @@ public class RTControlPanel extends JPanel {
       this.actionListeners.remove(listener);
    }
 
-   public void setScenes(final SceneDescription[] scenes) {
+   public void setScenes(final Scene[] scenes) {
       sceneList.setListData(scenes);
       if (scenes.length > 0)
          sceneList.setSelectedIndex(0);
    }
 
-   public SceneDescription getSelectedScene() {
-      return (SceneDescription) sceneList.getSelectedValue();
+   public Scene getSelectedScene() {
+      return (Scene) sceneList.getSelectedValue();
    }
 
    public void workStarted(final int workLoad) {

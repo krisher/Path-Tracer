@@ -91,7 +91,7 @@ public class KDTreeMetrics {
           * Unreachable...
           */
          assert false;
-         throw new RuntimeException();
+         throw new IllegalStateException(e);
       }
    }
 

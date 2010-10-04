@@ -12,17 +12,25 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
  */
 public class SAHPartitionStrategey implements KDPartitionStrategy {
 
-   private static final double kdNodeTraversalCost = 1.0;
-   private static final double geometryIntersectionCost = 40.0;
-   private static final double emptyBias = 0;// .25;
+   private final double kdNodeTraversalCost;
+   private final double geometryIntersectionCost;
+   private final double emptyBias;// .25;
    private final int maxDepth;
 
    public SAHPartitionStrategey() {
-      this.maxDepth = 20;
+      this(25);
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
+      this(maxDepth, 1.0, 50.0, 0.0);
+   }
+
+   public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
+         final double geometryIntersectionCost, final double emptyBias) {
       this.maxDepth = maxDepth;
+      this.kdNodeTraversalCost = nodeTraversalCost;
+      this.geometryIntersectionCost = geometryIntersectionCost;
+      this.emptyBias = Math.max(0.0, Math.min(1.0, emptyBias));
    }
 
    @Override

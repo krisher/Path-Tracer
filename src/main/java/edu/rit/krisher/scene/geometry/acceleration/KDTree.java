@@ -2,7 +2,6 @@ package edu.rit.krisher.scene.geometry.acceleration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
@@ -41,10 +40,11 @@ public class KDTree implements Geometry {
          return;
       }
 
-      List<Geometry> primitivesList = new ArrayList<Geometry>();
+      ArrayList<Geometry> primitivesList = new ArrayList<Geometry>();
       treeBounds = new AxisAlignedBoundingBox(content[0].getBounds());
       for (int i = 0; i < content.length; ++i) {
          final Geometry[] prims = content[i].getPrimitives();
+         primitivesList.ensureCapacity(primitivesList.size() + prims.length);
          for (final Geometry prim : prims) {
             primitivesList.add(prim);
          }
@@ -111,10 +111,6 @@ public class KDTree implements Geometry {
       if (members.length == 0) {
          return null;
       }
-
-      // if (members.length < minPrims || depthRemaining == 0) {
-      // return new KDLeafNode(members);
-      // }
 
       final PartitionResult partition = partitionStrategy.findSplitLocation(members, bounds, nodeBounds, depth);
       if (partition == PartitionResult.LEAF) {
