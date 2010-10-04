@@ -54,7 +54,7 @@ public class KDTreeTest {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");
       timer.start();
-      final KDTree tree = new KDTree(new SAHPartitionStrategey(25), bunnyGeom);
+      final KDTree tree = new KDTree(new SAHPartitionStrategey(), bunnyGeom);
       timer.stop();
       timer.print(System.out);
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);
@@ -63,8 +63,8 @@ public class KDTreeTest {
       assertThat("Primitive Count", metrics.totalPrimitives - metrics.duplicatedPrimitives, equalTo(69451));
 
       assertThat("Average leaf depth", metrics.avgDepth, greaterThan(18.5f));
-      assertThat("Max leaf Primitives", metrics.maxLeafPrimitives, lessThanOrEqualTo(824));
-      assertThat("Avg Primitives Per Leaf...", metrics.avgLeafPrimitives, lessThan(4.7f));
+      assertThat("Max leaf Primitives", metrics.maxLeafPrimitives, lessThanOrEqualTo(102));
+      assertThat("Avg Primitives Per Leaf...", metrics.avgLeafPrimitives, lessThan(6f));
    }
 
    private static TriangleMesh loadBunny() {
