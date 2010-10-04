@@ -11,5 +11,5 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 public interface KDPartitionStrategy {
 
    public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
-         final int previousSplitAxis, final AxisAlignedBoundingBox nodeBounds, final int depthRemaining, final int minPrimitives);
+         final AxisAlignedBoundingBox nodeBounds, final int depthRemaining);
 }

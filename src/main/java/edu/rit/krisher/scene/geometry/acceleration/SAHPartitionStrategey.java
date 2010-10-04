@@ -14,13 +14,23 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
    private static final double kdNodeTraversalCost = 1.0;
    private static final double geometryIntersectionCost = 40.0;
-   private static final double emptyBias = 0.25;
+   private static final double emptyBias = 0;// .25;
+   private final int maxDepth;
+
+   public SAHPartitionStrategey() {
+      this.maxDepth = 20;
+   }
+
+   public SAHPartitionStrategey(final int maxDepth) {
+      this.maxDepth = maxDepth;
+   }
 
    @Override
    public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
-         final int previousSplitAxis, final AxisAlignedBoundingBox nodeBounds, final int depthRemaining,
-         final int minPrimitives) {
-
+         final AxisAlignedBoundingBox nodeBounds, final int depth) {
+      if (depth >= maxDepth) {
+         return PartitionResult.LEAF;
+      }
       /*
        * The surface area of the node being split...
        */
@@ -122,7 +132,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       /*
        * No split attempt was cheaper than creating a leaf, so that's what we do.
        */
-      return new PartitionResult();
+      return PartitionResult.LEAF;
    }
 
    private static final class SplitCandidate implements Comparable<SplitCandidate> {

@@ -16,6 +16,7 @@ import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.acceleration.KDTree;
 import edu.rit.krisher.scene.geometry.acceleration.KDTreeMetrics;
+import edu.rit.krisher.scene.geometry.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
@@ -312,7 +313,7 @@ public class RTDemo {
       scene.add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.8), new Vec3(-2, -0.5, 0), false));
       final TriangleMesh bunnyMesh = loadBunny();
       final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
-      final KDTree accel = new KDTree(20, 2, bunnyMesh);
+      final KDTree accel = new KDTree(new SAHPartitionStrategey(25), bunnyMesh);
       kdTimer.stop().print(System.out);
       scene.add(accel);
       final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
@@ -335,7 +336,7 @@ public class RTDemo {
 
       bunnyMesh.setMaterial(blueGreenMixedRefractive);
       final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
-      final KDTree accel = new KDTree(20, 2, bunnyMesh, groundPlane(whiteLambert, true));
+      final KDTree accel = new KDTree(new SAHPartitionStrategey(25), bunnyMesh, groundPlane(whiteLambert, true));
       kdTimer.stop().print(System.out);
       System.out.println(new KDTreeMetrics(accel));
       scene.add(accel);

@@ -12,15 +12,38 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
  */
 public final class MedianPartitionStrategy implements KDPartitionStrategy {
 
+   private final int maxDepth;
+   private final int maxPrimitives;
+
+   /**
+    * Creates a new median partitioning strategy.
+    * 
+    * @param maxDepth
+    *           The maximum depth of the tree (hard limit).
+    * @param maxPrimitives
+    *           The maximum number of primitives in a leaf node (soft limit).
+    */
+   public MedianPartitionStrategy(final int maxDepth, final int maxPrimitives) {
+      this.maxDepth = maxDepth;
+      this.maxPrimitives = maxPrimitives;
+   }
+
    /*
     * @see edu.rit.krisher.scene.geometry.acceleration.KDPartitionStrategy#findSplitLocation(int[],
     * edu.rit.krisher.scene.AxisAlignedBoundingBox[], byte, edu.rit.krisher.scene.AxisAlignedBoundingBox, int, int)
     */
    @Override
    public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
-         final int previousSplitAxis, final AxisAlignedBoundingBox nodeBounds, final int depthRemaining,
-         final int minPrimitives) {
-      int splitAxis = (previousSplitAxis + 1) % 3;
+         final AxisAlignedBoundingBox nodeBounds, final int depth) {
+
+      if (depth >= maxDepth || members.length < maxPrimitives)
+         return PartitionResult.LEAF;
+      /*
+       * From SAH; choose largest dimension as initial split axis.
+       */
+      int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? KDTree.X_AXIS
+            : KDTree.Z_AXIS)
+            : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
       for (int i = 0; i < 3; ++i) {
          final float split = findSplitLocation(members, bounds, splitAxis);
          // TODO: need to ensure the split actually occurs within the bounds of the kd-node!,
@@ -32,7 +55,7 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
          }
          return new PartitionResult(splitAxis, split);
       }
-      return new PartitionResult();
+      return PartitionResult.LEAF;
    }
 
    /**

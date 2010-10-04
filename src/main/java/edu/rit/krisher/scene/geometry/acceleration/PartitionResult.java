@@ -7,7 +7,7 @@ package edu.rit.krisher.scene.geometry.acceleration;
  *
  */
 public class PartitionResult {
-   public static final int NO_SPLIT = -1;
+   public static final PartitionResult LEAF = new PartitionResult();;
 
    public final int splitAxis;
    public final double splitLocation;
@@ -17,8 +17,8 @@ public class PartitionResult {
       this.splitLocation = splitLocation;
    }
 
-   public PartitionResult() {
-      this.splitAxis = NO_SPLIT;
+   private PartitionResult() {
+      this.splitAxis = -1;
       this.splitLocation = 0;
    }
 }

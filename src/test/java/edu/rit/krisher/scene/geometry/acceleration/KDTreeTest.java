@@ -33,7 +33,7 @@ public class KDTreeTest {
    @Test
    public void splitLocationsShouldBeInNodeRange() throws Exception {
       final Geometry geometry = createOpenBoxGeometry();
-      final KDTree tree = new KDTree(20, 2, geometry);
+      final KDTree tree = new KDTree(geometry);
       final KDNodeVisitor visitor = new KDNodeVisitor() {
 
          @Override
@@ -54,7 +54,7 @@ public class KDTreeTest {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");
       timer.start();
-      final KDTree tree = new KDTree(new SAHPartitionStrategey(), 20, 2, bunnyGeom);
+      final KDTree tree = new KDTree(new SAHPartitionStrategey(25), bunnyGeom);
       timer.stop();
       timer.print(System.out);
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);

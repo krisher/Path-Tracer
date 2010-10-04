@@ -23,19 +23,17 @@ public class KDTree implements Geometry {
 
    private final KDNode root;
    private final Geometry[] primitives;
-   private final int minPrims;
    private final AxisAlignedBoundingBox treeBounds;
    private final KDPartitionStrategy partitionStrategy;
 
 
 
-   public KDTree(final int maxDepth, final int minPrims, final Geometry... content) {
-      this(new MedianPartitionStrategy(), maxDepth, minPrims, content);
+   public KDTree(final Geometry... content) {
+      this(new SAHPartitionStrategey(), content);
    }
 
-   public KDTree(final KDPartitionStrategy strategy, final int maxDepth, final int minPrims, final Geometry... content) {
+   public KDTree(final KDPartitionStrategy strategy, final Geometry... content) {
       this.partitionStrategy = strategy;
-      this.minPrims = minPrims;
       if (content == null || content.length == 0) {
          root = null;
          primitives = null;
@@ -62,7 +60,7 @@ public class KDTree implements Geometry {
          members[i] = i;
       }
 
-      root = partition(members, bounds, maxDepth, (byte) 0, treeBounds);
+      root = partition(members, bounds, 0, treeBounds);
    }
 
    @Override
@@ -108,18 +106,18 @@ public class KDTree implements Geometry {
       }
    }
 
-   private final KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depthRemaining,
-         final int splitAxis, final AxisAlignedBoundingBox nodeBounds) {
+   private final KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depth,
+         final AxisAlignedBoundingBox nodeBounds) {
       if (members.length == 0) {
          return null;
       }
 
-      if (members.length < minPrims || depthRemaining == 0) {
-         return new KDLeafNode(members);
-      }
+      // if (members.length < minPrims || depthRemaining == 0) {
+      // return new KDLeafNode(members);
+      // }
 
-      final PartitionResult partition = partitionStrategy.findSplitLocation(members, bounds, splitAxis, nodeBounds, depthRemaining, minPrims);
-      if (partition.splitAxis == PartitionResult.NO_SPLIT) {
+      final PartitionResult partition = partitionStrategy.findSplitLocation(members, bounds, nodeBounds, depth);
+      if (partition == PartitionResult.LEAF) {
          return new KDLeafNode(members);
       }
 
@@ -128,9 +126,9 @@ public class KDTree implements Geometry {
 
       final KDInteriorNode node = new KDInteriorNode((float)partition.splitLocation, partition.splitAxis);
       if (lgPrims[0].length > 0)
-         node.lessChild = partition(lgPrims[0], bounds, depthRemaining - 1, splitAxis, boundsForChild(nodeBounds, partition.splitLocation, partition.splitAxis, true));
+         node.lessChild = partition(lgPrims[0], bounds, depth + 1, boundsForChild(nodeBounds, partition.splitLocation, partition.splitAxis, true));
       if (lgPrims[1].length > 0)
-         node.greaterEqChild = partition(lgPrims[1], bounds, depthRemaining - 1, splitAxis, boundsForChild(nodeBounds, partition.splitLocation, partition.splitAxis, false));
+         node.greaterEqChild = partition(lgPrims[1], bounds, depth + 1, boundsForChild(nodeBounds, partition.splitLocation, partition.splitAxis, false));
       return node;
    }
 
