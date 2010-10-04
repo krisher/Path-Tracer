@@ -38,7 +38,6 @@ public final class AdvRenderingScenes {
    static Material whiteLambert = new LambertBRDF(Color.white);
    static Material blueLambert = new LambertBRDF(new Color(0.25, 0.25, 1.0));
 
-
    static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.95, 0.95), 100000);
    static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
 
@@ -55,7 +54,7 @@ public final class AdvRenderingScenes {
    }
 
    public static Scene[] getScenes() {
-      return new Scene[] { bunnyScene, bunnySceneKDMedian, bunnySceneKDSAH1, bunnySceneKDRef };
+      return new Scene[] { bunnyScene, bunnySceneKDMedian, bunnySceneKDSAH1, bunnySceneKDRef, boxKDTest };
    }
 
    private static final Scene bunnyScene = new AbstractSceneDescription<PinholeCamera>("Bunny Scene", new PinholeCamera()) {
@@ -90,6 +89,26 @@ public final class AdvRenderingScenes {
          System.out.println(new KDTreeMetrics(accel));
          add(accel);
          final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
+         camera.lookAt(bounds.centerPt(), 25, 180, bounds.diagonalLength());
+         camera.setFocalDist(bounds.diagonalLength());
+         camera.setAperture(1 / 100.0);
+
+         add(new SphereLight(new Vec3(0, 6, 0), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
+
+         camera.setFOVAngle(56.14);
+         // scene.setBackground(new Color(0.25, 0.25, 0.65));
+      }
+   };
+
+   private static final Scene boxKDTest = new AbstractSceneDescription<DoFCamera>("Box KD Test", new DoFCamera()) {
+      @Override
+      protected void initScene() {
+         final Timer kdTimer = new Timer("KD-Tree Construction (Box KD Test)").start();
+         final KDTree accel = new KDTree(new SAHPartitionStrategey(), groundPlane(whiteLambert, true));
+         kdTimer.stop().print(System.out);
+         System.out.println(new KDTreeMetrics(accel));
+         add(accel);
+         final AxisAlignedBoundingBox bounds = accel.getBounds();
          camera.lookAt(bounds.centerPt(), 25, 180, bounds.diagonalLength());
          camera.setFocalDist(bounds.diagonalLength());
          camera.setAperture(1 / 100.0);

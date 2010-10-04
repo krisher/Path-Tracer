@@ -82,8 +82,8 @@ public class KDTreeMetrics {
          this.totalPrimitives = visitor.cumLeafPrimitives;
          this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getPrimitives().length;
 
-         final VarianceVisitor vVisitor = new VarianceVisitor(visitor.leafNodeCount
-                                                              / (double) visitor.cumLeafPrimitives);
+         final VarianceVisitor vVisitor = new VarianceVisitor(visitor.cumLeafPrimitives
+                                                              / (double) visitor.leafNodeCount);
          tree.visitTreeNodes(vVisitor);
          this.primCountVariance = (float) (vVisitor.variance / visitor.leafNodeCount);
       } catch (final Exception e) {
@@ -164,7 +164,7 @@ public class KDTreeMetrics {
    private static class VarianceVisitor implements KDNodeVisitor {
 
       private final double meanPrimsPerLeaf;
-      double variance;
+      double variance = 0;
 
       public VarianceVisitor(final double meanPrimsPerLeaf) {
          this.meanPrimsPerLeaf = meanPrimsPerLeaf;

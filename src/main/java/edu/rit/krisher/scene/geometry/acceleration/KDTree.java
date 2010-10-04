@@ -25,8 +25,6 @@ public class KDTree implements Geometry {
    private final AxisAlignedBoundingBox treeBounds;
    private final KDPartitionStrategy partitionStrategy;
 
-
-
    public KDTree(final Geometry... content) {
       this(new SAHPartitionStrategey(), content);
    }
@@ -120,7 +118,7 @@ public class KDTree implements Geometry {
       final int[][] lgPrims;
       lgPrims = partitionPrimitives(members, bounds, partition.splitAxis, partition.splitLocation);
 
-      final KDInteriorNode node = new KDInteriorNode((float)partition.splitLocation, partition.splitAxis);
+      final KDInteriorNode node = new KDInteriorNode((float) partition.splitLocation, partition.splitAxis);
       if (lgPrims[0].length > 0)
          node.lessChild = partition(lgPrims[0], bounds, depth + 1, boundsForChild(nodeBounds, partition.splitLocation, partition.splitAxis, true));
       if (lgPrims[1].length > 0)
@@ -169,33 +167,27 @@ public class KDTree implements Geometry {
 
       KDInteriorNode(final float splitLocation, final int splitAxis) {
          this.splitLocation = splitLocation;
-         this.axis = (byte)splitAxis;
+         this.axis = (byte) splitAxis;
       }
 
       @Override
       public double intersects(final Ray ray, final double tmin, final double tmax) {
-         final double tCMin, tCMax;
+         final double cEntry, cExit;
          if (axis == X_AXIS) {
-            tCMin = ray.origin.x + tmin * ray.direction.x;
-            tCMax = ray.origin.x + tmax * ray.direction.x;
+            cEntry = ray.origin.x + tmin * ray.direction.x;
+            cExit = ray.origin.x + tmax * ray.direction.x;
          } else if (axis == Y_AXIS) {
-            tCMin = ray.origin.y + tmin * ray.direction.y;
-            tCMax = ray.origin.y + tmax * ray.direction.y;
+            cEntry = ray.origin.y + tmin * ray.direction.y;
+            cExit = ray.origin.y + tmax * ray.direction.y;
          } else {
-            tCMin = ray.origin.z + tmin * ray.direction.z;
-            tCMax = ray.origin.z + tmax * ray.direction.z;
+            cEntry = ray.origin.z + tmin * ray.direction.z;
+            cExit = ray.origin.z + tmax * ray.direction.z;
          }
 
-         if (tCMin <= splitLocation) {
-            if (tCMax < splitLocation) {
-               final double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tmax);
-               if (hitDist > 0)
-                  return hitDist;
-            } else if (tCMax == splitLocation) {
-               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax);
-               if (hitDist > 0)
-                  return hitDist;
-            } else {
+         if (cEntry < splitLocation) { // entry point on less side of split, or on split
+            if (cExit < splitLocation) { // exit point on less side of split, only need to check less...
+               return (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tmax);
+            } else { // exit point >= split location, need to check both
                final double tsplit;
                if (axis == X_AXIS)
                   tsplit = (splitLocation - ray.origin.x) / ray.direction.x;
@@ -204,20 +196,16 @@ public class KDTree implements Geometry {
                else
                   tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
                // less-child: use tmin, tsplit
-               double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tsplit);
-               if (hitDist > 0)
+               final double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tsplit);
+               if ((hitDist > 0 && hitDist < tsplit) || greaterEqChild == null)
                   return hitDist;
                // greater-child: use tsplit, tmax
-               hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tsplit, tmax);
-               if (hitDist > 0)
-                  return hitDist;
+               return greaterEqChild.intersects(ray, tsplit, tmax);
             }
-         } else {
-            if (tCMax > splitLocation) {
-               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax);
-               if (hitDist > 0)
-                  return hitDist;
-            } else {
+         } else { // entry >= split coordinate
+            if (cExit >= splitLocation) { // exit on greater/eq side of split, only check greater.
+               return (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax);
+            } else { // exit on less side, check both
                final double tsplit;
                if (axis == X_AXIS)
                   tsplit = (splitLocation - ray.origin.x) / ray.direction.x;
@@ -226,16 +214,13 @@ public class KDTree implements Geometry {
                else
                   tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
                // greater-child: use tmin, tsplit
-               double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tsplit);
-               if (hitDist > 0)
+               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tsplit);
+               if ((hitDist > 0 && hitDist <= tsplit) || lessChild == null)
                   return hitDist;
                // less-child: use tsplit, tmax
-               hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tsplit, tmax);
-               if (hitDist > 0)
-                  return hitDist;
+               return lessChild.intersects(ray, tsplit, tmax);
             }
          }
-         return 0;
       }
 
       @Override
