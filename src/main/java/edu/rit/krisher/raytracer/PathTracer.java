@@ -12,7 +12,6 @@ import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -46,8 +45,6 @@ public final class PathTracer {
       }
    };
 
-   private static final Timer timer = new Timer("Path Tracing");
-
    /*
     * Buffer to collect rgb pixel data
     * 
@@ -65,8 +62,7 @@ public final class PathTracer {
    }
 
    /**
-    * Generates eye rays for each sample of each pixel in the specified
-    * WorkItem, and calls processRays to trace them.
+    * Generates eye rays for each sample of each pixel in the specified WorkItem, and calls processRays to trace them.
     * 
     * {@link WorkItem#workDone()} is invoked before this method completes.
     * 
@@ -74,7 +70,6 @@ public final class PathTracer {
     *           The non-null item to path-trace.
     */
    public void pathTrace(final WorkItem workItem) {
-      timer.start();
       try {
          final int pixelCount = workItem.blockWidth * workItem.blockHeight * 3;
          if (pixels == null || pixels.length < pixelCount)
@@ -102,22 +97,19 @@ public final class PathTracer {
                for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
                   for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
                      /*
-                      * Stratified jittered sampling, an eye ray is generated
-                      * that passes through a random location in a small square
-                      * region of the pixel area for each sample.
+                      * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
+                      * small square region of the pixel area for each sample.
                       * 
-                      * This is not quite as good as a true Poisson
-                      * distribution, but a reasonable approximation for this
-                      * purpose.
+                      * This is not quite as good as a true Poisson distribution, but a reasonable approximation for
+                      * this purpose.
                       */
                      final double xSRand = rng.nextDouble();
                      final double ySRand = rng.nextDouble();
                      /*
-                      * Compute normalized image coordinates (-1 to 1 for the
-                      * full range of the camera's FoV angle).
+                      * Compute normalized image coordinates (-1 to 1 for the full range of the camera's FoV angle).
                       * 
-                      * Note that both x and y are normalized based on the
-                      * width, so the FoV represents a horizontal range.
+                      * Note that both x and y are normalized based on the width, so the FoV represents a horizontal
+                      * range.
                       */
                      final double x = ((pixelX + workItem.blockStartX + (sampleDelta * (sampleX + xSRand))) - xCenter)
                      / xCenter;
@@ -125,19 +117,17 @@ public final class PathTracer {
                      / xCenter;
                      final SampleRay ray = rays[rayIdx++];
                      /*
-                      * Reset the ray state since we are probably re-using each
-                      * instance many times.
+                      * Reset the ray state since we are probably re-using each instance many times.
                       */
                      ray.pixelX = pixelX;
                      ray.pixelY = pixelY;
                      /*
-                      * The contribution of the path is bounded by 1 / (samples
-                      * per pixel)
+                      * The contribution of the path is bounded by 1 / (samples per pixel)
                       */
                      ray.transmissionSpectrum.set(sampleWeight, sampleWeight, sampleWeight);
                      /*
-                      * Eye rays transmit the emissive component of intersected
-                      * objects (i.e. an emissive object is directly visible)
+                      * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
+                      * directly visible)
                       */
                      ray.emissiveResponse = true;
                      ray.extinction.clear();
@@ -157,8 +147,6 @@ public final class PathTracer {
          workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth, workItem.blockHeight, pixels);
       } finally {
          workItem.workDone();
-         timer.stop();
-         timer.print(System.out);
       }
    }
 
@@ -174,17 +162,14 @@ public final class PathTracer {
       final Vec3 directLightNormal = new Vec3();
 
       /*
-       * The number of rays that are still active (have not been absorbed or
-       * otherwise terminated).
+       * The number of rays that are still active (have not been absorbed or otherwise terminated).
        * 
-       * The active rays are always contiguous from the beginning of the rays
-       * array.
+       * The active rays are always contiguous from the beginning of the rays array.
        */
       int activeRayCount = rays.length;
       /*
-       * All active rays are at the same depth into the path (# of bounces from
-       * the initial eye ray). Process until we reach the maximum depth, or all
-       * rays have terminated.
+       * All active rays are at the same depth into the path (# of bounces from the initial eye ray). Process until we
+       * reach the maximum depth, or all rays have terminated.
        */
       for (int rayDepth = 0; rayDepth <= workItem.recursionDepth && activeRayCount > 0; rayDepth++) {
          /*
@@ -195,8 +180,7 @@ public final class PathTracer {
             final SampleRay ray = rays[processRayIdx];
 
             /*
-             * Process the sample ray for the nearest intersection with scene
-             * geometry.
+             * Process the sample ray for the nearest intersection with scene geometry.
              */
             double intersectDist = 0;
             Geometry hit = null;
@@ -212,8 +196,7 @@ public final class PathTracer {
                /*
                 * No intersection, process for the scene background color.
                 * 
-                * Ignore the emissive response flag since the background will
-                * not be sampled for direct illumination.
+                * Ignore the emissive response flag since the background will not be sampled for direct illumination.
                 */
                // if (ray.emissiveResponse) {
                final int dst = 3 * (ray.pixelY * workItem.blockWidth + ray.pixelX);
@@ -230,24 +213,20 @@ public final class PathTracer {
             hit.getHitData(hitData, ray, intersectDist);
 
             /*
-             * Diffuse surfaces with a wide distribution of reflectivity are
-             * relatively unlikely to bounce to a small emissive object, which
-             * introduces significant variance without an extremely large number
-             * of samples. Diffuse surfaces will be tested for direct
-             * illumination explicitly below, so we ignore the emissive
+             * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
+             * emissive object, which introduces significant variance without an extremely large number of samples.
+             * Diffuse surfaces will be tested for direct illumination explicitly below, so we ignore the emissive
              * component of an object reflecting off a diffuse surface.
              * 
              * For more information, see:
              * 
-             * ﻿Shirley, Peter, Changyaw Wang, and Kurt Zimmerman. 1996. Monte
-             * Carlo techniques for direct lighting calculations. ACM
-             * Transactions on Graphics 15, no. 1: 1-36.
+             * ﻿Shirley, Peter, Changyaw Wang, and Kurt Zimmerman. 1996. Monte Carlo techniques for direct lighting
+             * calculations. ACM Transactions on Graphics 15, no. 1: 1-36.
              * 
              * 
              * or
              * 
-             * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK
-             * Peters.
+             * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
              */
             if (ray.emissiveResponse) {
 
@@ -256,8 +235,8 @@ public final class PathTracer {
                sampleColor.set(0, 0, 0);
 
             /*
-             * Save the transmission weights, they may be overwritten if the ray
-             * is reused for the next path segment below.
+             * Save the transmission weights, they may be overwritten if the ray is reused for the next path segment
+             * below.
              */
             final double rTransmission = ray.transmissionSpectrum.r
             * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
@@ -267,23 +246,19 @@ public final class PathTracer {
             * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
 
             /*
-             * The intersection point. Saved because this data may be
-             * overwritten when generating the next path segment.
+             * The intersection point. Saved because this data may be overwritten when generating the next path segment.
              */
             final Vec3 hitPoint = ray.getPointOnRay(intersectDist);
 
             /*
-             * Specular and refractive materials do not benefit from direct
-             * illuminant sampling, since their relfection/refraction
-             * distributions are typically constrained to a small solid angle,
-             * they only respond to light coming from directions that will be
-             * sampled via bounce rays.
+             * Specular and refractive materials do not benefit from direct illuminant sampling, since their
+             * relfection/refraction distributions are typically constrained to a small solid angle, they only respond
+             * to light coming from directions that will be sampled via bounce rays.
              */
             if (hitData.material.shouldSampleDirectIllumination()) {
                /*
-                * Set the origin of the shadow ray to the hit point, but perturb
-                * by a small distance along the surface normal vector to avoid
-                * self-intersecting the same point due to round-off error.
+                * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface
+                * normal vector to avoid self-intersecting the same point due to round-off error.
                 */
                shadowRay.origin.set(hitPoint).scaleAdd(hitData.surfaceNormal, Constants.EPSILON_D);
 
@@ -293,14 +268,12 @@ public final class PathTracer {
                    */
                   double lightDist = light.sampleEmissiveRadiance(shadowRay.direction, lightEnergy, directLightNormal, shadowRay.origin, rng);
                   /*
-                   * Cosine of the angle between the geometry surface normal and
-                   * the shadow ray direction
+                   * Cosine of the angle between the geometry surface normal and the shadow ray direction
                    */
                   final double cosWi = shadowRay.direction.dot(hitData.surfaceNormal);
                   if (cosWi > 0) {
                      /*
-                      * Determine whether the light source is visible from the
-                      * irradiated point
+                      * Determine whether the light source is visible from the irradiated point
                       */
                      for (final Geometry geom : geometry) {
                         if (geom != light) {
@@ -313,15 +286,13 @@ public final class PathTracer {
                      }
                      if (lightDist > 0) {
                         /*
-                         * Cosine of the angle between the light sample point's
-                         * normal and the shadow ray.
+                         * Cosine of the angle between the light sample point's normal and the shadow ray.
                          */
                         final double cosWo = -directLightNormal.dot(shadowRay.direction);
 
                         /*
-                         * Compute the reflected spectrum/power by modulating
-                         * the energy transmitted along the shadow ray with the
-                         * response of the material...
+                         * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
+                         * ray with the response of the material...
                          */
                         hitData.material.getDirectIlluminationTransport(lightResponse, ray.direction, rng, shadowRay.direction, hitData.surfaceNormal, hitData.materialCoords);
 
@@ -335,20 +306,17 @@ public final class PathTracer {
             }
 
             /*
-             * If we have not reached the maximum recursion depth, generate a
-             * new ray for the next path segment.
+             * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
              */
             if (rayDepth < workItem.recursionDepth
                   /*
-                   * Russion roulette for variance
-                   * reduction.
+                   * Russian roulette for variance reduction.
                    */
                   && rng.nextFloat() >= 1 / 6.0) {
                final SampleRay outRay = rays[outRayCount];
                /*
-                * Preserve the current extinction, this is only modified when
-                * the ray passes through a refractive interface, at which point
-                * the extinction is changed in the Material model.
+                * Preserve the current extinction, this is only modified when the ray passes through a refractive
+                * interface, at which point the extinction is changed in the Material model.
                 */
                outRay.extinction.set(ray.extinction);
                outRay.origin.set(hitPoint);
@@ -360,8 +328,7 @@ public final class PathTracer {
                   outRay.pixelX = ray.pixelX;
                   outRay.pixelY = ray.pixelY;
                   /*
-                   * Avoid precision issues when processing the ray for the next
-                   * intersection.
+                   * Avoid precision issues when processing the ray for the next intersection.
                    */
                   outRay.origin.scaleAdd(outRay.direction, Constants.EPSILON_D);
                   outRayCount++;
@@ -369,8 +336,8 @@ public final class PathTracer {
                }
             }
             /*
-             * Add the contribution to the pixel, modulated by the transmission
-             * across all previous bounces in this path.
+             * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
+             * path.
              */
             final int dst = 3 * (ray.pixelY * workItem.blockWidth + ray.pixelX);
             pixels[dst] += (sampleColor.r) * rTransmission;

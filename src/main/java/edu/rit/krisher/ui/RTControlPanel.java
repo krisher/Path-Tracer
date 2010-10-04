@@ -184,6 +184,7 @@ public class RTControlPanel extends JPanel {
    public void workCompleted() {
       timer.stop();
       timer.print(System.out);
+      timer.reset();
       this.worked = workload;
       for (final Component comp : getComponents()) {
          if (comp != startRTButton) {

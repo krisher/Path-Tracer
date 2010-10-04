@@ -93,7 +93,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * Ensure that the split candidate falls inside the node's bounds.
              */
             if (candidate.splitLocation > nodeBounds.minXYZ[splitAxis]
-                  && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+                                                            && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.

@@ -11,6 +11,7 @@ public class RTDemo {
       final RTFrame frame = new RTFrame();
 
       frame.setScenes(AdvRenderingScenes.getScenes());
+      // frame.setScenes(CG2Scenes.getScenes());
 
       SwingUtilities.invokeLater(new Runnable() {
          @Override

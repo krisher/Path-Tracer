@@ -73,7 +73,7 @@ public class PhongSpecularBRDF implements Material {
        */
       final Vec3 directionOut = sampleOut.direction;
       directionOut.set(radianceSampleDirection);
-      directionOut.scaleAdd(surfaceNormal, -2 * (radianceSampleDirection.dot(surfaceNormal))).normalize();
+      directionOut.reflect(surfaceNormal);
 
       if (specExp < 100000) {
          /*

@@ -10,6 +10,7 @@ import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.camera.DoFCamera;
 import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.Box;
+import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.acceleration.KDPartitionStrategy;
 import edu.rit.krisher.scene.geometry.acceleration.KDTree;
@@ -54,7 +55,8 @@ public final class AdvRenderingScenes {
    }
 
    public static Scene[] getScenes() {
-      return new Scene[] { bunnyScene, bunnySceneKDMedian, bunnySceneKDSAH1, bunnySceneKDRef, boxKDTest };
+      return new Scene[] { bunnyScene, bunnySceneKDMedian, bunnySceneKDSAH1, bunnySceneKDRef, boxKDTest,
+            sphereTestScene };
    }
 
    private static final Scene bunnyScene = new AbstractSceneDescription<PinholeCamera>("Bunny Scene", new PinholeCamera()) {
@@ -84,7 +86,7 @@ public final class AdvRenderingScenes {
 
          bunnyMesh.setMaterial(blueGreenMixedRefractive);
          final Timer kdTimer = new Timer("KD-Tree Construction (Bunny Mesh)").start();
-         final KDTree accel = new KDTree(new SAHPartitionStrategey(25), bunnyMesh, groundPlane(whiteLambert, true));
+         final KDTree accel = new KDTree(new SAHPartitionStrategey(), bunnyMesh, groundPlane(whiteLambert, true));
          kdTimer.stop().print(System.out);
          System.out.println(new KDTreeMetrics(accel));
          add(accel);
@@ -120,14 +122,35 @@ public final class AdvRenderingScenes {
       }
    };
 
+   private static final Scene sphereTestScene = new AbstractSceneDescription<DoFCamera>("Sphere Test", new DoFCamera()) {
+      @Override
+      protected void initScene() {
+         add(new Box(10, 1, 16, new PhongSpecularBRDF(Color.white, 1000), new Vec3(-2, -0.5, 0), false));
+         final Timer kdTimer = new Timer("KD-Tree Construction (Sphere Test)").start();
+         final KDTree accel = new KDTree(new SAHPartitionStrategey(), new Sphere(1));
+         kdTimer.stop().print(System.out);
+         System.out.println(new KDTreeMetrics(accel));
+         add(accel);
+         final AxisAlignedBoundingBox bounds = new Sphere(1).getBounds();
+
+         camera.lookAt(bounds.centerPt(), 25, 180, bounds.diagonalLength());
+         camera.setFocalDist(bounds.diagonalLength());
+         camera.setAperture(1 / 100.0);
+         add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
+
+         camera.setFOVAngle(56.14);
+      }
+   };
+
    private static Scene createKDBunnyScene(final String name, final KDPartitionStrategy strategy) {
       return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
          @Override
          protected void initScene() {
-            add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.8), new Vec3(-2, -0.5, 0), false));
+            // add(new Box(10, 1, 16, new PhongSpecularBRDF(new Color(1, 0, 0), 100000), new Vec3(-2, -0.5, 0), false));
             final TriangleMesh bunnyMesh = loadBunny();
+            bunnyMesh.setMaterial(new LambertBRDF(new Color(1, 0, 1)));
             final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
-            final KDTree accel = new KDTree(strategy, bunnyMesh);
+            final KDTree accel = new KDTree(strategy, bunnyMesh, groundPlane(new PhongSpecularBRDF(new Color(1, 0, 0), 100000), false));
             kdTimer.stop().print(System.out);
             System.out.println(new KDTreeMetrics(accel));
             add(accel);
@@ -136,7 +159,8 @@ public final class AdvRenderingScenes {
             camera.lookAt(bounds.centerPt(), 25, 180, bounds.diagonalLength());
             camera.setFocalDist(bounds.diagonalLength());
             camera.setAperture(1 / 100.0);
-            add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
+            add(new SphereLight(new Vec3(3, 6, 5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
+            // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
             camera.setFOVAngle(56.14);
          }

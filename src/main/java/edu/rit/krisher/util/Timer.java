@@ -20,6 +20,13 @@ public class Timer {
       return this;
    }
 
+   public Timer reset() {
+      if (isRunning())
+         stop();
+      this.accumTime = 0;
+      return this;
+   }
+
    public Timer stop() {
       final long nanoTime = System.nanoTime();
       if (!isRunning())

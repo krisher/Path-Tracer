@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.DefaultScene;
 import edu.rit.krisher.scene.Scene;
+import edu.rit.krisher.util.Timer;
 
 /**
  * Class to manage ray tracing process in multiple threads.
@@ -52,6 +53,7 @@ public class RayEngine {
    private static final NumberFormat formatter = NumberFormat.getNumberInstance();
    private static final LinkedBlockingQueue<WorkItem> workQueue = new LinkedBlockingQueue<WorkItem>();
    private static final Thread[] workerThreads = new Thread[threads];
+   private static final Timer timer = new Timer("Ray Trace (Thread Timing)");
    static {
       for (int i = 0; i < workerThreads.length; i++) {
          final PathTracer tracer = new PathTracer();
@@ -66,8 +68,11 @@ public class RayEngine {
             public void run() {
                try {
                   while (!Thread.interrupted()) {
-                     tracer.pathTrace(workQueue.take());
-
+                     final WorkItem item = workQueue.take();
+                     timer.start();
+                     tracer.pathTrace(item);
+                     timer.stop();
+                     timer.print(System.out);
                   }
                } catch (final InterruptedException ie) {
                   return;
@@ -136,6 +141,7 @@ public class RayEngine {
        * WorkItems may begin processing as soon as they are queued, so notify
        * the ImageBuffer that pixels are on their way...
        */
+      timer.reset();
       image.imagingStarted();
       for (int i = 0; i < xBlocks; i++) {
          final int blockStartX = i * BLOCK_SIZE;
