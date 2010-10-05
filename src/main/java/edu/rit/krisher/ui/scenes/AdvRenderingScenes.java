@@ -80,10 +80,10 @@ public final class AdvRenderingScenes {
 
    };
 
-   private static final Scene bunnySceneKDSAH1 = createScene("Bunny (SAH KDTree)", new SAHPartitionStrategey(), loadBunny());
-   private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", new MedianPartitionStrategy(25, 2), loadBunny());
+   private static final Scene bunnySceneKDSAH1 = createBunnyScene("Bunny (SAH KDTree)", null, new SAHPartitionStrategey());
+   private static final Scene bunnySceneKDMedian = createBunnyScene("Bunny (Median-Centroid KDTree)", null, new MedianPartitionStrategy(25, 2));
 
-   private static final Scene bunnySceneKDRef = createScene("Bunny (SAH KDTree)", new SAHPartitionStrategey(), loadBunny(new PhongSpecularBRDF(new Color(1, 0, 0), 1000000)));
+   private static final Scene bunnySceneKDRef = createBunnyScene("Bunny (SAH KDTree)", new PhongSpecularBRDF(new Color(1, 0, 0), 1000000), new SAHPartitionStrategey());
 
    private static final Scene sphereTestScene = new AbstractSceneDescription<DoFCamera>("Sphere Test", new DoFCamera()) {
       @Override
@@ -107,23 +107,22 @@ public final class AdvRenderingScenes {
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
-      final double xBorder = sceneBounds.xSpan() / 4.0;
-
-      final double zBorder = sceneBounds.zSpan() / 4.0;
+      final double xBorder = sceneBounds.xSpan();
+      final double zBorder = sceneBounds.zSpan();
       final Vec3Buffer vb = new Vec3fBuffer(walls ? 8 : 4);
       final IndexBuffer ib = new IndexBuffer(walls ? 30 : 6);
-      vb.put(new Vec3(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder));
-      vb.put(new Vec3(sceneBounds.minXYZ[0] - xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder));
-      vb.put(new Vec3(sceneBounds.minXYZ[0] - xBorder, sceneBounds.minXYZ[1], sceneBounds.maxXYZ[2] + zBorder));
-      vb.put(new Vec3(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.maxXYZ[2] + zBorder));
+      vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder);
+      vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder);
+      vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.minXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
+      vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
       ib.put(0).put(1).put(2);
       ib.put(0).put(2).put(3);
 
       if (walls) {
-         vb.put(new Vec3(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1], sceneBounds.minXYZ[2] - zBorder));
-         vb.put(new Vec3(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1], sceneBounds.minXYZ[2] - zBorder));
-         vb.put(new Vec3(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1], sceneBounds.maxXYZ[2] + zBorder));
-         vb.put(new Vec3(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1], sceneBounds.maxXYZ[2] + zBorder));
+         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1], sceneBounds.minXYZ[2] - zBorder);
+         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1], sceneBounds.minXYZ[2] - zBorder);
+         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
+         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
 
          ib.put(4).put(5).put(1);
          ib.put(4).put(1).put(0);
@@ -145,7 +144,7 @@ public final class AdvRenderingScenes {
       return mesh;
    }
 
-   public static Scene createPLYScene(final File ply, final Color material, final KDPartitionStrategy kdStrategy) {
+   public static Scene createPLYScene(final File ply, final Material material, final KDPartitionStrategy kdStrategy) {
       final String name = ply.getName();
       return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
          @Override
@@ -155,6 +154,9 @@ public final class AdvRenderingScenes {
                if (material != null)
                   model.setMaterial(material);
                final AxisAlignedBoundingBox geomBounds = model.getBounds();
+               camera.lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength());
+               camera.setFocalDist(geomBounds.diagonalLength());
+
                final Geometry groundPlane = groundPlane(new LambertBRDF(new Color(1, 1, 1)), false, geomBounds);
                geomBounds.union(groundPlane.getBounds());
                if (kdStrategy != null) {
@@ -167,16 +169,44 @@ public final class AdvRenderingScenes {
                   add(model);
                   add(groundPlane);
                }
-               camera.lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength());
-               camera.setFocalDist(geomBounds.diagonalLength());
                camera.setAperture(1 / 100.0);
-               add(new SphereLight(new Vec3(3, 6, 5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
-               // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
-
                camera.setFOVAngle(56.14);
+               add(new SphereLight(new Vec3(3, 6, 5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
             } catch (final IOException ioe) {
                ioe.printStackTrace();
             }
+
+         }
+      };
+   }
+
+   public static Scene createBunnyScene(final String name, final Material material, final KDPartitionStrategy kdStrategy) {
+      return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
+         @Override
+         protected void initScene() {
+
+            final TriangleMesh model = loadBunny();
+            if (material != null)
+               model.setMaterial(material);
+            final AxisAlignedBoundingBox geomBounds = model.getBounds();
+            camera.lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength());
+            camera.setFocalDist(geomBounds.diagonalLength());
+
+            final Geometry groundPlane = groundPlane(new LambertBRDF(new Color(1, 1, 1)), false, geomBounds);
+            geomBounds.union(groundPlane.getBounds());
+            if (kdStrategy != null) {
+               final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
+               final KDTree accel = new KDTree(kdStrategy, model, groundPlane);
+               kdTimer.stop().print(System.out);
+               System.out.println(new KDTreeMetrics(accel));
+               add(accel);
+            } else {
+               add(model);
+               add(groundPlane);
+            }
+            camera.setAperture(1 / 100.0);
+            camera.setFOVAngle(56.14);
+            add(new SphereLight(new Vec3(3, 6, 5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
 
          }
       };

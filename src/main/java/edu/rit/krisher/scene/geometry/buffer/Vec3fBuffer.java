@@ -62,6 +62,18 @@ public class Vec3fBuffer extends BaseBuffer implements Vec3Buffer {
    }
 
    @Override
+   public Vec3Buffer put(final double x, final double y, final double z) {
+      if (position >= limit)
+         throw new BufferOverflowException();
+      final int offs = position * 3;
+      buffer[offs] = (float) x;
+      buffer[offs + 1] = (float) y;
+      buffer[offs + 2] = (float) z;
+      ++position;
+      return this;
+   }
+
+   @Override
    public Vec3Buffer put(final int idx, final Vec3 value) {
       if (idx >= limit)
          throw new BufferOverflowException();
@@ -74,7 +86,17 @@ public class Vec3fBuffer extends BaseBuffer implements Vec3Buffer {
 
    @Override
    public final AxisAlignedBoundingBox computeBounds() {
-      return Vec3dBuffer.computeBoundsInt(this);
+      final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
+      final int verts = limit() * 3;
+      for (int i = 0; i < verts; i += 3) {
+         for (int j = 0; j < 3; ++j) {
+            if (buffer[i + j] < bounds.minXYZ[j])
+               bounds.minXYZ[j] = buffer[i + j];
+            if (buffer[i + j] > bounds.maxXYZ[j])
+               bounds.maxXYZ[j] = buffer[i + j];
+         }
+      }
+      return bounds;
    }
 
 }

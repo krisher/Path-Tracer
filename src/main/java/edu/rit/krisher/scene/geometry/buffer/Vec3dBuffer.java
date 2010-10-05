@@ -62,6 +62,18 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
    }
 
    @Override
+   public Vec3Buffer put(final double x, final double y, final double z) {
+      if (position >= limit)
+         throw new BufferOverflowException();
+      final int offs = position * 3;
+      buffer[offs] = x;
+      buffer[offs + 1] = y;
+      buffer[offs + 2] = z;
+      ++position;
+      return this;
+   }
+
+   @Override
    public Vec3Buffer put(final int idx, final Vec3 value) {
       if (idx >= limit)
          throw new BufferOverflowException();
@@ -74,33 +86,16 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
 
    @Override
    public final AxisAlignedBoundingBox computeBounds() {
-      return computeBoundsInt(this);
-   }
-
-   final static AxisAlignedBoundingBox computeBoundsInt(final Vec3Buffer buff) {
-
-      double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY, minZ = Double.POSITIVE_INFINITY, maxZ = Double.NEGATIVE_INFINITY;
-
-      final int verts = buff.limit();
-      final Vec3 vec = new Vec3();
-      for (int i = verts - 3; i >= 0; --i) {
-         buff.get(i, vec);
-         if (vec.x < minX)
-            minX = vec.x;
-         if (vec.x > maxX)
-            maxX = vec.x;
-
-         if (vec.y < minY)
-            minY = vec.y;
-         if (vec.y > maxY)
-            maxY = vec.y;
-
-         if (vec.z < minZ)
-            minZ = vec.z;
-         if (vec.z > maxZ)
-            maxZ = vec.z;
+      final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
+      final int verts = limit() * 3;
+      for (int i = 0; i < verts; i += 3) {
+         for (int j = 0; j < 3; ++j) {
+            if (buffer[i + j] < bounds.minXYZ[j])
+               bounds.minXYZ[j] = buffer[i + j];
+            if (buffer[i + j] > bounds.maxXYZ[j])
+               bounds.maxXYZ[j] = buffer[i + j];
+         }
       }
-
-      return new AxisAlignedBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+      return bounds;
    }
 }

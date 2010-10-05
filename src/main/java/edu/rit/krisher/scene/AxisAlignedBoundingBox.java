@@ -28,11 +28,11 @@ public final class AxisAlignedBoundingBox {
    public final double[] maxXYZ;
 
    /**
-    * Creates a new AxisAlignedBoundingBox with coordinates initialized to all 0's.
+    * Creates a new AxisAlignedBoundingBox with max coord negative infinity, and min coord positive infinity.
     */
    public AxisAlignedBoundingBox() {
-      minXYZ = new double[3];
-      maxXYZ = new double[3];
+      minXYZ = new double[] { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+      maxXYZ = new double[] { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY };
    }
 
    /**
@@ -93,20 +93,13 @@ public final class AxisAlignedBoundingBox {
    }
 
    public void union(final AxisAlignedBoundingBox other) {
-      if (other.minXYZ[0] < minXYZ[0])
-         minXYZ[0] = other.minXYZ[0];
-      if (other.maxXYZ[0] > maxXYZ[0])
-         maxXYZ[0] = other.maxXYZ[0];
+      for (int i = 0; i < 3; ++i) {
+         if (other.minXYZ[i] < minXYZ[i])
+            minXYZ[i] = other.minXYZ[i];
+         if (other.maxXYZ[i] > maxXYZ[i])
+            maxXYZ[i] = other.maxXYZ[i];
+      }
 
-      if (other.minXYZ[1] < minXYZ[1])
-         minXYZ[1] = other.minXYZ[1];
-      if (other.maxXYZ[1] > maxXYZ[1])
-         maxXYZ[1] = other.maxXYZ[1];
-
-      if (other.minXYZ[2] < minXYZ[2])
-         minXYZ[2] = other.minXYZ[2];
-      if (other.maxXYZ[2] > maxXYZ[2])
-         maxXYZ[2] = other.maxXYZ[2];
    }
 
    public Vec3 centerPt() {

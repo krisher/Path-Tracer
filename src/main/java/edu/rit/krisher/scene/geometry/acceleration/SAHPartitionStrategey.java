@@ -84,8 +84,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
          for (final SplitCandidate candidate : splitCandidates) {
             /*
-             * Each time we encounter a candidate with max == true (max edge of the corresponding BB), decrement
-             * the number of primitives that will fall on the greater side of the split.
+             * Each time we encounter a candidate with max == true (max edge of the corresponding BB), decrement the
+             * number of primitives that will fall on the greater side of the split.
              */
             if (candidate.isMax)
                --greaterPrims;
@@ -106,10 +106,9 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                final double greaterNodeSurfaceAreaRatio = saTemp.surfaceArea() / nodeSurfaceArea;
 
                /*
-                * The cost of splitting at this candidate is: node traversal cost + the probability of traversing
-                * to the less node * the cost of traversing it + the probability of traversing the right node * the cost
-                * of traversing it. The empty bias factor decreases the computed cost by a factor if the partition
-                * results
+                * The cost of splitting at this candidate is: node traversal cost + the probability of traversing to the
+                * less node * the cost of traversing it + the probability of traversing the right node * the cost of
+                * traversing it. The empty bias factor decreases the computed cost by a factor if the partition results
                 * in an empty child node to encourage culling of empty space.
                 */
                final double splitCost = kdNodeTraversalCost + geometryIntersectionCost
@@ -123,8 +122,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
             }
             /*
              * If we have entered a new bounding box, increment the number that fall on the less side of the split
-             * (since the current candidate is at the edge the node falls to the greater side of the split until
-             * after we move to the next greater candidate).
+             * (since the current candidate is at the edge the node falls to the greater side of the split until after
+             * we move to the next greater candidate).
              */
             if (!candidate.isMax)
                ++lessPrims;

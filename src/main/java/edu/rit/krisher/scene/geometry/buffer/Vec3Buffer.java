@@ -17,6 +17,8 @@ public interface Vec3Buffer extends Buffer {
 
    public Vec3Buffer put(Vec3 value);
 
+   public Vec3Buffer put(double x, double y, double z);
+
    public Vec3Buffer put(int idx, Vec3 value);
 
    public AxisAlignedBoundingBox computeBounds();
