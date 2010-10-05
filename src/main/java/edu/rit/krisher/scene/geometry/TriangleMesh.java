@@ -60,15 +60,12 @@ public class TriangleMesh implements Geometry {
       }
    }
 
-   private final Vec3 normalFor(final int idx, final Vec3 rayDirection) {
+   private final Vec3 normalFor(final int idx) {
       final Vec3 v0 = new Vec3();
       final Vec3 e1 = new Vec3();
       final Vec3 e2 = new Vec3();
       getTriangleVEE(idx * 3, v0, e1, e2);
-      final Vec3 normal = e1.cross(e2).normalize();
-      if (rayDirection.dot(normal) > 0)
-         return normal.inverted();
-      return normal;
+      return e1.cross(e2).normalize();
    }
 
    private final boolean boundsCheck(final Ray ray) {
@@ -137,7 +134,7 @@ public class TriangleMesh implements Geometry {
    private final void getTriangleHitData(final int triangleIndex, final HitData data, final Ray ray) {
       data.material = material;
       data.materialCoords = null;
-      data.surfaceNormal = normalFor(triangleIndex, ray.direction);
+      data.surfaceNormal = normalFor(triangleIndex);
    }
 
    class MeshTriangle implements Geometry {
