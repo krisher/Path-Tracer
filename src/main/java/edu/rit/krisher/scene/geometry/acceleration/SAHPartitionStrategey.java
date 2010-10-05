@@ -34,11 +34,15 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    @Override
-   public PartitionResult findSplitLocation(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds,
-         final AxisAlignedBoundingBox nodeBounds, final int depth) {
+   public PartitionResult findSplitLocation(final int[] members, final int memberCount,
+         final AxisAlignedBoundingBox[] bounds, final AxisAlignedBoundingBox nodeBounds, final int depth) {
       if (depth >= maxDepth) {
          return PartitionResult.LEAF;
       }
+
+      double bestSplit = 0;
+      int bestSplitAxis = -1;
+      double bestSACost = geometryIntersectionCost * memberCount; // Initialize to the cost of creating a leaf.
       /*
        * The surface area of the node being split...
        */
@@ -79,8 +83,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
           */
          int lessPrims = memberCount;
          int greaterPrims = 0;
-         SplitCandidate bestSplit = null;
-         double bestSACost = geometryIntersectionCost * memberCount; // Initialize to the cost of creating a leaf.
+
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
          for (final SplitCandidate candidate : splitCandidates) {
             /*
@@ -96,7 +99,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * Ensure that the split candidate falls inside the node's bounds.
              */
             if (candidate.splitLocation > nodeBounds.minXYZ[splitAxis]
-                                                            && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+                  && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.
@@ -115,18 +118,20 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                 * in an empty child node to encourage culling of empty space.
                 */
                final double splitCost = kdNodeTraversalCost + geometryIntersectionCost
-               * (lessNodeSurfaceAreaRatio * lessPrims + greaterNodeSurfaceAreaRatio * greaterPrims)
-               * ((lessPrims == 0 || greaterPrims == 0) ? (1.0 - emptyBias) : 1.0);
+                     * (lessNodeSurfaceAreaRatio * lessPrims + greaterNodeSurfaceAreaRatio * greaterPrims)
+                     * ((lessPrims == 0 || greaterPrims == 0) ? (1.0 - emptyBias) : 1.0);
 
                if (splitCost < bestSACost) {
                   bestSACost = splitCost;
-                  bestSplit = candidate;
+                  bestSplit = candidate.splitLocation;
+                  bestSplitAxis = splitAxis;
                }
             }
 
          }
-         if (bestSplit != null) {
-            return new PartitionResult(splitAxis, bestSplit.splitLocation);
+
+         if (bestSplitAxis >= 0) {
+            return new PartitionResult(bestSplitAxis, bestSplit);
          }
          /*
           * It was cheaper to create a leaf than to split along the current axis; retry the next axis...
