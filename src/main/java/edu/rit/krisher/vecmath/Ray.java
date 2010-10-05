@@ -39,7 +39,7 @@ public class Ray {
    public double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
       final double[] result = new double[2];
       if (intersectsBoxParametric(result, new Vec3(center.x - xSize, center.y - ySize, center.z - zSize), new Vec3(center.x
-                                                                                                                   + xSize, center.y + ySize, center.z + zSize))) {
+            + xSize, center.y + ySize, center.z + zSize))) {
          return result[0] > 0 ? result[0] : result[1];
       }
       return 0;
@@ -172,8 +172,6 @@ public class Ray {
     *         there was no intersection.
     */
    public double intersectsTriangle(final Vec3 v0, final Vec3 e1, final Vec3 e2) {
-      // Vec3 e1 = v1.subtract(v0);
-      // Vec3 e2 = v2.subtract(v0);
       final Vec3 p = new Vec3(direction).cross(e2);
       final double divisor = p.dot(e1);
       /*
@@ -201,6 +199,46 @@ public class Ray {
       }
 
       return q.dot(e2) / divisor;
+   }
+
+   /**
+    * Moller-Trumbore intersection test
+    * (http://www.graphics.cornell.edu/pubs/1997/MT97.html)
+    * 
+    * @param VEE
+    *           A (minimum) 9-element double array containing the 3 vector components for each of the triangle base
+    *           vertex, and two edges.
+    * @return The distance from the origin to the intersection point, if <= 0
+    *         there was no intersection.
+    */
+   public double intersectsTriangle(final double[] VEE) {
+      final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
+      final double divisor = Vec3.dot(p.x, p.y, p.z, VEE[3], VEE[4], VEE[5]);
+      /*
+       * Ray nearly parallel to triangle plane...
+       */
+      if (divisor < SMALL_D && divisor > -SMALL_D) {
+         return 0;
+      }
+
+      final Vec3 translatedOrigin = new Vec3(origin);
+      translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
+      final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
+      /*
+       * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
+       * defined at the vertex locations:
+       */
+      final double e1Factor = p.dot(translatedOrigin) / divisor;
+      if (e1Factor < 0 || e1Factor > 1) {
+         return 0;
+      }
+
+      final double e2Factor = q.dot(direction) / divisor;
+      if (e2Factor < 0 || e2Factor + e1Factor > 1) {
+         return 0;
+      }
+
+      return Vec3.dot(q.x, q.y, q.z, VEE[6], VEE[7], VEE[8]) / divisor;
    }
 
    @Override

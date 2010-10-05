@@ -3,13 +3,12 @@ package edu.rit.krisher.vecmath;
 /**
  * Mutable 3D vector class.
  * <p>
- * Instances are NOT thread safe, and generally should not ever be modified in
- * one thread and read in another unless there is some external synchonization.
+ * Instances are NOT thread safe, and generally should not ever be modified in one thread and read in another unless
+ * there is some external synchonization.
  * 
  * <p>
- * It would be better for instances of this class to be immutable, in terms of
- * safety, however that can lead to significant performance loss since it will
- * typically require many new instances of Vec3s to be allocated.
+ * It would be better for instances of this class to be immutable, in terms of safety, however that can lead to
+ * significant performance loss since it will typically require many new instances of Vec3s to be allocated.
  * 
  * @author krisher
  * 
@@ -29,8 +28,7 @@ public final class Vec3 implements Transform {
    public static final Vec3 zAxis = new Vec3(0, 0, 1);
    public static final Vec3 negZAxis = new Vec3(0, 0, -1);
 
-   public static final boolean isNear(final double value,
-         final double nearValue) {
+   public static final boolean isNear(final double value, final double nearValue) {
       return value + EPSILON > nearValue && value - EPSILON < nearValue;
    }
 
@@ -67,7 +65,7 @@ public final class Vec3 implements Transform {
    }
 
    public final double get(final int idx) {
-      return idx == 0?x:(idx == 1?y:z);
+      return idx == 0 ? x : (idx == 1 ? y : z);
    }
 
    public final Vec3 add(final Vec3 vector) {
@@ -85,7 +83,7 @@ public final class Vec3 implements Transform {
       this.x = x;
       return this;
    }
-   
+
    public final Vec3 cross(final double crossByX, final double crossByY, final double crossByZ) {
       final double x = y * crossByZ - z * crossByY;
       final double y = z * crossByX - this.x * crossByZ;
@@ -94,7 +92,6 @@ public final class Vec3 implements Transform {
       this.x = x;
       return this;
    }
-
 
    public double distance(final Vec3 other) {
       final double dx = other.x - x;
@@ -215,4 +212,12 @@ public final class Vec3 implements Transform {
       return this;
    }
 
+   public static final double length(final double x, final double y, final double z) {
+      return Math.sqrt(x * x + y * y + z * z);
+   }
+
+   public static final double dot(final double v1X, final double v1Y, final double v1Z, final double v2X,
+         final double v2Y, final double v2Z) {
+      return v1X * v2X + v1Y * v2Y + v1Z * v2Z;
+   }
 }

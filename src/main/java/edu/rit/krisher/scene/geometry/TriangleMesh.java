@@ -26,9 +26,6 @@ public class TriangleMesh implements Geometry {
       this.bounds = verts.computeBounds();
    }
 
-   public int getTriangleCount() {
-      return triCount;
-   }
 
    @Override
    public double getSurfaceArea() {
@@ -37,18 +34,11 @@ public class TriangleMesh implements Geometry {
 
    @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist) {
-      // TODO: no need to perform the intersection again if we could store the hit data (tri index)
-      // in the original intersects(...) call.
-
       int isectTri = -1;
-      final Vec3 v0 = new Vec3();
-      final Vec3 e1 = new Vec3();
-      final Vec3 e2 = new Vec3();
+      final double[] triVerts = new double[9];
       for (int idx = 0; idx < triCount; ++idx) {
-
-         getTriangleVEE(idx * 3, v0, e1, e2);
-
-         final double t = ray.intersectsTriangle(v0, e1, e2);
+         getTriangleVEE(triVerts, idx * 3);
+         final double t = ray.intersectsTriangle(triVerts);
          if (isectDist == t) {
             isectTri = idx;
             break;
@@ -62,19 +52,12 @@ public class TriangleMesh implements Geometry {
 
    private final void normalFor(final Vec3 result, final int idx) {
       final double[] vecs = new double[9];
-      final int idxOffset = idx * 3;
-      vertices.get(vecs, triangleIndices.get(idxOffset), triangleIndices.get(idxOffset + 1), triangleIndices.get(idxOffset + 2));
-      /*
-       * Compute edge1 (indices 3-5), edge2 (indices 6-8) by subtracting the first triangle vertex (indices 0-2) from the second two.
-       */
-      for (int i=0; i < 3; ++i) {
-         vecs[3 + i] -= vecs[i];
-         vecs[6 + i] -= vecs[i];
-      }
+      getTriangleVEE(vecs, idx * 3);
       /*
        * Cross product of edge1, edge2.
        */
-      result.set(vecs[4] * vecs[8] - vecs[5] * vecs[7], vecs[5] * vecs[6] - vecs[3] * vecs[8], vecs[3] * vecs[7] - vecs[4] * vecs[6]).normalize();
+      result.set(vecs[4] * vecs[8] - vecs[5] * vecs[7], vecs[5] * vecs[6] - vecs[3] * vecs[8], vecs[3] * vecs[7]
+            - vecs[4] * vecs[6]).normalize();
    }
 
    private final boolean boundsCheck(final Ray ray) {
@@ -92,13 +75,10 @@ public class TriangleMesh implements Geometry {
          return 0;
       double isectDist = Double.POSITIVE_INFINITY;
       int isectTri = -1;
-      final Vec3 v0 = new Vec3();
-      final Vec3 e1 = new Vec3();
-      final Vec3 e2 = new Vec3();
+      final double[] triVerts = new double[9];
       for (int idx = 0; idx < triCount; ++idx) {
-         getTriangleVEE(idx * 3, v0, e1, e2);
-
-         final double t = ray.intersectsTriangle(v0, e1, e2);
+         getTriangleVEE(triVerts, idx * 3);
+         final double t = ray.intersectsTriangle(triVerts);
          if (t > 0 && t < isectDist) {
             isectDist = t;
             isectTri = idx;
@@ -108,14 +88,6 @@ public class TriangleMesh implements Geometry {
          return isectDist;
       }
       return 0;
-   }
-
-   private final void getTriangleVEE(final int idxOffset, final Vec3 v0, final Vec3 edge1, final Vec3 edge2) {
-      vertices.get(triangleIndices.get(idxOffset), v0);
-      vertices.get(triangleIndices.get(idxOffset + 1), edge1);
-      edge1.subtract(v0);
-      vertices.get(triangleIndices.get(idxOffset + 2), edge2);
-      edge2.subtract(v0);
    }
 
    @Override
@@ -129,6 +101,13 @@ public class TriangleMesh implements Geometry {
 
    public void setMaterial(final Material material) {
       this.material = material;
+   }
+
+   /* 
+    * @see edu.rit.krisher.scene.Geometry#getPrimitiveCount()
+    */
+   public int getPrimitiveCount() {
+      return triCount;
    }
 
    @Override
@@ -146,6 +125,23 @@ public class TriangleMesh implements Geometry {
       normalFor(data.surfaceNormal, triangleIndex);
    }
 
+   /**
+    * @param vecs
+    */
+   private final void getTriangleVEE(final double[] vecs, final int triangleIndexOffset) {
+      vertices.get(vecs, triangleIndices.get(triangleIndexOffset), triangleIndices.get(triangleIndexOffset + 1), triangleIndices.get(triangleIndexOffset + 2));
+      /*
+       * Compute edge1 (indices 3-5), edge2 (indices 6-8) by subtracting the first triangle vertex (indices 0-2) from
+       * the second two.
+       */
+      for (int i = 0; i < 3; ++i) {
+         vecs[3 + i] -= vecs[i];
+         vecs[6 + i] -= vecs[i];
+      }
+   }
+
+   
+   
    class MeshTriangle implements Geometry {
       private final int triangleIndexOffset;
 
@@ -160,20 +156,22 @@ public class TriangleMesh implements Geometry {
 
       @Override
       public double getSurfaceArea() {
-         final Vec3 v0 = new Vec3();
-         final Vec3 e1 = new Vec3();
-         final Vec3 e2 = new Vec3();
-         getTriangleVEE(triangleIndexOffset, v0, e1, e2);
-         return 0.5 * e1.cross(e2).length();
+         final double[] vecs = new double[9];
+         getTriangleVEE(vecs, triangleIndexOffset);
+         /*
+          * Cross product of edge1, edge2.
+          */
+         final double cX = vecs[4] * vecs[8] - vecs[5] * vecs[7];
+         final double cY = vecs[5] * vecs[6] - vecs[3] * vecs[8];
+         final double cZ = vecs[3] * vecs[7] - vecs[4] * vecs[6];
+         return 0.5 * Vec3.length(cX, cY, cZ);
       }
 
       @Override
       public double intersects(final Ray ray) {
-         final Vec3 v0 = new Vec3();
-         final Vec3 e1 = new Vec3();
-         final Vec3 e2 = new Vec3();
-         getTriangleVEE(triangleIndexOffset, v0, e1, e2);
-         return ray.intersectsTriangle(v0, e1, e2);
+         final double[] triVerts = new double[9];
+         getTriangleVEE(triVerts, triangleIndexOffset);
+         return ray.intersectsTriangle(triVerts);
       }
 
       @Override
@@ -181,10 +179,16 @@ public class TriangleMesh implements Geometry {
          return vertices.computeBounds(triangleIndices.get(triangleIndexOffset), triangleIndices.get(triangleIndexOffset + 1), triangleIndices.get(triangleIndexOffset + 2));
       }
 
+
+      /* 
+       * @see edu.rit.krisher.scene.Geometry#getPrimitives()
+       */
       @Override
       public Geometry[] getPrimitives() {
-         return new Geometry[] { this };
+         return new Geometry[] {this};
       }
+      
+      
 
    }
 }
