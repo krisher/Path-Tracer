@@ -3,6 +3,8 @@ package edu.rit.krisher.fileparser.ply;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,13 +18,13 @@ import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 
 /**
- * Simple parser implementation for the Stanford PLY model format. This is based on the format description
- * from: <a
+ * Simple parser implementation for the Stanford PLY model format. This is based on the format description from: <a
  * href="http://people.cs.kuleuven.be/~ares.lagae/libply/ply-0.1/doc/PLY_FILES.txt">http://people.cs.kuleuven.be
  * /~ares.lagae/libply/ply-0.1/doc/PLY_FILES.txt</a>.
  * <p>
  * This is quick and dirty in its present form, this may only be able to load a limited subset of PLY models, in
- * particular, it is known to work with the Stanford Bunny model.
+ * particular, it is known to work with the Stanford Bunny, Happy Buddha, and Dragon models
+ * (http://graphics.stanford.edu/data/3Dscanrep/).
  * 
  * @author krisher
  * 
@@ -39,7 +41,7 @@ public final class PLYParser {
    }
 
    public static void parsePLY(final InputStream stream, final Map<String, ElementReceiver> receivers)
-         throws IOException {
+   throws IOException {
 
       try {
          final PLYContentDescription content = new PLYContentDescription(stream);
@@ -69,6 +71,10 @@ public final class PLYParser {
       } finally {
          stream.close();
       }
+   }
+
+   public static TriangleMesh parseTriangleMesh(final File file) throws IOException {
+      return parseTriangleMesh(new BufferedInputStream(new FileInputStream(file)));
    }
 
    public static TriangleMesh parseTriangleMesh(final InputStream stream) throws IOException {
@@ -119,9 +125,8 @@ public final class PLYParser {
          final Number[] values = new Number[attributeListSize[attributeIdx]];
          for (int i = 0; i < values.length; i++) {
             values[i] = attributes[attributeIdx].valueType.parseAscii(elementComponents[attributeStart[attributeIdx]
-                  + i]);
+                                                                                                       + i]);
          }
-         // TODO Auto-generated method stub
          return values;
 
       }
@@ -199,7 +204,7 @@ public final class PLYParser {
                      final Number componentCount = attributes[attrIdx].listIndexType.parseBinary(stream, bigEndian);
                      final Number[] values = new Number[componentCount.intValue()];
                      for (int i = 0; i < values.length; i++) {
-                        values[i] = attributes[i].valueType.parseBinary(stream, bigEndian);
+                        values[i] = attributes[attrIdx].valueType.parseBinary(stream, bigEndian);
                      }
                      listValues[attrIdx] = values;
                   }
