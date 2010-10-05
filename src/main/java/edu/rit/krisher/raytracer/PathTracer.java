@@ -229,8 +229,13 @@ public final class PathTracer {
              * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
              */
             if (ray.emissiveResponse) {
-
                hitData.material.getEmissionColor(sampleColor, ray.direction, hitData.surfaceNormal, hitData.materialCoords);
+               // TODO: cosWi is the angle that the light hits the source of the ray, relative to its normal.
+               final double cosWi = 1.0;// ray.direction.dot(sourceHit.surfaceNormal);
+               final double cosWo = -hitData.surfaceNormal.dot(ray.direction);
+               final double diffAngle = (cosWi * cosWo) / (intersectDist * intersectDist);
+               sampleColor.scaleSet(sampleColor.r * ray.transmissionSpectrum.r, sampleColor.g
+                                    * ray.transmissionSpectrum.g, sampleColor.b * ray.transmissionSpectrum.b, diffAngle);
             } else
                sampleColor.set(0, 0, 0);
 
