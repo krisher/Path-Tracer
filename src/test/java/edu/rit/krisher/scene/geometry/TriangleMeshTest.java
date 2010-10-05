@@ -38,7 +38,7 @@ public class TriangleMeshTest {
       for (float delta = -1f; delta <= 1f; delta += 0.05) {
          for (float delta2 = -1f; delta2 <= 1f; delta2 += 0.05) {
             final Ray zRay = new Ray(new Vec3(delta, delta2, -1), direction);
-            Assert.assertEquals(1.0f, xyQuad.intersects(zRay), 0.00000001);
+            Assert.assertEquals(1.0f, xyQuad.intersects(zRay, -1), 0.00000001);
          }
       }
    }
@@ -49,7 +49,7 @@ public class TriangleMeshTest {
       for (float delta = -0.95f; delta <= 0.95f; delta += 0.05) {
          for (float delta2 = -0.95f; delta2 <= 0.95f; delta2 += 0.05) {
             final Ray ray = new Ray(origin, new Vec3(delta, delta2, 0).subtract(origin).normalize());
-            Assert.assertTrue("Ray: " + ray + " should intersect quad.", xyQuad.intersects(ray) >= 1.0f);
+            Assert.assertTrue("Ray: " + ray + " should intersect quad.", xyQuad.intersects(ray, -1) >= 1.0f);
          }
       }
    }

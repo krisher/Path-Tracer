@@ -36,7 +36,7 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+   public void getHitData(final HitData data, final Ray ray, final double isectDist,final int primIndices) {
       final Vec3 isectNormal = ray.getPointOnRay(isectDist);
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
@@ -49,7 +49,7 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public double intersects(final Ray ray) {
+   public double intersects(final Ray ray,final int primIndices) {
       return ray.intersectsSphere(center, radius);
    }
 
@@ -58,7 +58,7 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public double getSurfaceArea() {
+   public double getSurfaceArea(final int primIndices) {
       return 4.0 * Math.PI * radius * radius;
    }
 
@@ -66,14 +66,14 @@ public class Sphere implements Geometry {
     * @see edu.rit.krisher.scene.Geometry#getBounds()
     */
    @Override
-   public AxisAlignedBoundingBox getBounds() {
+   public AxisAlignedBoundingBox getBounds(final int primIndices) {
       return new AxisAlignedBoundingBox(center.x - radius, center.y - radius, center.z - radius, center.x + radius, center.y
                                         + radius, center.z + radius);
    }
 
    @Override
-   public Geometry[] getPrimitives() {
-      return new Geometry[] { this };
+   public int getPrimitiveCount() {
+      return 1;
    }
 
 }

@@ -26,11 +26,13 @@ public class Box implements Geometry {
       this(xSize, ySize, zSize, new LambertBRDF(Color.white), null, invertNormals);
    }
 
-   public Box(final double xSize, final double ySize, final double zSize, final Material mat, final boolean invertNormals) {
+   public Box(final double xSize, final double ySize, final double zSize, final Material mat,
+         final boolean invertNormals) {
       this(xSize, ySize, zSize, mat, null, invertNormals);
    }
 
-   public Box(final double xSize, final double ySize, final double zSize, final Material mat, final Transform transform, final boolean invertNormals) {
+   public Box(final double xSize, final double ySize, final double zSize, final Material mat,
+         final Transform transform, final boolean invertNormals) {
       this.xSize = xSize / 2.0;
       this.ySize = ySize / 2.0;
       this.zSize = zSize / 2.0;
@@ -40,7 +42,7 @@ public class Box implements Geometry {
    }
 
    @Override
-   public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+   public void getHitData(final HitData data, final Ray ray, final double isectDist, final int primIndices) {
       final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(isectDist));
       // Figure out which face the intersection occurred on
       Vec3 isectNormal;
@@ -50,28 +52,32 @@ public class Box implements Geometry {
       if (xDist < yDist) {
          if (xDist < zDist) {
             // face perpendicular to x
-            if (hitPt.x < 0) isectNormal = Vec3.xAxis.inverted();
-            else 
+            if (hitPt.x < 0)
+               isectNormal = Vec3.xAxis.inverted();
+            else
                isectNormal = Vec3.xAxis;
          } else {
             // face perpendicular to z
-            if (hitPt.z < 0) isectNormal = Vec3.zAxis.inverted();
-            else 
+            if (hitPt.z < 0)
+               isectNormal = Vec3.zAxis.inverted();
+            else
                isectNormal = Vec3.zAxis;
          }
       } else if (yDist < zDist) {
          // face perpendicular to y
-         if (hitPt.y < 0) isectNormal = Vec3.yAxis.inverted();
-         else 
+         if (hitPt.y < 0)
+            isectNormal = Vec3.yAxis.inverted();
+         else
             isectNormal = Vec3.yAxis;
       } else {
          // face perpendicular to z
-         if (hitPt.z < 0) isectNormal = Vec3.zAxis.inverted();
-         else 
+         if (hitPt.z < 0)
+            isectNormal = Vec3.zAxis.inverted();
+         else
             isectNormal = Vec3.zAxis;
       }
       isectNormal = transform.transformVec(new Vec3(isectNormal));
-      if (invertNormals) //isectNormal.dot(ray.direction) > 0
+      if (invertNormals) // isectNormal.dot(ray.direction) > 0
          isectNormal.multiply(-1);
 
       data.material = material;
@@ -80,7 +86,7 @@ public class Box implements Geometry {
    }
 
    @Override
-   public double intersects(final Ray ray) {
+   public double intersects(final Ray ray, final int primIndices) {
       return ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
    }
 
@@ -102,7 +108,7 @@ public class Box implements Geometry {
    }
 
    @Override
-   public double getSurfaceArea() {
+   public double getSurfaceArea(final int primIndices) {
       /*
        * The 4.0 is because the size value represent distance from the center; half the size.
        */
@@ -110,7 +116,7 @@ public class Box implements Geometry {
    }
 
    @Override
-   public AxisAlignedBoundingBox getBounds() {
+   public AxisAlignedBoundingBox getBounds(final int primIndices) {
       final Vec3[] corners = new Vec3[8];
       corners[0] = new Vec3(-xSize, -ySize, -zSize);
       corners[1] = new Vec3(-xSize, -ySize, zSize);
@@ -123,24 +129,29 @@ public class Box implements Geometry {
       for (final Vec3 corner : corners) {
          transform.transformPoint(corner);
       }
-      final AxisAlignedBoundingBox bounds =new AxisAlignedBoundingBox();
-      for (int i=1; i < 8; i++) {
+      final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
+      for (int i = 1; i < 8; i++) {
          final Vec3 corner = corners[i];
-         if (corner.x < bounds.minXYZ[0]) bounds.minXYZ[0] = corner.x;
-         else if (corner.x > bounds.maxXYZ[0]) bounds.maxXYZ[0] = corner.x;
+         if (corner.x < bounds.minXYZ[0])
+            bounds.minXYZ[0] = corner.x;
+         else if (corner.x > bounds.maxXYZ[0])
+            bounds.maxXYZ[0] = corner.x;
 
-         if (corner.y < bounds.minXYZ[1]) bounds.minXYZ[1] = corner.y;
-         else if (corner.y > bounds.maxXYZ[1]) bounds.maxXYZ[1] = corner.y;
+         if (corner.y < bounds.minXYZ[1])
+            bounds.minXYZ[1] = corner.y;
+         else if (corner.y > bounds.maxXYZ[1])
+            bounds.maxXYZ[1] = corner.y;
 
-         if (corner.z < bounds.minXYZ[2]) bounds.minXYZ[2] = corner.z;
-         else if (corner.z > bounds.maxXYZ[2]) bounds.maxXYZ[2] = corner.z;
+         if (corner.z < bounds.minXYZ[2])
+            bounds.minXYZ[2] = corner.z;
+         else if (corner.z > bounds.maxXYZ[2])
+            bounds.maxXYZ[2] = corner.z;
       }
       return bounds;
 
    }
 
-   @Override
-   public Geometry[] getPrimitives() {
-      return new Geometry[] { this };
+   public int getPrimitiveCount() {
+      return 1;
    }
 }

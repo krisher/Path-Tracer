@@ -122,7 +122,7 @@ public final class AdvRenderingScenes {
             final Geometry[] geometry = new Geometry[geomFactories.length + 1];
             for (int i = 0; i < geomFactories.length; ++i) {
                geometry[i] = geomFactories[i].createGeometry();
-               geomBounds.union(geometry[i].getBounds());
+               geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
             : groundMat, walls, geomBounds);

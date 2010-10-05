@@ -65,7 +65,7 @@ public class KDTreeMetrics {
       try {
          tree.visitTreeNodes(visitor);
 
-         this.treeVolume = tree.getBounds().volume();
+         this.treeVolume = tree.getBounds(-1).volume();
          this.leafVolume = visitor.cumLeafVolume;
 
          this.maxDepth = visitor.maxDepth;
@@ -80,7 +80,7 @@ public class KDTreeMetrics {
          this.leafNodes = visitor.leafNodeCount;
 
          this.totalPrimitives = visitor.cumLeafPrimitives;
-         this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getPrimitives().length;
+         this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getPrimitiveCount();
 
          final VarianceVisitor vVisitor = new VarianceVisitor(visitor.cumLeafPrimitives
                                                               / (double) visitor.leafNodeCount);

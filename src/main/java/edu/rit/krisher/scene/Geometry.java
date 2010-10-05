@@ -24,7 +24,7 @@ public interface Geometry {
     * @param isectDist
     *           The distance from the origin of the ray at which the intersection occurs.
     */
-   public void getHitData(HitData data, Ray ray, double isectDist);
+   public void getHitData(HitData data, Ray ray, double isectDist, int primitiveIndex);
 
    /**
     * Computes the smallest positive distance along the ray to the intersection,
@@ -34,14 +34,14 @@ public interface Geometry {
     *           A non-null ray to test intersection with.
     * @return the distance along the ray (from the origin) at which the intersection occurs.
     */
-   public double intersects(Ray ray);
+   public double intersects(Ray ray, int primitiveIndex);
 
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.
     * 
     * @return A non-null bounding box.
     */
-   public AxisAlignedBoundingBox getBounds();
+   public AxisAlignedBoundingBox getBounds(int primitiveIndex);
 
    /**
     * Accessor for the surface area of the geometry.
@@ -49,7 +49,9 @@ public interface Geometry {
     * @return The surface area. If it is difficult to compute, use the surface area
     *         of the bounding box as a rough approximation.
     */
-   public double getSurfaceArea();
+   public double getSurfaceArea(int primitiveIndex);
+   
+   public int getPrimitiveCount();
 
    /**
     * Accessor for the primitive geometry that this geometry can be decomposed into.
@@ -57,5 +59,5 @@ public interface Geometry {
     * @return A non-null array of primitives that this geometry can be decomposed into. May return:
     *         <code>new Geometry[] {this}</code> if this geometry is alread primitive.
     */
-   public Geometry[] getPrimitives();
+//   public Geometry[] getPrimitives();
 }
