@@ -23,19 +23,10 @@ public class PartitionResult {
     */
    final double splitLocation;
 
-   final int lessMemberCount;
-   final int greaterEqMemberCount;
-
-   public PartitionResult(final int splitAxis, final double splitLocation, final int lessMemberCount,
-         final int greaterMemberCount) {
-      this.splitAxis = splitAxis;
-      this.splitLocation = splitLocation;
-      this.lessMemberCount = lessMemberCount;
-      this.greaterEqMemberCount = greaterMemberCount;
-   }
 
    public PartitionResult(final int splitAxis, final double splitLocation) {
-      this(splitAxis, splitLocation, -1, -1);
+      this.splitAxis = splitAxis;
+      this.splitLocation = splitLocation;
    }
 
    private PartitionResult() {

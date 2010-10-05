@@ -33,10 +33,10 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
     * edu.rit.krisher.scene.AxisAlignedBoundingBox[], byte, edu.rit.krisher.scene.AxisAlignedBoundingBox, int, int)
     */
    @Override
-   public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
+   public PartitionResult findSplitLocation(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds,
          final AxisAlignedBoundingBox nodeBounds, final int depth) {
 
-      if (depth >= maxDepth || members.length < maxPrimitives)
+      if (depth >= maxDepth || memberCount < maxPrimitives)
          return PartitionResult.LEAF;
       /*
        * From SAH; choose largest dimension as initial split axis.
@@ -45,7 +45,7 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
             : KDTree.Z_AXIS)
             : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
       for (int i = 0; i < 3; ++i) {
-         final float split = findSplitLocation(members, bounds, splitAxis);
+         final float split = findSplitLocation(members, memberCount, bounds, splitAxis);
          // TODO: need to ensure the split actually occurs within the bounds of the kd-node!,
          // But this generates a really bad tree.
          // Maybe try a different axis?
@@ -64,11 +64,11 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
     * @param splitAxis
     * @return
     */
-   private final float findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds, final int splitAxis) {
-      final float[] splitCandidates = new float[members.length];
+   private final float findSplitLocation(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds, final int splitAxis) {
+      final float[] splitCandidates = new float[memberCount];
       int idx = 0;
-      for (final int prim : members) {
-         splitCandidates[idx++] = (float) bounds[prim].centerArray()[splitAxis];
+      for (int i=0; i < memberCount; ++i) {
+         splitCandidates[idx++] = (float) bounds[members[i]].centerArray()[splitAxis];
       }
       Arrays.sort(splitCandidates);
       final float split = splitCandidates[splitCandidates.length / 2];

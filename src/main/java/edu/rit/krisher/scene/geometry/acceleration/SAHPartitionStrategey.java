@@ -34,7 +34,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    @Override
-   public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
+   public PartitionResult findSplitLocation(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds,
          final AxisAlignedBoundingBox nodeBounds, final int depth) {
       if (depth >= maxDepth) {
          return PartitionResult.LEAF;
@@ -54,14 +54,14 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? KDTree.X_AXIS
             : KDTree.Z_AXIS)
             : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
-      final SplitCandidate[] splitCandidates = new SplitCandidate[members.length * 2];
+      final SplitCandidate[] splitCandidates = new SplitCandidate[memberCount * 2];
       for (int i = 0; i < splitCandidates.length; ++i)
          splitCandidates[i] = new SplitCandidate();
       for (int axisAttempt = 0; axisAttempt < 3; axisAttempt++) {
          /*
           * Use the bounding box edges along the split axis as candidate split locations.
           */
-         for (int bbIdx = 0; bbIdx < members.length; ++bbIdx) {
+         for (int bbIdx = 0; bbIdx < memberCount; ++bbIdx) {
             final int boundsIdx = members[bbIdx];
             splitCandidates[bbIdx * 2].splitLocation = bounds[boundsIdx].minXYZ[splitAxis];
             splitCandidates[bbIdx * 2].isMax = false;
@@ -77,10 +77,10 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
          /*
           * Compute the SA-based cost of spliting at each candidate, recording the best location.
           */
-         int lessPrims = members.length;
+         int lessPrims = memberCount;
          int greaterPrims = 0;
          SplitCandidate bestSplit = null;
-         double bestSACost = geometryIntersectionCost * members.length; // Initialize to the cost of creating a leaf.
+         double bestSACost = geometryIntersectionCost * memberCount; // Initialize to the cost of creating a leaf.
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
          for (final SplitCandidate candidate : splitCandidates) {
             /*

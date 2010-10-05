@@ -1,6 +1,7 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
@@ -57,7 +58,7 @@ public class KDTree implements Geometry {
          members[i] = i;
       }
 
-      root = partition(members, bounds, 0, treeBounds);
+      root = partition(members, members.length, bounds, 0, treeBounds);
    }
 
    @Override
@@ -103,56 +104,64 @@ public class KDTree implements Geometry {
       }
    }
 
-   private final KDNode partition(final int[] members, final AxisAlignedBoundingBox[] bounds, final int depth,
+   private final KDNode partition(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds, final int depth,
          final AxisAlignedBoundingBox nodeBounds) {
-      if (members.length == 0) {
-         return null;
+      if (memberCount == 0) {
+         return new KDLeafNode(new int[0]);
       }
 
-      final PartitionResult partition = partitionStrategy.findSplitLocation(members, bounds, nodeBounds, depth);
+      final PartitionResult partition = partitionStrategy.findSplitLocation(members, memberCount, bounds, nodeBounds, depth);
       if (partition == PartitionResult.LEAF) {
-         return new KDLeafNode(members);
+         return new KDLeafNode(Arrays.copyOf(members, memberCount));
       }
 
-      final int[][] lgPrims = partitionPrimitives(members, bounds, partition.splitAxis, partition.splitLocation, partition.lessMemberCount, partition.greaterEqMemberCount);
 
       final KDInteriorNode node = new KDInteriorNode((float) partition.splitLocation, partition.splitAxis);
-      if (lgPrims[0].length > 0) {
+      final int lessCount = partitionPrimitives(members, memberCount, bounds, partition.splitAxis, partition.splitLocation, true);
+      if (lessCount > 0) {
          final double maxBound = nodeBounds.maxXYZ[partition.splitAxis];
          nodeBounds.maxXYZ[partition.splitAxis] = partition.splitLocation;
-         node.lessChild = partition(lgPrims[0], bounds, depth + 1, nodeBounds);
+         node.lessChild = partition(members, lessCount, bounds, depth + 1, nodeBounds);
          nodeBounds.maxXYZ[partition.splitAxis] = maxBound;
       }
-      if (lgPrims[1].length > 0) {
+      final int greaterCount = partitionPrimitives(members, memberCount, bounds, partition.splitAxis, partition.splitLocation, false);
+      if (greaterCount > 0) {
          final double minBound = nodeBounds.minXYZ[partition.splitAxis];
          nodeBounds.minXYZ[partition.splitAxis] = partition.splitLocation;
-         node.greaterEqChild = partition(lgPrims[1], bounds, depth + 1, nodeBounds);
+         node.greaterEqChild = partition(members, greaterCount, bounds, depth + 1, nodeBounds);
          nodeBounds.minXYZ[partition.splitAxis] = minBound;
       }
       return node;
    }
 
-   public static final int[][] partitionPrimitives(final int[] members, final AxisAlignedBoundingBox[] bounds,
-         final int splitAxis, final double split, int lCount, int gCount) {
-      if (lCount < 0 || gCount < 0) {
-         lCount = 0;
-         gCount = 0;
-         for (final int member : members) {
-            if (bounds[member].minXYZ[splitAxis] < split)
-               ++lCount;
-            if (bounds[member].maxXYZ[splitAxis] >= split)
-               ++gCount;
+   private static final int partitionPrimitives(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds,
+         final int splitAxis, final double split, final boolean less) {
+      int startIdx = 0;
+      int endIdx = memberCount - 1;
+      if (less) {
+         while (startIdx <= endIdx) {
+            if (bounds[members[startIdx]].minXYZ[splitAxis] < split) {
+               ++startIdx;
+            } else {
+               final int tmp = members[endIdx];
+               members[endIdx] = members[startIdx];
+               members[startIdx] = tmp;
+               --endIdx;
+            }
+         }
+      } else {
+         while (startIdx <= endIdx) {
+            if (bounds[members[startIdx]].maxXYZ[splitAxis] >= split) {
+               ++startIdx;
+            } else {
+               final int tmp = members[endIdx];
+               members[endIdx] = members[startIdx];
+               members[startIdx] = tmp;
+               --endIdx;
+            }
          }
       }
-      final int[] lessPrims = new int[lCount];
-      final int[] greaterPrims = new int[gCount];
-      for (final int prim : members) {
-         if (bounds[prim].minXYZ[splitAxis] < split)
-            lessPrims[--lCount] = prim;
-         if (bounds[prim].maxXYZ[splitAxis] >= split)
-            greaterPrims[--gCount] = prim;
-      }
-      return new int[][] { lessPrims, greaterPrims };
+      return startIdx;
    }
 
    private static interface KDNode {

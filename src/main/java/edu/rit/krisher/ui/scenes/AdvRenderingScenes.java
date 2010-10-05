@@ -60,7 +60,7 @@ public final class AdvRenderingScenes {
             bunnyScene,
             bunnySceneKDRef,
             bunnySceneReflection,
-            createScene("Lucy", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Downloads/lucy.ply"))) };
+            createScene("Lucy", null, false, new SAHPartitionStrategey(12), plyFactory(new File("/home/krisher/Download/lucy.ply"))) };
    }
 
    private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, bunnyFactory());

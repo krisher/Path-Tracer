@@ -10,6 +10,6 @@ import edu.rit.krisher.scene.AxisAlignedBoundingBox;
  */
 public interface KDPartitionStrategy {
 
-   public PartitionResult findSplitLocation(final int[] members, final AxisAlignedBoundingBox[] bounds,
+   public PartitionResult findSplitLocation(final int[] members, int memberCount, final AxisAlignedBoundingBox[] bounds,
          final AxisAlignedBoundingBox nodeBounds, final int depthRemaining);
 }
