@@ -22,7 +22,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1.0, 50.0, 0.0);
+      this(maxDepth, 1.0, 100.0, 0.25);
    }
 
    public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
@@ -77,18 +77,21 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
          /*
           * Compute the SA-based cost of spliting at each candidate, recording the best location.
           */
-         int lessPrims = 0;
-         int greaterPrims = members.length;
+         int lessPrims = members.length;
+         int greaterPrims = 0;
          SplitCandidate bestSplit = null;
          double bestSACost = geometryIntersectionCost * members.length; // Initialize to the cost of creating a leaf.
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
          for (final SplitCandidate candidate : splitCandidates) {
             /*
-             * Each time we encounter a candidate with max == true (max edge of the corresponding BB), decrement the
-             * number of primitives that will fall on the greater side of the split.
+             * If we have entered a new bounding box, increment the number that fall on the less side of the split
+             * (since the current candidate is at the edge the node falls to the greater side of the split until after
+             * we move to the next greater candidate).
              */
             if (candidate.isMax)
-               --greaterPrims;
+               ++greaterPrims;
+            else
+               --lessPrims;
             /*
              * Ensure that the split candidate falls inside the node's bounds.
              */
@@ -120,13 +123,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                   bestSplit = candidate;
                }
             }
-            /*
-             * If we have entered a new bounding box, increment the number that fall on the less side of the split
-             * (since the current candidate is at the edge the node falls to the greater side of the split until after
-             * we move to the next greater candidate).
-             */
-            if (!candidate.isMax)
-               ++lessPrims;
+
          }
          if (bestSplit != null) {
             return new PartitionResult(splitAxis, bestSplit.splitLocation);
@@ -148,7 +145,15 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
       @Override
       public int compareTo(final SplitCandidate o) {
-         return (splitLocation < o.splitLocation) ? -1 : ((splitLocation == o.splitLocation) ? 0 : 1);
+         if (splitLocation > o.splitLocation)
+            return -1;
+         if (splitLocation < o.splitLocation)
+            return 1;
+         if (isMax == o.isMax)
+            return 0;
+         if (isMax)
+            return 1;
+         return -1;
       }
 
       @Override
@@ -163,7 +168,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
       @Override
       public boolean equals(final Object obj) {
-         return splitLocation == ((SplitCandidate) obj).splitLocation;
+         return splitLocation == ((SplitCandidate) obj).splitLocation && isMax == ((SplitCandidate) obj).isMax;
       }
 
    }

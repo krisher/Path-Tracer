@@ -45,9 +45,9 @@ public final class AdvRenderingScenes {
    static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
 
    static {
-      blueGreenMixedRefractive.addMaterial(0.05, blueLambert);
-      blueGreenMixedRefractive.addMaterial(0.8, blueGreenRefractive);
-      blueGreenMixedRefractive.addMaterial(0.01, new PhongSpecularBRDF(Color.white, 80));
+      blueGreenMixedRefractive.addMaterial(0.1, blueLambert);
+      blueGreenMixedRefractive.addMaterial(0.7, blueGreenRefractive);
+      blueGreenMixedRefractive.addMaterial(0.1, new PhongSpecularBRDF(Color.white, 80));
    }
 
    private AdvRenderingScenes() {
@@ -119,10 +119,11 @@ public final class AdvRenderingScenes {
       ib.put(0).put(2).put(3);
 
       if (walls) {
-         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1], sceneBounds.minXYZ[2] - zBorder);
-         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1], sceneBounds.minXYZ[2] - zBorder);
-         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
-         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
+         final double yBorder = sceneBounds.ySpan() * 2;
+         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.minXYZ[2] - zBorder);
+         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.minXYZ[2] - zBorder);
+         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.maxXYZ[2] + zBorder);
+         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.maxXYZ[2] + zBorder);
 
          ib.put(4).put(5).put(1);
          ib.put(4).put(1).put(0);
