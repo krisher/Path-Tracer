@@ -85,6 +85,15 @@ public final class Vec3 implements Transform {
       this.x = x;
       return this;
    }
+   
+   public final Vec3 cross(final double crossByX, final double crossByY, final double crossByZ) {
+      final double x = y * crossByZ - z * crossByY;
+      final double y = z * crossByX - this.x * crossByZ;
+      z = this.x * crossByY - this.y * crossByX;
+      this.y = y;
+      this.x = x;
+      return this;
+   }
 
 
    public double distance(final Vec3 other) {

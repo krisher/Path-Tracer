@@ -22,6 +22,6 @@ public class HitData {
    /**
     * The surface normal at the hit location.
     */
-   public Vec3 surfaceNormal;
+   public final Vec3 surfaceNormal = new Vec3(0,1,0);
 
 }

@@ -85,6 +85,19 @@ public class Vec3fBuffer extends BaseBuffer implements Vec3Buffer {
    }
 
    @Override
+   public Vec3Buffer get(final double[] value, final int... indices) {
+      int outOffs = 0;
+      for (final int index : indices) {
+         final int offs = index * 3;
+         value[outOffs] = buffer[offs];
+         value[outOffs + 1] = buffer[offs + 1];
+         value[outOffs + 2] = buffer[offs + 2];
+         outOffs += 3;
+      }
+      return this;
+   }
+
+   @Override
    public final AxisAlignedBoundingBox computeBounds() {
       final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
       final int verts = limit() * 3;
@@ -94,6 +107,21 @@ public class Vec3fBuffer extends BaseBuffer implements Vec3Buffer {
                bounds.minXYZ[j] = buffer[i + j];
             if (buffer[i + j] > bounds.maxXYZ[j])
                bounds.maxXYZ[j] = buffer[i + j];
+         }
+      }
+      return bounds;
+   }
+
+   @Override
+   public AxisAlignedBoundingBox computeBounds(final int... indices) {
+      final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
+      for (final int index : indices) {
+         final int offset = index * 3;
+         for (int j = 0; j < 3; ++j) {
+            if (buffer[offset + j] < bounds.minXYZ[j])
+               bounds.minXYZ[j] = buffer[offset + j];
+            if (buffer[offset + j] > bounds.maxXYZ[j])
+               bounds.maxXYZ[j] = buffer[offset + j];
          }
       }
       return bounds;

@@ -40,7 +40,7 @@ public class Sphere implements Geometry {
       final Vec3 isectNormal = ray.getPointOnRay(isectDist);
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
-      data.surfaceNormal = isectNormal;
+      data.surfaceNormal.set(isectNormal);
       data.materialCoords = null;
    }
 

@@ -76,7 +76,7 @@ public class Box implements Geometry {
 
       data.material = material;
       data.materialCoords = new double[] { hitPt.x, hitPt.y, hitPt.z };
-      data.surfaceNormal = isectNormal;
+      data.surfaceNormal.set(isectNormal);
    }
 
    @Override

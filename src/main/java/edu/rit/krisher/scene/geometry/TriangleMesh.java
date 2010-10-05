@@ -60,12 +60,21 @@ public class TriangleMesh implements Geometry {
       }
    }
 
-   private final Vec3 normalFor(final int idx) {
-      final Vec3 v0 = new Vec3();
-      final Vec3 e1 = new Vec3();
-      final Vec3 e2 = new Vec3();
-      getTriangleVEE(idx * 3, v0, e1, e2);
-      return e1.cross(e2).normalize();
+   private final void normalFor(final Vec3 result, final int idx) {
+      final double[] vecs = new double[9];
+      final int idxOffset = idx * 3;
+      vertices.get(vecs, triangleIndices.get(idxOffset), triangleIndices.get(idxOffset + 1), triangleIndices.get(idxOffset + 2));
+      /*
+       * Compute edge1 (indices 3-5), edge2 (indices 6-8) by subtracting the first triangle vertex (indices 0-2) from the second two.
+       */
+      for (int i=0; i < 3; ++i) {
+         vecs[3 + i] -= vecs[i];
+         vecs[6 + i] -= vecs[i];
+      }
+      /*
+       * Cross product of edge1, edge2.
+       */
+      result.set(vecs[4] * vecs[8] - vecs[5] * vecs[7], vecs[5] * vecs[6] - vecs[3] * vecs[8], vecs[3] * vecs[7] - vecs[4] * vecs[6]).normalize();
    }
 
    private final boolean boundsCheck(final Ray ray) {
@@ -134,7 +143,7 @@ public class TriangleMesh implements Geometry {
    private final void getTriangleHitData(final int triangleIndex, final HitData data, final Ray ray) {
       data.material = material;
       data.materialCoords = null;
-      data.surfaceNormal = normalFor(triangleIndex);
+      normalFor(data.surfaceNormal, triangleIndex);
    }
 
    class MeshTriangle implements Geometry {
@@ -169,13 +178,7 @@ public class TriangleMesh implements Geometry {
 
       @Override
       public AxisAlignedBoundingBox getBounds() {
-         final AxisAlignedBoundingBox aabb = new AxisAlignedBoundingBox();
-         final Vec3 v0 = new Vec3(), v1 = new Vec3(), v2 = new Vec3();
-         vertices.get(triangleIndices.get(triangleIndexOffset), v0);
-         vertices.get(triangleIndices.get(triangleIndexOffset + 1), v1);
-         vertices.get(triangleIndices.get(triangleIndexOffset + 2), v2);
-         aabb.set(Math.min(v0.x, Math.min(v1.x, v2.x)), Math.min(v0.y, Math.min(v1.y, v2.y)), Math.min(v0.z, Math.min(v1.z, v2.z)), Math.max(v0.x, Math.max(v1.x, v2.x)), Math.max(v0.y, Math.max(v1.y, v2.y)), Math.max(v0.z, Math.max(v1.z, v2.z)));
-         return aabb;
+         return vertices.computeBounds(triangleIndices.get(triangleIndexOffset), triangleIndices.get(triangleIndexOffset + 1), triangleIndices.get(triangleIndexOffset + 2));
       }
 
       @Override

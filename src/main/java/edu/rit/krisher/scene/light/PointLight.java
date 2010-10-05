@@ -41,7 +41,7 @@ public class PointLight implements EmissiveGeometry {
    @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist) {
       data.material = material;
-      data.surfaceNormal = ray.direction.inverted();
+      data.surfaceNormal.set(ray.direction).multiply(-1);
    }
 
    @Override
