@@ -2,7 +2,6 @@ package edu.rit.krisher.ui.scenes;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.zip.ZipInputStream;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
@@ -58,8 +57,8 @@ public final class AdvRenderingScenes {
    }
 
    public static Scene[] getScenes() {
-      return new Scene[] { bunnySceneKDSAH1, bunnySceneKDMedian, bunnyScene, bunnySceneKDRef,
-            createPLYScene(new File("/home/krisher/Downloads/lucy.ply"), null, new SAHPartitionStrategey()),
+      return new Scene[] { bunnySceneKDSAH1, bunnySceneKDMedian, bunnyScene, bunnySceneKDRef, bunnySceneReflection,
+            createScene("Lucy", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Downloads/lucy.ply"))),
             sphereTestScene };
    }
 
@@ -67,7 +66,7 @@ public final class AdvRenderingScenes {
       @Override
       protected void initScene() {
          add(new Box(10, 1, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.6, whiteMirror, 0.4), new Vec3(-2, -0.5, 0), false));
-         final TriangleMesh bunnyMesh = loadBunny();
+         final Geometry bunnyMesh = bunnyFactory().createGeometry();
 
          add(bunnyMesh);
          final AxisAlignedBoundingBox bounds = bunnyMesh.getBounds();
@@ -80,10 +79,11 @@ public final class AdvRenderingScenes {
 
    };
 
-   private static final Scene bunnySceneKDSAH1 = createBunnyScene("Bunny (SAH KDTree)", null, new SAHPartitionStrategey());
-   private static final Scene bunnySceneKDMedian = createBunnyScene("Bunny (Median-Centroid KDTree)", null, new MedianPartitionStrategy(25, 2));
+   private static final Scene bunnySceneKDSAH1 = createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), bunnyFactory());
+   private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), bunnyFactory());
 
-   private static final Scene bunnySceneKDRef = createBunnyScene("Bunny (SAH KDTree)", new PhongSpecularBRDF(new Color(1, 0, 0), 1000000), new SAHPartitionStrategey());
+   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), bunnyFactory(blueGreenMixedRefractive));
+   private static final Scene bunnySceneReflection = createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), bunnyFactory());
 
    private static final Scene sphereTestScene = new AbstractSceneDescription<DoFCamera>("Sphere Test", new DoFCamera()) {
       @Override
@@ -107,8 +107,8 @@ public final class AdvRenderingScenes {
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
-      final double xBorder = sceneBounds.xSpan();
-      final double zBorder = sceneBounds.zSpan();
+      final double xBorder = sceneBounds.xSpan() * 2;
+      final double zBorder = sceneBounds.zSpan() * 2;
       final Vec3Buffer vb = new Vec3fBuffer(walls ? 8 : 4);
       final IndexBuffer ib = new IndexBuffer(walls ? 30 : 6);
       vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder);
@@ -144,89 +144,25 @@ public final class AdvRenderingScenes {
       return mesh;
    }
 
-   public static Scene createPLYScene(final File ply, final Material material, final KDPartitionStrategy kdStrategy) {
-      final String name = ply.getName();
-      return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
-         @Override
-         protected void initScene() {
-            try {
-               final TriangleMesh model = PLYParser.parseTriangleMesh(ply);
-               if (material != null)
-                  model.setMaterial(material);
-               final AxisAlignedBoundingBox geomBounds = model.getBounds();
-               camera.lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength());
-               camera.setFocalDist(geomBounds.diagonalLength());
 
-               final Geometry groundPlane = groundPlane(new LambertBRDF(new Color(1, 1, 1)), false, geomBounds);
-               geomBounds.union(groundPlane.getBounds());
-               if (kdStrategy != null) {
-                  final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
-                  final KDTree accel = new KDTree(kdStrategy, model, groundPlane);
-                  kdTimer.stop().print(System.out);
-                  System.out.println(new KDTreeMetrics(accel));
-                  add(accel);
-               } else {
-                  add(model);
-                  add(groundPlane);
-               }
-               camera.setAperture(1 / 100.0);
-               camera.setFOVAngle(56.14);
-               add(new SphereLight(new Vec3(3, 6, 5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
-            } catch (final IOException ioe) {
-               ioe.printStackTrace();
-            }
-
-         }
-      };
-   }
-
-   public static Scene createBunnyScene(final String name, final Material material, final KDPartitionStrategy kdStrategy) {
+   public static Scene createScene(final String name, final Material groundMat, final boolean walls,
+         final KDPartitionStrategy kdStrategy, final GeometryFactory... geomFactories) {
       return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
          @Override
          protected void initScene() {
 
-            final TriangleMesh model = loadBunny();
-            if (material != null)
-               model.setMaterial(material);
-            final AxisAlignedBoundingBox geomBounds = model.getBounds();
-            camera.lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength());
-            camera.setFocalDist(geomBounds.diagonalLength());
-
-            final Geometry groundPlane = groundPlane(new LambertBRDF(new Color(1, 1, 1)), false, geomBounds);
-            geomBounds.union(groundPlane.getBounds());
-            if (kdStrategy != null) {
-               final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
-               final KDTree accel = new KDTree(kdStrategy, model, groundPlane);
-               kdTimer.stop().print(System.out);
-               System.out.println(new KDTreeMetrics(accel));
-               add(accel);
-            } else {
-               add(model);
-               add(groundPlane);
-            }
-            camera.setAperture(1 / 100.0);
-            camera.setFOVAngle(56.14);
-            add(new SphereLight(new Vec3(3, 6, 5), 1.0, new Color(1.0f, 1.0f, 1.0f), 75));
-
-         }
-      };
-   }
-
-   public static Scene createScene(final String name, final KDPartitionStrategy kdStrategy, final Geometry... geometry) {
-      return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
-         @Override
-         protected void initScene() {
-
-            final AxisAlignedBoundingBox geomBounds = geometry[0].getBounds();
-            for (int i = 1; i < geometry.length; ++i)
+            final AxisAlignedBoundingBox geomBounds = new AxisAlignedBoundingBox();
+            final Geometry[] geometry = new Geometry[geomFactories.length + 1];
+            for (int i = 0; i < geomFactories.length; ++i) {
+               geometry[i] = geomFactories[i].createGeometry();
                geomBounds.union(geometry[i].getBounds());
-            final Geometry groundPlane = groundPlane(new LambertBRDF(new Color(1, 1, 1)), false, geomBounds);
-            geomBounds.union(groundPlane.getBounds());
+            }
+            final Geometry groundPlane = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
+            : groundMat, walls, geomBounds);
+            geometry[geometry.length - 1] = groundPlane;
             if (kdStrategy != null) {
-               final Geometry[] allGeom = Arrays.copyOf(geometry, geometry.length + 1);
-               allGeom[geometry.length] = groundPlane;
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
-               final KDTree accel = new KDTree(kdStrategy, allGeom);
+               final KDTree accel = new KDTree(kdStrategy, geometry);
                kdTimer.stop().print(System.out);
                System.out.println(new KDTreeMetrics(accel));
                add(accel);
@@ -234,7 +170,6 @@ public final class AdvRenderingScenes {
                for (final Geometry geom : geometry) {
                   add(geom);
                }
-               add(groundPlane);
             }
             camera.lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength());
             camera.setFocalDist(geomBounds.diagonalLength());
@@ -247,29 +182,60 @@ public final class AdvRenderingScenes {
       };
    }
 
-   private static TriangleMesh loadBunny() {
-      return loadBunny(new LambertBRDF(Color.white));
+   public static interface GeometryFactory {
+      public Geometry createGeometry();
    }
 
-   private static TriangleMesh loadBunny(final Material mat) {
-      ZipInputStream stream = null;
-      try {
-         stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
-         stream.getNextEntry();
-         final TriangleMesh mesh = PLYParser.parseTriangleMesh(stream);
-         if (mat != null)
-            mesh.setMaterial(mat);
-         return mesh;
-      } catch (final IOException ioe) {
-         ioe.printStackTrace();
-      } finally {
-         try {
-            if (stream != null)
-               stream.close();
-         } catch (final IOException e) {
-            e.printStackTrace();
+   private static GeometryFactory plyFactory(final File file) {
+      return plyFactory(file, null);
+   }
+
+   private static GeometryFactory plyFactory(final File file, final Material material) {
+      return new GeometryFactory() {
+         @Override
+         public Geometry createGeometry() {
+            try {
+               final TriangleMesh model = PLYParser.parseTriangleMesh(file);
+               if (material != null)
+                  model.setMaterial(material);
+               return model;
+            } catch (final IOException e) {
+               e.printStackTrace();
+               return null;
+            }
          }
-      }
-      return null;
+      };
+   }
+
+   private static GeometryFactory bunnyFactory() {
+      return bunnyFactory(new LambertBRDF(Color.white));
+   }
+
+   private static final GeometryFactory bunnyFactory(final Material mat) {
+      return new GeometryFactory() {
+         @Override
+         public Geometry createGeometry() {
+
+            ZipInputStream stream = null;
+            try {
+               stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
+               stream.getNextEntry();
+               final TriangleMesh mesh = PLYParser.parseTriangleMesh(stream);
+               if (mat != null)
+                  mesh.setMaterial(mat);
+               return mesh;
+            } catch (final IOException ioe) {
+               ioe.printStackTrace();
+            } finally {
+               try {
+                  if (stream != null)
+                     stream.close();
+               } catch (final IOException e) {
+                  e.printStackTrace();
+               }
+            }
+            return null;
+         }
+      };
    }
 }
