@@ -234,8 +234,7 @@ public final class PathTracer {
                final double cosWi = 1.0;// ray.direction.dot(sourceHit.surfaceNormal);
                final double cosWo = -hitData.surfaceNormal.dot(ray.direction);
                final double diffAngle = (cosWi * cosWo) / (intersectDist * intersectDist);
-               sampleColor.scaleSet(sampleColor.r * ray.transmissionSpectrum.r, sampleColor.g
-                                    * ray.transmissionSpectrum.g, sampleColor.b * ray.transmissionSpectrum.b, diffAngle);
+               sampleColor.multiply(diffAngle);
             } else
                sampleColor.set(0, 0, 0);
 
