@@ -67,6 +67,10 @@ public final class Vec3 implements Transform {
    public final double get(final int idx) {
       return idx == 0 ? x : (idx == 1 ? y : z);
    }
+   
+   public double[] get() {
+      return new double[] {x, y, z};
+   }
 
    public final Vec3 add(final Vec3 vector) {
       x += vector.x;

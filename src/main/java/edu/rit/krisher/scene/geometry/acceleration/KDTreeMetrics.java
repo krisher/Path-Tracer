@@ -80,7 +80,7 @@ public class KDTreeMetrics {
          this.leafNodes = visitor.leafNodeCount;
 
          this.totalPrimitives = visitor.cumLeafPrimitives;
-         this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getPrimitiveCount();
+         this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getTriCount();
 
          final VarianceVisitor vVisitor = new VarianceVisitor(visitor.cumLeafPrimitives
                                                               / (double) visitor.leafNodeCount);

@@ -60,7 +60,9 @@ public final class AdvRenderingScenes {
             bunnyScene,
             bunnySceneKDRef,
             bunnySceneReflection,
-            createScene("Lucy", null, false, new SAHPartitionStrategey(12), plyFactory(new File("/home/krisher/Download/lucy.ply"))) };
+            createScene("Lucy", null, false, new SAHPartitionStrategey(12), plyFactory(new File("/home/krisher/Download/lucy.ply"))),
+            createScene("Dragon", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
+            createScene("Buddha", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/happy_vrip.ply")))};
    }
 
    private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, bunnyFactory());
@@ -138,8 +140,8 @@ public final class AdvRenderingScenes {
                }
             }
             camera.lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
-            camera.setFocalDist(geomBounds.diagonalLength());
-            camera.setAperture(1 / 200.0);
+            camera.setFocalDist(geomBounds.diagonalLength() / 2.0);
+            camera.setAperture(1 / 400.0);
             add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
                                                                                                          + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));

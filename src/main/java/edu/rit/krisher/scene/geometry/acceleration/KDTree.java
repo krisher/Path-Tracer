@@ -75,6 +75,10 @@ public class KDTree implements Geometry {
       return 1;
    }
 
+   public int getTriCount() {
+      return primToGeomMap.length / 2;
+   }
+
    /**
     * @return the partitionStrategy
     */
@@ -84,7 +88,11 @@ public class KDTree implements Geometry {
 
    @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist, final int primIndices) {
-      root.getHitData(data, ray, isectDist);
+      final double[] hitCoord = new double[] { ray.origin.x + ray.direction.x * isectDist,
+            ray.origin.y + ray.direction.y * isectDist,
+
+            ray.origin.z + ray.direction.z * isectDist };
+      root.getHitData(data, ray, isectDist, hitCoord);
    }
 
    @Override
@@ -92,7 +100,7 @@ public class KDTree implements Geometry {
       if (root != null) {
          final double[] params = new double[2];
          if (treeBounds.rayIntersectsParametric(ray, params))
-            return root.intersects(ray, params[0], params[1]);
+            return root.intersects(ray, params[0], params[1], ray.origin.get(), ray.direction.get());
       }
       return 0;
    }
@@ -169,9 +177,9 @@ public class KDTree implements Geometry {
 
    private static interface KDNode {
 
-      public double intersects(final Ray ray, final double tmin, final double tmax);
+      public double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD, final double[] rayDirectionD);
 
-      public void getHitData(final HitData data, final Ray ray, final double isectDist);
+      public void getHitData(final HitData data, final Ray ray, final double isectDist, final double[] hitCoord);
 
       public void visit(int depth, AxisAlignedBoundingBox nodeBounds, KDNodeVisitor vistor) throws Exception;
    }
@@ -188,72 +196,43 @@ public class KDTree implements Geometry {
       }
 
       @Override
-      public final double intersects(final Ray ray, final double tmin, final double tmax) {
-         final double cEntry, cExit;
-         if (axis == X_AXIS) {
-            cEntry = ray.origin.x + tmin * ray.direction.x;
-            cExit = ray.origin.x + tmax * ray.direction.x;
-         } else if (axis == Y_AXIS) {
-            cEntry = ray.origin.y + tmin * ray.direction.y;
-            cExit = ray.origin.y + tmax * ray.direction.y;
-         } else {
-            cEntry = ray.origin.z + tmin * ray.direction.z;
-            cExit = ray.origin.z + tmax * ray.direction.z;
-         }
+      public final double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
+         final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
+         final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
 
          if (cEntry < splitLocation) { // entry point on less side of split, or on split
             if (cExit < splitLocation) { // exit point on less side of split, only need to check less...
-               return (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tmax);
+               return (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { // exit point >= split location, need to check both
-               final double tsplit;
-               if (axis == X_AXIS)
-                  tsplit = (splitLocation - ray.origin.x) / ray.direction.x;
-               else if (axis == Y_AXIS)
-                  tsplit = (splitLocation - ray.origin.y) / ray.direction.y;
-               else
-                  tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
+               final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                // less-child: use tmin, tsplit
-               final double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tsplit);
+               final double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if ((hitDist > 0 && hitDist < tsplit) || greaterEqChild == null)
                   return hitDist;
                // greater-child: use tsplit, tmax
-               return greaterEqChild.intersects(ray, tsplit, tmax);
+               return greaterEqChild.intersects(ray, tsplit, tmax, rayOriginD, rayDirectionD);
             }
          } else { // entry >= split coordinate
             if (cExit >= splitLocation) { // exit on greater/eq side of split, only check greater.
-               return (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax);
+               return (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { // exit on less side, check both
-               final double tsplit;
-               if (axis == X_AXIS)
-                  tsplit = (splitLocation - ray.origin.x) / ray.direction.x;
-               else if (axis == Y_AXIS)
-                  tsplit = (splitLocation - ray.origin.y) / ray.direction.y;
-               else
-                  tsplit = (splitLocation - ray.origin.z) / ray.direction.z;
+               final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                // greater-child: use tmin, tsplit
-               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tsplit);
+               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if ((hitDist > 0 && hitDist <= tsplit) || lessChild == null)
                   return hitDist;
                // less-child: use tsplit, tmax
-               return lessChild.intersects(ray, tsplit, tmax);
+               return lessChild.intersects(ray, tsplit, tmax, rayOriginD, rayDirectionD);
             }
          }
       }
 
       @Override
-      public void getHitData(final HitData data, final Ray ray, final double isectDist) {
-         final double isectCoord;
-         if (axis == X_AXIS) {
-            isectCoord = ray.origin.x + ray.direction.x * isectDist;
-         } else if (axis == Y_AXIS) {
-            isectCoord = ray.origin.y + ray.direction.y * isectDist;
-         } else {
-            isectCoord = ray.origin.z + ray.direction.z * isectDist;
-         }
-         if (isectCoord < splitLocation)
-            lessChild.getHitData(data, ray, isectDist);
+      public void getHitData(final HitData data, final Ray ray, final double isectDist, final double[] hitCoord) {
+         if (hitCoord[axis] < splitLocation)
+            lessChild.getHitData(data, ray, isectDist, hitCoord);
          else
-            greaterEqChild.getHitData(data, ray, isectDist);
+            greaterEqChild.getHitData(data, ray, isectDist, hitCoord);
       }
 
       @Override
@@ -284,10 +263,10 @@ public class KDTree implements Geometry {
       }
 
       @Override
-      public double intersects(final Ray ray, final double tmin, final double tmax) {
+      public double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
          double minDist = 0;
          for (final int prim : primitives) {
-            final double dist = KDTree.this.content[primToGeomMap[prim * 2]].intersects(ray,primToGeomMap[prim * 2 + 1]);
+            final double dist = KDTree.this.content[primToGeomMap[prim * 2]].intersects(ray, primToGeomMap[prim * 2 + 1]);
             if (dist > 0 && (dist < minDist || minDist <= 0))
                minDist = dist;
          }
@@ -295,7 +274,7 @@ public class KDTree implements Geometry {
       }
 
       @Override
-      public void getHitData(final HitData data, final Ray ray, final double isectDist) {
+      public void getHitData(final HitData data, final Ray ray, final double isectDist, final double[] hitCoord) {
          for (final int prim : primitives) {
             final double dist = KDTree.this.content[primToGeomMap[prim * 2]].intersects(ray, primToGeomMap[prim * 2 + 1]);
             if (dist == isectDist) {
