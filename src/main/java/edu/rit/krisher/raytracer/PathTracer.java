@@ -186,7 +186,7 @@ public final class PathTracer {
             Geometry hit = null;
 
             for (final Geometry geom : geometry) {
-               final double d = geom.intersects(ray);
+               final double d = geom.intersects(ray, -1);
                if (d > 0 && (intersectDist <= 0 || d < intersectDist)) {
                   intersectDist = d;
                   hit = geom;
@@ -210,7 +210,7 @@ public final class PathTracer {
                 */
                continue;
             }
-            hit.getHitData(hitData, ray, intersectDist);
+            hit.getHitData(hitData, ray, intersectDist, -1);
 
             /*
              * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
@@ -281,7 +281,7 @@ public final class PathTracer {
                       */
                      for (final Geometry geom : geometry) {
                         if (geom != light) {
-                           final double t = geom.intersects(shadowRay);
+                           final double t = geom.intersects(shadowRay, -1);
                            if (t > 0 && t < lightDist) {
                               lightDist = 0;
                               break;
