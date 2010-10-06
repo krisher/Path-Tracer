@@ -212,8 +212,11 @@ public class Ray {
     *         there was no intersection.
     */
    public double intersectsTriangle(final double[] VEE) {
-      final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
-      final double divisor = Vec3.dot(p.x, p.y, p.z, VEE[3], VEE[4], VEE[5]);
+//      final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
+      final double pX = direction.y * VEE[8] - direction.z * VEE[7];
+      final double pY = direction.z * VEE[6] - direction.x * VEE[8];
+      final double pZ = direction.x * VEE[7] - direction.y * VEE[6];
+      final double divisor = Vec3.dot(pX, pY, pZ, VEE[3], VEE[4], VEE[5]);
       /*
        * Ray nearly parallel to triangle plane...
        */
@@ -221,24 +224,31 @@ public class Ray {
          return 0;
       }
 
-      final Vec3 translatedOrigin = new Vec3(origin);
-      translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
-      final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
+//      final Vec3 translatedOrigin = new Vec3(origin);
+//      translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
+      final double translatedOriginX = origin.x - VEE[0];
+      final double translatedOriginY = origin.y - VEE[1];
+      final double translatedOriginZ = origin.z - VEE[2];
+      
+//      final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
+      final double qX = translatedOriginY * VEE[5] - translatedOriginZ * VEE[4];
+      final double qY = translatedOriginZ * VEE[3] - translatedOriginX * VEE[5];
+      final double qZ = translatedOriginX * VEE[4] - translatedOriginY * VEE[3];
       /*
        * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
        * defined at the vertex locations:
        */
-      final double e1Factor = p.dot(translatedOrigin) / divisor;
+      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
       if (e1Factor < 0 || e1Factor > 1) {
          return 0;
       }
 
-      final double e2Factor = q.dot(direction) / divisor;
+      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
       if (e2Factor < 0 || e2Factor + e1Factor > 1) {
          return 0;
       }
 
-      return Vec3.dot(q.x, q.y, q.z, VEE[6], VEE[7], VEE[8]) / divisor;
+      return Vec3.dot(qX, qY, qZ, VEE[6], VEE[7], VEE[8]) / divisor;
    }
 
    @Override
