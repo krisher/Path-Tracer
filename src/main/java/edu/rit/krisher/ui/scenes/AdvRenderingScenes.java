@@ -38,7 +38,7 @@ public final class AdvRenderingScenes {
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
    static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100000);
    static Material whiteLambert = new LambertBRDF(Color.white);
-   static Material blueLambert = new LambertBRDF(new Color(0.25, 0.25, 1.0));
+   static Material blueLambert = new LambertBRDF(new Color(0.75, 0.75, 1.0));
 
    static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.75, 1.0), 100000);
    static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
