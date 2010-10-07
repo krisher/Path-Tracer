@@ -4,7 +4,6 @@ import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.scene.material.Color;
@@ -17,38 +16,38 @@ public class TriangleMesh implements Geometry {
    private Material material = new LambertBRDF(Color.white);
    private final Vec3Buffer vertices;
    private final Vec3Buffer normals;
-   private final IndexBuffer triangleIndices;
+   private final int[] triangleIndices;
    private final AxisAlignedBoundingBox bounds;
    private final int triCount;
 
 
-   public TriangleMesh(final Vec3Buffer verts, final IndexBuffer triangles) {
+   public TriangleMesh(final Vec3Buffer verts, final int[] triangles) {
       this.vertices = verts;
       this.triangleIndices = triangles;
-      this.triCount = triangleIndices.limit() / 3;
+      this.triCount = triangleIndices.length / 3;
       this.bounds = verts.computeBounds();
       normals = null;
    }
 
-   public TriangleMesh(final Vec3Buffer verts, final Vec3Buffer normals, final IndexBuffer triangles) {
+   public TriangleMesh(final Vec3Buffer verts, final Vec3Buffer normals, final int[] triangles) {
       this.vertices = verts;
       this.triangleIndices = triangles;
-      this.triCount = triangleIndices.limit() / 3;
+      this.triCount = triangleIndices.length / 3;
       this.bounds = verts.computeBounds();
       this.normals = normals;
    }
 
-   public static Vec3Buffer computeTriangleNormals(final Vec3Buffer vertices, final IndexBuffer triangleIndices) {
-      final int triCount = triangleIndices.capacity() / 3;
+   public static Vec3Buffer computeTriangleNormals(final Vec3Buffer vertices, final int[] triangleIndices) {
+      final int triCount = triangleIndices.length / 3;
       final Vec3fBuffer normals = new Vec3fBuffer(vertices.capacity());
       final Vec3 v0 = new Vec3();
       final Vec3 e1 = new Vec3();
       final Vec3 e2 = new Vec3();
       final int[] counts = new int[normals.capacity()];
       for (int i = 0; i < triCount; i++) {
-         final int v0Idx = triangleIndices.get(i * 3);
-         final int v1Idx = triangleIndices.get(i * 3 + 1);
-         final int v2Idx = triangleIndices.get(i * 3 + 2);
+         final int v0Idx = triangleIndices[i * 3];
+         final int v1Idx = triangleIndices[i * 3 + 1];
+         final int v2Idx = triangleIndices[i * 3 + 2];
          vertices.get(v0Idx, v0);
          vertices.get(v1Idx, e1);
          vertices.get(v2Idx, e2);
@@ -164,7 +163,7 @@ public class TriangleMesh implements Geometry {
          return new AxisAlignedBoundingBox(bounds);
       } else {
          final int triangleIndexOffset = primIndex * 3;
-         return vertices.computeBounds(triangleIndices.get(triangleIndexOffset), triangleIndices.get(triangleIndexOffset + 1), triangleIndices.get(triangleIndexOffset + 2));
+         return vertices.computeBounds(triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
       }
    }
 
@@ -195,7 +194,7 @@ public class TriangleMesh implements Geometry {
          final double[] triVerts = new double[9];
          getTriangleVEE(triVerts, triangleIndex * 3);
          ray.intersectsTriangleBarycentric(baryCoords, triVerts);
-         normals.get(triVerts, triangleIndices.get(triangleIndex * 3), triangleIndices.get(triangleIndex * 3 + 1), triangleIndices.get(triangleIndex * 3 + 2));
+         normals.get(triVerts, triangleIndices[triangleIndex * 3], triangleIndices[triangleIndex * 3 + 1], triangleIndices[triangleIndex * 3 + 2]);
          final double w = 1.0 - baryCoords[1] - baryCoords[2];
          data.surfaceNormal.x = w * triVerts[0] + baryCoords[1] * triVerts[3] + baryCoords[2] * triVerts[6];
          data.surfaceNormal.y = w * triVerts[1] + baryCoords[1] * triVerts[4] + baryCoords[2] * triVerts[7];
@@ -207,7 +206,7 @@ public class TriangleMesh implements Geometry {
     * @param vecs
     */
    private final void getTriangleVEE(final double[] vecs, final int triangleIndexOffset) {
-      vertices.get(vecs, triangleIndices.get(triangleIndexOffset), triangleIndices.get(triangleIndexOffset + 1), triangleIndices.get(triangleIndexOffset + 2));
+      vertices.get(vecs, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
       /*
        * Compute edge1 (indices 3-5), edge2 (indices 6-8) by subtracting the first triangle vertex (indices 0-2) from
        * the second two.

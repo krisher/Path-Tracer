@@ -153,21 +153,21 @@ public final class Vec3 implements Transform {
       return this;
    }
 
-   public Vec3 set(final double x, final double y, final double z) {
+   public final Vec3 set(final double x, final double y, final double z) {
       this.x = x;
       this.y = y;
       this.z = z;
       return this;
    }
 
-   public Vec3 set(final Vec3 from) {
+   public final Vec3 set(final Vec3 from) {
       x = from.x;
       y = from.y;
       z = from.z;
       return this;
    }
 
-   public Vec3 set(final double[] from) {
+   public final Vec3 set(final double[] from) {
       x = from[0];
       y = from[1];
       z = from[2];
@@ -201,17 +201,17 @@ public final class Vec3 implements Transform {
    }
 
    @Override
-   public Vec3 transformPoint(final Vec3 vec) {
+   public final Vec3 transformPoint(final Vec3 vec) {
       vec.add(this);
       return vec;
    }
 
    @Override
-   public Vec3 transformVec(final Vec3 vec) {
+   public final Vec3 transformVec(final Vec3 vec) {
       return vec;
    }
 
-   public Vec3 reflect(final Vec3 reflectionVec) {
+   public final Vec3 reflect(final Vec3 reflectionVec) {
       scaleAdd(reflectionVec, -2 * (dot(reflectionVec))).normalize();
       return this;
    }

@@ -65,6 +65,7 @@ public final class AdvRenderingScenes {
             bunnySceneReflection,
             createScene("Lucy", null, false, new SAHPartitionStrategey(12), plyFactory(new File("/home/krisher/Download/lucy.ply"))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
+            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))) };
    }
 
@@ -110,7 +111,7 @@ public final class AdvRenderingScenes {
          ib.put(7).put(0).put(3);
       }
 
-      final TriangleMesh mesh = new TriangleMesh(vb, ib);
+      final TriangleMesh mesh = new TriangleMesh(vb, ib.getIndices());
       if (mat != null) {
          mesh.setMaterial(mat);
       }

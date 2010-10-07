@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.vecmath.Ray;
@@ -23,12 +22,7 @@ public class TriangleMeshTest {
       verts.put(new Vec3(1, -1, 0));
       verts.flip();
 
-      final IndexBuffer idx = new IndexBuffer(6);
-      idx.put(0).put(1).put(2);
-      idx.put(0).put(2).put(3);
-      idx.flip();
-
-      xyQuad = new TriangleMesh(verts, idx);
+      xyQuad = new TriangleMesh(verts, new int[] {0,1,2,0,2,3});
 
    }
 

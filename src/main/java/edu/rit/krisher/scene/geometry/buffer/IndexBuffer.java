@@ -9,7 +9,7 @@ import java.nio.BufferUnderflowException;
  * @author krisher
  * 
  */
-public class IndexBuffer extends BaseBuffer {
+public final class IndexBuffer extends BaseBuffer {
 
    private final int[] buffer;
 
@@ -47,6 +47,10 @@ public class IndexBuffer extends BaseBuffer {
          throw new BufferOverflowException();
       buffer[idx] = value;
       return this;
+   }
+   
+   public int[] getIndices() {
+      return buffer;
    }
 
 }

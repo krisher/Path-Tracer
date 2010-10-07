@@ -34,12 +34,12 @@ public final class PathTracer {
       private final static long mask = (1L << 48) - 1;
 
       @Override
-      public void setSeed(final long seed) {
+      public final void setSeed(final long seed) {
          this.seed = (seed ^ multiplier) & mask;
       }
 
       @Override
-      protected int next(final int bits) {
+      protected final int next(final int bits) {
          seed = (seed * multiplier + addend) & mask;
          return (int) (seed >>> (48 - bits));
       }
@@ -161,6 +161,7 @@ public final class PathTracer {
       final Ray shadowRay = new Ray(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
       final Vec3 directLightNormal = new Vec3();
 
+      final Color bg = workItem.scene.getBackground();
       /*
        * The number of rays that are still active (have not been absorbed or otherwise terminated).
        * 
@@ -200,7 +201,6 @@ public final class PathTracer {
                 */
                // if (ray.emissiveResponse) {
                final int dst = 3 * (ray.pixelY * workItem.blockWidth + ray.pixelX);
-               final Color bg = workItem.scene.getBackground();
                pixels[dst] += bg.r * ray.transmissionSpectrum.r;
                pixels[dst + 1] += bg.g * ray.transmissionSpectrum.g;
                pixels[dst + 2] += bg.b * ray.transmissionSpectrum.b;

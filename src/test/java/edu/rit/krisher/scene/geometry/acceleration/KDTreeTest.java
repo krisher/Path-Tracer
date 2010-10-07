@@ -113,6 +113,6 @@ public class KDTreeTest {
 
       ib.put(7).put(4).put(0);
       ib.put(7).put(0).put(3);
-      return new TriangleMesh(vb, ib);
+      return new TriangleMesh(vb, ib.getIndices());
    }
 }
