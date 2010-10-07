@@ -162,7 +162,7 @@ public class KDTree implements Geometry {
          }
       } else {
          while (startIdx <= endIdx) {
-            if (bounds[members[startIdx]].maxXYZ[splitAxis] >= split) {
+            if (bounds[members[startIdx]].maxXYZ[splitAxis] > split || bounds[members[startIdx]].maxXYZ[splitAxis] == split && bounds[members[startIdx]].minXYZ[splitAxis] == split) {
                ++startIdx;
             } else {
                final int tmp = members[endIdx];
@@ -200,7 +200,7 @@ public class KDTree implements Geometry {
          final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
          final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
 
-         if (cEntry < splitLocation) { // entry point on less side of split, or on split
+         if (cEntry < splitLocation) { // entry point on less side of split
             if (cExit < splitLocation) { // exit point on less side of split, only need to check less...
                return (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { // exit point >= split location, need to check both

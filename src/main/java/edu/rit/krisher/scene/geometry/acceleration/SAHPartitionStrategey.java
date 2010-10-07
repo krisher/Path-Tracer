@@ -91,9 +91,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * (since the current candidate is at the edge the node falls to the greater side of the split until after
              * we move to the next greater candidate).
              */
-            if (candidate.isMax)
-               ++greaterPrims;
-            else
+            
+            if (!candidate.isMax)
                --lessPrims;
             /*
              * Ensure that the split candidate falls inside the node's bounds.
@@ -127,6 +126,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                   bestSplitAxis = splitAxis;
                }
             }
+            if (candidate.isMax)
+               ++greaterPrims;
 
          }
 
