@@ -16,6 +16,8 @@ import java.util.Map;
 import edu.rit.krisher.fileparser.ply.ElementReceiver.ElementAttributeValues;
 import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
+import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
+import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 
 /**
  * Simple parser implementation for the Stanford PLY model format. This is based on the format description from: <a
@@ -41,7 +43,7 @@ public final class PLYParser {
    }
 
    public static void parsePLY(final InputStream stream, final Map<String, ElementReceiver> receivers)
-   throws IOException {
+         throws IOException {
 
       try {
          final PLYContentDescription content = new PLYContentDescription(stream);
@@ -74,10 +76,14 @@ public final class PLYParser {
    }
 
    public static TriangleMesh parseTriangleMesh(final File file) throws IOException {
-      return parseTriangleMesh(new BufferedInputStream(new FileInputStream(file)));
+      return parseTriangleMesh(new BufferedInputStream(new FileInputStream(file)), false);
    }
 
    public static TriangleMesh parseTriangleMesh(final InputStream stream) throws IOException {
+      return parseTriangleMesh(stream, false);
+   }
+
+   public static TriangleMesh parseTriangleMesh(final InputStream stream, final boolean computeNormals) throws IOException {
       final Map<String, ElementReceiver> elementReceivers = new HashMap<String, ElementReceiver>();
       final VertexReceiver vReceiver = new VertexReceiver();
       elementReceivers.put("vertex", vReceiver);
@@ -86,7 +92,10 @@ public final class PLYParser {
 
       parsePLY(stream, elementReceivers);
 
-      return new TriangleMesh(vReceiver.getBuffer(), iReceiver.getBuffer());
+      final Vec3fBuffer vertices = vReceiver.getBuffer();
+      final IndexBuffer indices = iReceiver.getBuffer();
+      return new TriangleMesh(vertices, (computeNormals) ? TriangleMesh.computeTriangleNormals(vertices, indices)
+            : null, indices);
    }
 
    private static final class ASCIIElementAttributeValues implements ElementAttributeValues {
@@ -125,7 +134,7 @@ public final class PLYParser {
          final Number[] values = new Number[attributeListSize[attributeIdx]];
          for (int i = 0; i < values.length; i++) {
             values[i] = attributes[attributeIdx].valueType.parseAscii(elementComponents[attributeStart[attributeIdx]
-                                                                                                       + i]);
+                  + i]);
          }
          return values;
 

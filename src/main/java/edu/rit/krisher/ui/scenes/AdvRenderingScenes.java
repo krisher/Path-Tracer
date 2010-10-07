@@ -1,6 +1,8 @@
 package edu.rit.krisher.ui.scenes;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.zip.ZipInputStream;
 
@@ -58,11 +60,12 @@ public final class AdvRenderingScenes {
             bunnySceneKDSAH1,
             bunnySceneKDMedian,
             bunnyScene,
+            bunnySceneReflective,
             bunnySceneKDRef,
             bunnySceneReflection,
             createScene("Lucy", null, false, new SAHPartitionStrategey(12), plyFactory(new File("/home/krisher/Download/lucy.ply"))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
-            createScene("Buddha", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/happy_vrip.ply")))};
+            createScene("Buddha", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))) };
    }
 
    private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, bunnyFactory());
@@ -70,9 +73,9 @@ public final class AdvRenderingScenes {
    private static final Scene bunnySceneKDSAH1 = createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), bunnyFactory());
    private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), bunnyFactory());
 
-   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), bunnyFactory(blueGreenMixedRefractive));
+   private static final Scene bunnySceneReflective = createScene("Bunny (Normals)", null, false, new SAHPartitionStrategey(), bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true));
+   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), bunnyFactory(blueGreenMixedRefractive, false));
    private static final Scene bunnySceneReflection = createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), bunnyFactory());
-
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
@@ -127,7 +130,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-            : groundMat, walls, geomBounds);
+                  : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -141,9 +144,9 @@ public final class AdvRenderingScenes {
             }
             camera.lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
             camera.setFocalDist(geomBounds.diagonalLength() / 2.0);
-            camera.setAperture(1 / 400.0);
+            camera.setAperture(1 / 1000.0);
             add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
             camera.setFOVAngle(56.14);
@@ -156,15 +159,15 @@ public final class AdvRenderingScenes {
    }
 
    private static GeometryFactory plyFactory(final File file) {
-      return plyFactory(file, null);
+      return plyFactory(file, null, false);
    }
 
-   private static GeometryFactory plyFactory(final File file, final Material material) {
+   private static GeometryFactory plyFactory(final File file, final Material material, final boolean computeNormals) {
       return new GeometryFactory() {
          @Override
          public Geometry createGeometry() {
             try {
-               final TriangleMesh model = PLYParser.parseTriangleMesh(file);
+               final TriangleMesh model = PLYParser.parseTriangleMesh(new BufferedInputStream(new FileInputStream(file)), computeNormals);
                if (material != null)
                   model.setMaterial(material);
                return model;
@@ -177,10 +180,10 @@ public final class AdvRenderingScenes {
    }
 
    private static GeometryFactory bunnyFactory() {
-      return bunnyFactory(new LambertBRDF(Color.white));
+      return bunnyFactory(new LambertBRDF(Color.white), false);
    }
 
-   private static final GeometryFactory bunnyFactory(final Material mat) {
+   private static final GeometryFactory bunnyFactory(final Material mat, final boolean computeNormals) {
       return new GeometryFactory() {
          @Override
          public Geometry createGeometry() {
@@ -189,7 +192,7 @@ public final class AdvRenderingScenes {
             try {
                stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
                stream.getNextEntry();
-               final TriangleMesh mesh = PLYParser.parseTriangleMesh(stream);
+               final TriangleMesh mesh = PLYParser.parseTriangleMesh(stream, computeNormals);
                if (mat != null)
                   mesh.setMaterial(mat);
                return mesh;

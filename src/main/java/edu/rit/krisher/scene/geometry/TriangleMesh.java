@@ -21,9 +21,6 @@ public class TriangleMesh implements Geometry {
    private final AxisAlignedBoundingBox bounds;
    private final int triCount;
 
-   public TriangleMesh(final Vec3Buffer verts, final IndexBuffer triangles, final boolean computeNormals) {
-      this(verts, triangles);
-   }
 
    public TriangleMesh(final Vec3Buffer verts, final IndexBuffer triangles) {
       this.vertices = verts;
@@ -60,7 +57,7 @@ public class TriangleMesh implements Geometry {
          /*
           * Face normal is the cross product of the two edges eminating from v0.
           */
-         e1.cross(e2);
+         e1.cross(e2).normalize();
          /*
           * Add normal to the corresponding cumulative sums...
           */
@@ -72,12 +69,12 @@ public class TriangleMesh implements Geometry {
          normals.get(v1Idx, v0);
          v0.add(e1);
          normals.put(v1Idx, v0);
-         ++counts[v0Idx];
+         ++counts[v1Idx];
 
          normals.get(v2Idx, v0);
          v0.add(e1);
          normals.put(v2Idx, v0);
-         ++counts[v0Idx];
+         ++counts[v2Idx];
       }
       for (int i = 0; i < normals.capacity(); i++) {
          if (counts[i] > 0) {
@@ -107,8 +104,8 @@ public class TriangleMesh implements Geometry {
 
    @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist, final int primIndex) {
-      final double[] triVerts = new double[9];
       if (primIndex < 0) {
+         final double[] triVerts = new double[9];
          int isectTri = -1;
          for (int idx = 0; idx < triCount; ++idx) {
             getTriangleVEE(triVerts, idx * 3);
@@ -187,10 +184,23 @@ public class TriangleMesh implements Geometry {
    }
 
    private final void getTriangleHitData(final int triangleIndex, final HitData data, final Ray ray) {
-      //TODO: Barycentric normal interpolation if vertex normals present...
       data.material = material;
       data.materialCoords = null;
-      normalFor(data.surfaceNormal, triangleIndex);
+      if (normals == null) {
+         normalFor(data.surfaceNormal, triangleIndex);
+      } else {
+         // TODO: Barycentric normal interpolation if vertex normals present... This is not the most efficient way of
+         // doing this.
+         final double[] baryCoords = new double[3];
+         final double[] triVerts = new double[9];
+         getTriangleVEE(triVerts, triangleIndex * 3);
+         ray.intersectsTriangleBarycentric(baryCoords, triVerts);
+         normals.get(triVerts, triangleIndices.get(triangleIndex * 3), triangleIndices.get(triangleIndex * 3 + 1), triangleIndices.get(triangleIndex * 3 + 2));
+         final double w = 1.0 - baryCoords[1] - baryCoords[2];
+         data.surfaceNormal.x = w * triVerts[0] + baryCoords[1] * triVerts[3] + baryCoords[2] * triVerts[6];
+         data.surfaceNormal.y = w * triVerts[1] + baryCoords[1] * triVerts[4] + baryCoords[2] * triVerts[7];
+         data.surfaceNormal.z = w * triVerts[2] + baryCoords[1] * triVerts[5] + baryCoords[2] * triVerts[8];
+      }
    }
 
    /**

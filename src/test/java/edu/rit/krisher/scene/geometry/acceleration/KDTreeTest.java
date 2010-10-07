@@ -73,7 +73,7 @@ public class KDTreeTest {
       try {
          stream = new ZipInputStream(KDTreeTest.class.getResourceAsStream(bunnyResource));
          stream.getNextEntry();
-         return PLYParser.parseTriangleMesh(stream);
+         return PLYParser.parseTriangleMesh(stream, false);
       } catch (final IOException ioe) {
          ioe.printStackTrace();
       } finally {
