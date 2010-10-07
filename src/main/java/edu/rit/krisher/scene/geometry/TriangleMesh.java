@@ -6,6 +6,7 @@ import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
+import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.vecmath.Ray;
@@ -15,15 +16,78 @@ public class TriangleMesh implements Geometry {
 
    private Material material = new LambertBRDF(Color.white);
    private final Vec3Buffer vertices;
+   private final Vec3Buffer normals;
    private final IndexBuffer triangleIndices;
    private final AxisAlignedBoundingBox bounds;
    private final int triCount;
+
+   public TriangleMesh(final Vec3Buffer verts, final IndexBuffer triangles, final boolean computeNormals) {
+      this(verts, triangles);
+   }
 
    public TriangleMesh(final Vec3Buffer verts, final IndexBuffer triangles) {
       this.vertices = verts;
       this.triangleIndices = triangles;
       this.triCount = triangleIndices.limit() / 3;
       this.bounds = verts.computeBounds();
+      normals = null;
+   }
+
+   public TriangleMesh(final Vec3Buffer verts, final Vec3Buffer normals, final IndexBuffer triangles) {
+      this.vertices = verts;
+      this.triangleIndices = triangles;
+      this.triCount = triangleIndices.limit() / 3;
+      this.bounds = verts.computeBounds();
+      this.normals = normals;
+   }
+
+   public static Vec3Buffer computeTriangleNormals(final Vec3Buffer vertices, final IndexBuffer triangleIndices) {
+      final int triCount = triangleIndices.capacity() / 3;
+      final Vec3fBuffer normals = new Vec3fBuffer(vertices.capacity());
+      final Vec3 v0 = new Vec3();
+      final Vec3 e1 = new Vec3();
+      final Vec3 e2 = new Vec3();
+      final int[] counts = new int[normals.capacity()];
+      for (int i = 0; i < triCount; i++) {
+         final int v0Idx = triangleIndices.get(i * 3);
+         final int v1Idx = triangleIndices.get(i * 3 + 1);
+         final int v2Idx = triangleIndices.get(i * 3 + 2);
+         vertices.get(v0Idx, v0);
+         vertices.get(v1Idx, e1);
+         vertices.get(v2Idx, e2);
+         e1.subtract(v0);
+         e2.subtract(v0);
+         /*
+          * Face normal is the cross product of the two edges eminating from v0.
+          */
+         e1.cross(e2);
+         /*
+          * Add normal to the corresponding cumulative sums...
+          */
+         normals.get(v0Idx, v0);
+         v0.add(e1);
+         normals.put(v0Idx, v0);
+         ++counts[v0Idx];
+
+         normals.get(v1Idx, v0);
+         v0.add(e1);
+         normals.put(v1Idx, v0);
+         ++counts[v0Idx];
+
+         normals.get(v2Idx, v0);
+         v0.add(e1);
+         normals.put(v2Idx, v0);
+         ++counts[v0Idx];
+      }
+      for (int i = 0; i < normals.capacity(); i++) {
+         if (counts[i] > 0) {
+            normals.get(i, v0);
+            v0.multiply(1.0 / counts[i]);
+            v0.normalize();
+            normals.put(i, v0);
+         }
+      }
+      return normals;
    }
 
    @Override
@@ -123,6 +187,7 @@ public class TriangleMesh implements Geometry {
    }
 
    private final void getTriangleHitData(final int triangleIndex, final HitData data, final Ray ray) {
+      //TODO: Barycentric normal interpolation if vertex normals present...
       data.material = material;
       data.materialCoords = null;
       normalFor(data.surfaceNormal, triangleIndex);
