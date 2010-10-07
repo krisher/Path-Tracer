@@ -162,7 +162,7 @@ public class KDTree implements Geometry {
          }
       } else {
          while (startIdx <= endIdx) {
-            if (bounds[members[startIdx]].maxXYZ[splitAxis] > split || bounds[members[startIdx]].maxXYZ[splitAxis] == split && bounds[members[startIdx]].minXYZ[splitAxis] == split) {
+            if (bounds[members[startIdx]].maxXYZ[splitAxis] >= split || bounds[members[startIdx]].maxXYZ[splitAxis] == split && bounds[members[startIdx]].minXYZ[splitAxis] == split) {
                ++startIdx;
             } else {
                final int tmp = members[endIdx];
@@ -229,9 +229,9 @@ public class KDTree implements Geometry {
 
       @Override
       public void getHitData(final HitData data, final Ray ray, final double isectDist, final double[] hitCoord) {
-         if (hitCoord[axis] < splitLocation)
+         if (hitCoord[axis] < splitLocation  && lessChild != null /* Can attempt to traverse the wrong child in the cases where the hit coord is very close to the splitLocation (round-off error...) */) {
             lessChild.getHitData(data, ray, isectDist, hitCoord);
-         else
+         } else
             greaterEqChild.getHitData(data, ray, isectDist, hitCoord);
       }
 

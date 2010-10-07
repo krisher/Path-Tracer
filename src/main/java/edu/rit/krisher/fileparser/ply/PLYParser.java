@@ -17,6 +17,7 @@ import edu.rit.krisher.fileparser.ply.ElementReceiver.ElementAttributeValues;
 import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
+import edu.rit.krisher.util.Timer;
 
 /**
  * Simple parser implementation for the Stanford PLY model format. This is based on the format description from: <a
@@ -89,7 +90,9 @@ public final class PLYParser {
       final TrianglesIndexBufferReceiver iReceiver = new TrianglesIndexBufferReceiver();
       elementReceivers.put("face", iReceiver);
 
+      final Timer timer = new Timer("Parse PLY").start();
       parsePLY(stream, elementReceivers);
+      timer.stop().print(System.out);
 
       final Vec3fBuffer vertices = vReceiver.getBuffer();
       final int[] indices = iReceiver.getBuffer().getIndices();
@@ -225,7 +228,7 @@ public final class PLYParser {
             throw new BufferUnderflowException();
       }
 
-      void skipToEnd() throws IOException {
+      void skipToEnd() {
          while (count < element.count) {
             nextElement();
          }

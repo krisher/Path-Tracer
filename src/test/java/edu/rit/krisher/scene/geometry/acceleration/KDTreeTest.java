@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.zip.ZipInputStream;
 
@@ -48,8 +49,26 @@ public class KDTreeTest {
       };
       tree.visitTreeNodes(visitor);
    }
-
+   
    @Test
+   public void splitLocationsShouldBeInNodeRange1() throws Exception {
+      final KDTree tree = new KDTree(PLYParser.parseTriangleMesh(new File("/home/krisher/Download/xyzrgb_dragon.ply")));
+      final KDNodeVisitor visitor = new KDNodeVisitor() {
+
+         @Override
+         public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
+               final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+            if (!leaf) {
+               Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds + " for split axis "
+                                 + splitAxis + ".", splitLocation < bounds.maxXYZ[splitAxis]
+                                                                                  && splitLocation > bounds.minXYZ[splitAxis]);
+            }
+         }
+      };
+      tree.visitTreeNodes(visitor);
+   }
+
+   
    public void treeMetricsShouldNotChange() {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");
