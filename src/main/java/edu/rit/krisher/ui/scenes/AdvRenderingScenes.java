@@ -48,7 +48,7 @@ public final class AdvRenderingScenes {
 
    static {
       blueGreenMixedRefractive.addMaterial(0.1, blueLambert);
-      blueGreenMixedRefractive.addMaterial(0.7, blueGreenRefractive);
+      blueGreenMixedRefractive.addMaterial(0.8, blueGreenRefractive);
       blueGreenMixedRefractive.addMaterial(0.1, new PhongSpecularBRDF(Color.white, 80));
    }
 
@@ -72,7 +72,10 @@ public final class AdvRenderingScenes {
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
             createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
-            createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))) };
+            createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))),
+            createScene("Box (Debug)", null, true, new SAHPartitionStrategey(15), true, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0), new AxisAlignedBoundingBox(-0.5, 0, -2, 1, 0.5, -0.5))),
+            createScene("Box KD Tree Visualization", null, true, new SAHPartitionStrategey(15), false, createKDVisualization(blueGreenMixedRefractive, new SAHPartitionStrategey(15), boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0), new AxisAlignedBoundingBox(-0.5, 0, -2, 1, 0.5, -0.5)))), };
+
    }
 
    private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, true, bunnyFactory());
@@ -145,6 +148,49 @@ public final class AdvRenderingScenes {
       };
    }
 
+   public static GeometryFactory boxes(final AxisAlignedBoundingBox... aabbs) {
+      return new GeometryFactory() {
+         final Vec3Buffer vertices = new Vec3fBuffer(8 * aabbs.length);
+         final IndexBuffer ib = new IndexBuffer(36 * aabbs.length);
+
+         public Geometry createGeometry() {
+            int idxBase = 0;
+            for (final AxisAlignedBoundingBox aabb : aabbs) {
+               vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
+               vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
+               vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.maxXYZ[2]);
+               vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.maxXYZ[2]);
+
+               vertices.put(aabb.maxXYZ[0], aabb.maxXYZ[1], aabb.minXYZ[2]);
+               vertices.put(aabb.minXYZ[0], aabb.maxXYZ[1], aabb.minXYZ[2]);
+               vertices.put(aabb.minXYZ[0], aabb.maxXYZ[1], aabb.maxXYZ[2]);
+               vertices.put(aabb.maxXYZ[0], aabb.maxXYZ[1], aabb.maxXYZ[2]);
+
+               ib.put(idxBase + 0).put(idxBase + 1).put(idxBase + 2);
+               ib.put(idxBase + 0).put(idxBase + 2).put(idxBase + 3);
+
+               ib.put(idxBase + 5).put(idxBase + 4).put(idxBase + 1);
+               ib.put(idxBase + 4).put(idxBase + 0).put(idxBase + 1);
+
+               ib.put(idxBase + 5).put(idxBase + 2).put(idxBase + 6);
+               ib.put(idxBase + 5).put(idxBase + 1).put(idxBase + 2);
+
+               ib.put(idxBase + 3).put(idxBase + 7).put(idxBase + 6);
+               ib.put(idxBase + 3).put(idxBase + 6).put(idxBase + 2);
+
+               ib.put(idxBase + 0).put(idxBase + 4).put(idxBase + 7);
+               ib.put(idxBase + 0).put(idxBase + 7).put(idxBase + 3);
+
+               ib.put(idxBase + 4).put(idxBase + 5).put(idxBase + 6);
+               ib.put(idxBase + 4).put(idxBase + 6).put(idxBase + 7);
+
+               idxBase += 8;
+            }
+            return new TriangleMesh(vertices, ib.getIndices());
+         }
+      };
+   }
+
    public static Scene createScene(final String name, final Material groundMat, final boolean walls,
          final KDPartitionStrategy kdStrategy, final boolean dofCamera, final GeometryFactory... geomFactories) {
       return new AbstractSceneDescription<Camera>(name, (dofCamera) ? new DoFCamera() : new PinholeCamera()) {
@@ -158,7 +204,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-            : groundMat, walls, geomBounds);
+                  : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -177,8 +223,7 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(geomBounds.minXYZ[0] - geomBounds.xSpan(), geomBounds.maxXYZ[1]
-                                                                                                      + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                                                                                                                                              + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                  + geomBounds.ySpan(), geomBounds.maxXYZ[2] + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }

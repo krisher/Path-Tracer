@@ -34,7 +34,7 @@ public interface Geometry {
     *           A non-null ray to test intersection with.
     * @return the distance along the ray (from the origin) at which the intersection occurs.
     */
-   public double intersects(Ray ray, int primitiveIndex);
+   public double intersects(GeometryIntersection intersection, Ray ray, int primitiveIndex);
 
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.

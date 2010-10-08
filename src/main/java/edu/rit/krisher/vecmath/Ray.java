@@ -45,25 +45,25 @@ public class Ray {
       return 0;
    }
 
-   public boolean intersectsBoxParametric(final double[] paramsOut, final double minX, final double minY,
+   public boolean intersectsBoxParametric(final double[] tNearFar, final double minX, final double minY,
          final double minZ, final double maxX, final double maxY, final double maxZ) {
       // final Vec3 rayOrigin = new Vec3(ray.origin);
       // rayOrigin.subtract(center);
-      paramsOut[0] = Double.NEGATIVE_INFINITY;
-      paramsOut[1] = Double.POSITIVE_INFINITY;
+      tNearFar[0] = Double.NEGATIVE_INFINITY;
+      tNearFar[1] = Double.POSITIVE_INFINITY;
 
       double t1, t2;
       if (direction.x != 0) {
          t1 = (minX - origin.x) / direction.x;
          t2 = (maxX - origin.x) / direction.x;
          if (t1 > t2) {
-            paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
-            paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
+            tNearFar[0] = t2 > tNearFar[0] ? t2 : tNearFar[0];
+            tNearFar[1] = t1 < tNearFar[1] ? t1 : tNearFar[1];
          } else {
-            paramsOut[0] = t1 > paramsOut[0] ? t1 : paramsOut[0];
-            paramsOut[1] = t2 < paramsOut[1] ? t2 : paramsOut[1];
+            tNearFar[0] = t1 > tNearFar[0] ? t1 : tNearFar[0];
+            tNearFar[1] = t2 < tNearFar[1] ? t2 : tNearFar[1];
          }
-         if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+         if (tNearFar[0] > tNearFar[1] || tNearFar[1] < 0) {
             return false;
          }
       } else {
@@ -80,13 +80,13 @@ public class Ray {
          t1 = (minY - origin.y) / direction.y;
          t2 = (maxY - origin.y) / direction.y;
          if (t1 > t2) {
-            paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
-            paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
+            tNearFar[0] = t2 > tNearFar[0] ? t2 : tNearFar[0];
+            tNearFar[1] = t1 < tNearFar[1] ? t1 : tNearFar[1];
          } else {
-            paramsOut[0] = t1 > paramsOut[0] ? t1 : paramsOut[0];
-            paramsOut[1] = t2 < paramsOut[1] ? t2 : paramsOut[1];
+            tNearFar[0] = t1 > tNearFar[0] ? t1 : tNearFar[0];
+            tNearFar[1] = t2 < tNearFar[1] ? t2 : tNearFar[1];
          }
-         if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+         if (tNearFar[0] > tNearFar[1] || tNearFar[1] < 0) {
             return false;
          }
       } else {
@@ -103,13 +103,13 @@ public class Ray {
          t1 = (minZ - origin.z) / direction.z;
          t2 = (maxZ - origin.z) / direction.z;
          if (t1 > t2) {
-            paramsOut[0] = t2 > paramsOut[0] ? t2 : paramsOut[0];
-            paramsOut[1] = t1 < paramsOut[1] ? t1 : paramsOut[1];
+            tNearFar[0] = t2 > tNearFar[0] ? t2 : tNearFar[0];
+            tNearFar[1] = t1 < tNearFar[1] ? t1 : tNearFar[1];
          } else {
-            paramsOut[0] = t1 > paramsOut[0] ? t1 : paramsOut[0];
-            paramsOut[1] = t2 < paramsOut[1] ? t2 : paramsOut[1];
+            tNearFar[0] = t1 > tNearFar[0] ? t1 : tNearFar[0];
+            tNearFar[1] = t2 < tNearFar[1] ? t2 : tNearFar[1];
          }
-         if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+         if (tNearFar[0] > tNearFar[1] || tNearFar[1] < 0) {
             return false;
          }
       } else {
@@ -121,7 +121,7 @@ public class Ray {
             return false;
          }
       }
-      if (paramsOut[0] > paramsOut[1] || paramsOut[1] < 0) {
+      if (tNearFar[0] > tNearFar[1] || tNearFar[1] < 0) {
          return false;
       }
       return true;

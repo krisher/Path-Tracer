@@ -11,6 +11,7 @@ import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
+import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
@@ -168,6 +169,7 @@ public final class PathTracer {
        * The active rays are always contiguous from the beginning of the rays array.
        */
       int activeRayCount = rays.length;
+      final GeometryIntersection intersectionInfo = new GeometryIntersection();
       /*
        * All active rays are at the same depth into the path (# of bounces from the initial eye ray). Process until we
        * reach the maximum depth, or all rays have terminated.
@@ -185,12 +187,14 @@ public final class PathTracer {
              */
             double intersectDist = 0;
             Geometry hit = null;
+            int hitPrimitive = -1;
 
             for (final Geometry geom : geometry) {
-               final double d = geom.intersects(ray, -1);
+               final double d = geom.intersects(intersectionInfo, ray, -1);
                if (d > 0 && (intersectDist <= 0 || d < intersectDist)) {
                   intersectDist = d;
                   hit = geom;
+                  hitPrimitive = intersectionInfo.primitiveIndex;
                }
             }
             if (intersectDist <= 0) {
@@ -210,7 +214,7 @@ public final class PathTracer {
                 */
                continue;
             }
-            hit.getHitData(hitData, ray, intersectDist, -1);
+            hit.getHitData(hitData, ray, intersectDist, hitPrimitive);
 
             /*
              * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
@@ -230,11 +234,6 @@ public final class PathTracer {
              */
             if (ray.emissiveResponse) {
                hitData.material.getEmissionColor(sampleColor, ray.direction, hitData.surfaceNormal, hitData.materialCoords);
-               // TODO: cosWi is the angle that the light hits the source of the ray, relative to its normal.
-               final double cosWi = 1.0;// ray.direction.dot(sourceHit.surfaceNormal);
-               final double cosWo = -hitData.surfaceNormal.dot(ray.direction);
-               final double diffAngle = (cosWi * cosWo) / (intersectDist * intersectDist);
-               sampleColor.multiply(diffAngle);
             } else
                sampleColor.set(0, 0, 0);
 
@@ -281,7 +280,7 @@ public final class PathTracer {
                       */
                      for (final Geometry geom : geometry) {
                         if (geom != light) {
-                           final double t = geom.intersects(shadowRay, -1);
+                           final double t = geom.intersects(intersectionInfo, shadowRay, -1);
                            if (t > 0 && t < lightDist) {
                               lightDist = 0;
                               break;

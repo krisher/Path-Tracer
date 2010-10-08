@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.vecmath.Ray;
@@ -29,10 +30,11 @@ public class TriangleMeshTest {
    @Test
    public void zParallelRaysShouldIntersect() {
       final Vec3 direction = new Vec3(0, 0, 1);
+      final GeometryIntersection intersectionInfo = new GeometryIntersection();
       for (float delta = -1f; delta <= 1f; delta += 0.05) {
          for (float delta2 = -1f; delta2 <= 1f; delta2 += 0.05) {
             final Ray zRay = new Ray(new Vec3(delta, delta2, -1), direction);
-            Assert.assertEquals(1.0f, xyQuad.intersects(zRay, -1), 0.00000001);
+            Assert.assertEquals(1.0f, xyQuad.intersects(intersectionInfo, zRay, -1), 0.00000001);
          }
       }
    }
@@ -40,10 +42,11 @@ public class TriangleMeshTest {
    @Test
    public void sphereRaysShouldIntersect() {
       final Vec3 origin = new Vec3(0, 0, -1);
+      final GeometryIntersection intersectionInfo = new GeometryIntersection();
       for (float delta = -0.95f; delta <= 0.95f; delta += 0.05) {
          for (float delta2 = -0.95f; delta2 <= 0.95f; delta2 += 0.05) {
             final Ray ray = new Ray(origin, new Vec3(delta, delta2, 0).subtract(origin).normalize());
-            Assert.assertTrue("Ray: " + ray + " should intersect quad.", xyQuad.intersects(ray, -1) >= 1.0f);
+            Assert.assertTrue("Ray: " + ray + " should intersect quad.", xyQuad.intersects(intersectionInfo, ray, -1) >= 1.0f);
          }
       }
    }

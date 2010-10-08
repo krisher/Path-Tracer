@@ -34,17 +34,17 @@ public class KDSplitMeshGenerator {
                   ib.put(vIdx + 0).put(vIdx + 1).put(vIdx + 2);
                   ib.put(vIdx + 0).put(vIdx + 2).put(vIdx + 3);
 
-                  ib.put(vIdx + 4).put(vIdx + 5).put(vIdx + 1);
-                  ib.put(vIdx + 4).put(vIdx + 1).put(vIdx + 0);
+                  ib.put(vIdx + 5).put(vIdx + 4).put(vIdx + 1);
+                  ib.put(vIdx + 4).put(vIdx + 0).put(vIdx + 1);
 
-                  ib.put(vIdx + 5).put(vIdx + 6).put(vIdx + 2);
-                  ib.put(vIdx + 5).put(vIdx + 2).put(vIdx + 1);
+                  ib.put(vIdx + 5).put(vIdx + 2).put(vIdx + 6);
+                  ib.put(vIdx + 5).put(vIdx + 1).put(vIdx + 2);
 
-                  ib.put(vIdx + 6).put(vIdx + 7).put(vIdx + 3);
-                  ib.put(vIdx + 6).put(vIdx + 3).put(vIdx + 2);
+                  ib.put(vIdx + 3).put(vIdx + 7).put(vIdx + 6);
+                  ib.put(vIdx + 3).put(vIdx + 6).put(vIdx + 2);
 
-                  ib.put(vIdx + 7).put(vIdx + 4).put(vIdx + 0);
-                  ib.put(vIdx + 7).put(vIdx + 0).put(vIdx + 3);
+                  ib.put(vIdx + 0).put(vIdx + 4).put(vIdx + 7);
+                  ib.put(vIdx + 0).put(vIdx + 7).put(vIdx + 3);
 
                   ib.put(vIdx + 4).put(vIdx + 5).put(vIdx + 6);
                   ib.put(vIdx + 4).put(vIdx + 6).put(vIdx + 7);

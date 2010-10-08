@@ -3,6 +3,7 @@ package edu.rit.krisher.scene.geometry;
 import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
+import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
@@ -127,7 +128,7 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public double intersects(final Ray ray, final int primIndex) {
+   public double intersects(final GeometryIntersection intersection, final Ray ray, final int primIndex) {
       double isectDist = Double.POSITIVE_INFINITY;
       final double[] triVerts = new double[9];
       if (primIndex < 0) {
@@ -141,10 +142,12 @@ public class TriangleMesh implements Geometry {
             }
          }
          if (isectTri >= 0) {
+            intersection.primitiveIndex = isectTri;
             return isectDist;
          }
       } else {
          getTriangleVEE(triVerts, primIndex * 3);
+         intersection.primitiveIndex = primIndex;
          return ray.intersectsTriangle(triVerts);
       }
       return 0;

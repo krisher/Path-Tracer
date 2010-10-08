@@ -22,7 +22,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1.0, 100.0, 0.25);
+      this(maxDepth, 1.0, 100.0, 0.75);
    }
 
    public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
@@ -81,8 +81,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
          /*
           * Compute the SA-based cost of spliting at each candidate, recording the best location.
           */
-         int lessPrims = memberCount;
-         int greaterPrims = 0;
+         int lessPrims = 0;
+         int greaterPrims = memberCount;
 
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
          for (final SplitCandidate candidate : splitCandidates) {
@@ -92,8 +92,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * we move to the next greater candidate).
              */
 
-            if (!candidate.isMax)
-               --lessPrims;
+            if (candidate.isMax)
+               --greaterPrims;
             /*
              * Ensure that the split candidate falls inside the node's bounds.
              */
@@ -118,7 +118,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                 */
                final double splitCost = kdNodeTraversalCost + geometryIntersectionCost
                * (lessNodeSurfaceAreaRatio * lessPrims + greaterNodeSurfaceAreaRatio * greaterPrims)
-               * ((lessPrims == 0 || greaterPrims == 0) ? (1.0 - emptyBias) : 1.0);
+               * ((lessPrims == 0 || greaterPrims == 0) ? (emptyBias) : 1.0);
 
                if (splitCost < bestSACost) {
                   bestSACost = splitCost;
@@ -126,14 +126,14 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                   bestSplitAxis = splitAxis;
                }
             }
-            if (bestSplitAxis >= 0) {
-               return new PartitionResult(bestSplitAxis, bestSplit);
-            }
-            if (candidate.isMax)
-               ++greaterPrims;
+            if (!candidate.isMax)
+               ++lessPrims;
+
 
          }
-
+         if (bestSplitAxis >= 0) {
+            return new PartitionResult(bestSplitAxis, bestSplit);
+         }
          /*
           * It was cheaper to create a leaf than to split along the current axis; retry the next axis...
           */
@@ -152,9 +152,9 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       @Override
       public int compareTo(final SplitCandidate o) {
          if (splitLocation > o.splitLocation)
-            return -1;
-         if (splitLocation < o.splitLocation)
             return 1;
+         if (splitLocation < o.splitLocation)
+            return -1;
          if (isMax == o.isMax)
             return 0;
          if (isMax)

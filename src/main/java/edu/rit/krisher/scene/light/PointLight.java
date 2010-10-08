@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.EmissiveGeometry;
+import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -44,7 +45,7 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public double intersects(final Ray ray, final int primIndices) {
+   public double intersects(final GeometryIntersection intersection, final Ray ray, final int primIndices) {
       return -1;
    }
 
