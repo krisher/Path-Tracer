@@ -8,12 +8,15 @@ import java.util.zip.ZipInputStream;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.camera.DoFCamera;
+import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.acceleration.KDPartitionStrategy;
+import edu.rit.krisher.scene.geometry.acceleration.KDSplitMeshGenerator;
 import edu.rit.krisher.scene.geometry.acceleration.KDTree;
 import edu.rit.krisher.scene.geometry.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.geometry.acceleration.MedianPartitionStrategy;
@@ -63,22 +66,23 @@ public final class AdvRenderingScenes {
             bunnySceneReflective,
             bunnySceneKDRef,
             bunnySceneReflection,
-            createScene("Lucy", null, false, new SAHPartitionStrategey(12), plyFactory(new File("/home/krisher/Download/lucy.ply"))),
-            createScene("Dragon", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
-            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
-            createScene("Buddha", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
-            createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
-            createScene("Thai Statue", null, false, new SAHPartitionStrategey(), plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply")))};
+            createScene("Bunny KD Tree Visualization", null, true, new SAHPartitionStrategey(), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(), bunnyFactory())),
+            createScene("Lucy", null, false, new SAHPartitionStrategey(12), true, plyFactory(new File("/home/krisher/Download/lucy.ply"))),
+            createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
+            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
+            createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
+            createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
+            createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))) };
    }
 
-   private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, bunnyFactory());
+   private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, true, bunnyFactory());
 
-   private static final Scene bunnySceneKDSAH1 = createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), bunnyFactory());
-   private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), bunnyFactory());
+   private static final Scene bunnySceneKDSAH1 = createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), true, bunnyFactory());
+   private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), true, bunnyFactory());
 
-   private static final Scene bunnySceneReflective = createScene("Bunny (Normals)", null, false, new SAHPartitionStrategey(), bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true));
-   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), bunnyFactory(blueGreenMixedRefractive, false));
-   private static final Scene bunnySceneReflection = createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), bunnyFactory());
+   private static final Scene bunnySceneReflective = createScene("Bunny (Normals)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true));
+   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, false));
+   private static final Scene bunnySceneReflection = createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory());
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
@@ -120,9 +124,30 @@ public final class AdvRenderingScenes {
       return mesh;
    }
 
+   public static GeometryFactory createKDVisualization(final Material material, final KDPartitionStrategy kdStrategy,
+         final GeometryFactory... geomFactories) {
+      return new GeometryFactory() {
+         @Override
+         public Geometry createGeometry() {
+            final Geometry[] geometry = new Geometry[geomFactories.length];
+            for (int i = 0; i < geomFactories.length; ++i) {
+               geometry[i] = geomFactories[i].createGeometry();
+            }
+            final Timer kdTimer = new Timer("KD-Tree Construction (KD Visualization)").start();
+            final KDTree accel = new KDTree(kdStrategy, geometry);
+            kdTimer.stop().print(System.out);
+            System.out.println(new KDTreeMetrics(accel));
+            System.out.println("Generating KDTree visualization mesh...");
+            final TriangleMesh kdMesh = KDSplitMeshGenerator.generateLeafNodeMesh(accel);
+            kdMesh.setMaterial(material);
+            return kdMesh;
+         }
+      };
+   }
+
    public static Scene createScene(final String name, final Material groundMat, final boolean walls,
-         final KDPartitionStrategy kdStrategy, final GeometryFactory... geomFactories) {
-      return new AbstractSceneDescription<DoFCamera>(name, new DoFCamera()) {
+         final KDPartitionStrategy kdStrategy, final boolean dofCamera, final GeometryFactory... geomFactories) {
+      return new AbstractSceneDescription<Camera>(name, (dofCamera) ? new DoFCamera() : new PinholeCamera()) {
          @Override
          protected void initScene() {
 
@@ -133,7 +158,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-                  : groundMat, walls, geomBounds);
+            : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -145,14 +170,17 @@ public final class AdvRenderingScenes {
                   add(geom);
                }
             }
-            camera.lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
-            camera.setFocalDist(geomBounds.diagonalLength() / 2.0);
-            camera.setAperture(1 / 1000.0);
-            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            ((PinholeCamera) camera).lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
+            ((PinholeCamera) camera).setFOVAngle(56.14);
+            if (dofCamera) {
+               ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
+               ((DoFCamera) camera).setAperture(1 / 1000.0);
+            }
+            add(new SphereLight(new Vec3(geomBounds.minXYZ[0] - geomBounds.xSpan(), geomBounds.maxXYZ[1]
+                                                                                                      + geomBounds.ySpan(), geomBounds.maxXYZ[2]
+                                                                                                                                              + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
-            camera.setFOVAngle(56.14);
          }
       };
    }

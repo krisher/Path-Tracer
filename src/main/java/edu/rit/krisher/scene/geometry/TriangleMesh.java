@@ -43,7 +43,6 @@ public class TriangleMesh implements Geometry {
       final Vec3 v0 = new Vec3();
       final Vec3 e1 = new Vec3();
       final Vec3 e2 = new Vec3();
-      final int[] counts = new int[normals.capacity()];
       for (int i = 0; i < triCount; i++) {
          final int v0Idx = triangleIndices[i * 3];
          final int v1Idx = triangleIndices[i * 3 + 1];
@@ -63,25 +62,19 @@ public class TriangleMesh implements Geometry {
          normals.get(v0Idx, v0);
          v0.add(e1);
          normals.put(v0Idx, v0);
-         ++counts[v0Idx];
 
          normals.get(v1Idx, v0);
          v0.add(e1);
          normals.put(v1Idx, v0);
-         ++counts[v1Idx];
 
          normals.get(v2Idx, v0);
          v0.add(e1);
          normals.put(v2Idx, v0);
-         ++counts[v2Idx];
       }
       for (int i = 0; i < normals.capacity(); i++) {
-         if (counts[i] > 0) {
             normals.get(i, v0);
-            v0.multiply(1.0 / counts[i]);
             v0.normalize();
             normals.put(i, v0);
-         }
       }
       return normals;
    }
@@ -178,6 +171,7 @@ public class TriangleMesh implements Geometry {
    /*
     * @see edu.rit.krisher.scene.Geometry#getPrimitiveCount()
     */
+   @Override
    public int getPrimitiveCount() {
       return triCount;
    }

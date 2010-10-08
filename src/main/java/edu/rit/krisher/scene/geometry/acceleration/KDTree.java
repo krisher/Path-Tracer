@@ -162,7 +162,9 @@ public class KDTree implements Geometry {
          }
       } else {
          while (startIdx <= endIdx) {
-            if (bounds[members[startIdx]].maxXYZ[splitAxis] >= split || bounds[members[startIdx]].maxXYZ[splitAxis] == split && bounds[members[startIdx]].minXYZ[splitAxis] == split) {
+            if (bounds[members[startIdx]].maxXYZ[splitAxis] >= split
+                  || bounds[members[startIdx]].maxXYZ[splitAxis] == split
+                  && bounds[members[startIdx]].minXYZ[splitAxis] == split) {
                ++startIdx;
             } else {
                final int tmp = members[endIdx];
@@ -177,7 +179,8 @@ public class KDTree implements Geometry {
 
    private static interface KDNode {
 
-      public double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD, final double[] rayDirectionD);
+      public double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
+            final double[] rayDirectionD);
 
       public void getHitData(final HitData data, final Ray ray, final double isectDist, final double[] hitCoord);
 
@@ -196,7 +199,8 @@ public class KDTree implements Geometry {
       }
 
       @Override
-      public final double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
+      public final double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
+            final double[] rayDirectionD) {
          final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
          final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
 
@@ -206,7 +210,8 @@ public class KDTree implements Geometry {
             } else { // exit point >= split location, need to check both
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                // less-child: use tmin, tsplit
-               final double hitDist = (lessChild == null) ? 0 : lessChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
+               final double hitDist = (lessChild == null) ? 0
+                     : lessChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if ((hitDist > 0 && hitDist < tsplit) || greaterEqChild == null)
                   return hitDist;
                // greater-child: use tsplit, tmax
@@ -214,11 +219,13 @@ public class KDTree implements Geometry {
             }
          } else { // entry >= split coordinate
             if (cExit >= splitLocation) { // exit on greater/eq side of split, only check greater.
-               return (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
+               return (greaterEqChild == null) ? 0
+                     : greaterEqChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { // exit on less side, check both
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                // greater-child: use tmin, tsplit
-               final double hitDist = (greaterEqChild == null) ? 0 : greaterEqChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
+               final double hitDist = (greaterEqChild == null) ? 0
+                     : greaterEqChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if ((hitDist > 0 && hitDist <= tsplit) || lessChild == null)
                   return hitDist;
                // less-child: use tsplit, tmax
@@ -229,7 +236,11 @@ public class KDTree implements Geometry {
 
       @Override
       public void getHitData(final HitData data, final Ray ray, final double isectDist, final double[] hitCoord) {
-         if (hitCoord[axis] < splitLocation  && lessChild != null /* Can attempt to traverse the wrong child in the cases where the hit coord is very close to the splitLocation (round-off error...) */) {
+         if (hitCoord[axis] < splitLocation && lessChild != null /*
+          * Can attempt to traverse the wrong child in the cases
+          * where the hit coord is very close to the
+          * splitLocation (round-off error...)
+          */) {
             lessChild.getHitData(data, ray, isectDist, hitCoord);
          } else
             greaterEqChild.getHitData(data, ray, isectDist, hitCoord);
@@ -237,7 +248,7 @@ public class KDTree implements Geometry {
 
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-            throws Exception {
+      throws Exception {
          if (lessChild != null) {
             final double maxBound = nodeBounds.maxXYZ[axis];
             nodeBounds.maxXYZ[axis] = splitLocation;
@@ -263,7 +274,8 @@ public class KDTree implements Geometry {
       }
 
       @Override
-      public double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
+      public double intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
+            final double[] rayDirectionD) {
          double minDist = 0;
          for (final int prim : primitives) {
             final double dist = KDTree.this.content[primToGeomMap[prim * 2]].intersects(ray, primToGeomMap[prim * 2 + 1]);
@@ -290,7 +302,7 @@ public class KDTree implements Geometry {
        */
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-            throws Exception {
+      throws Exception {
          visitor.visitNode(depth, nodeBounds, true, primitives.length, 0, -1);
       }
 

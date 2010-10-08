@@ -91,14 +91,14 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * (since the current candidate is at the edge the node falls to the greater side of the split until after
              * we move to the next greater candidate).
              */
-            
+
             if (!candidate.isMax)
                --lessPrims;
             /*
              * Ensure that the split candidate falls inside the node's bounds.
              */
             if (candidate.splitLocation > nodeBounds.minXYZ[splitAxis]
-                  && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+                                                            && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.
@@ -117,8 +117,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                 * in an empty child node to encourage culling of empty space.
                 */
                final double splitCost = kdNodeTraversalCost + geometryIntersectionCost
-                     * (lessNodeSurfaceAreaRatio * lessPrims + greaterNodeSurfaceAreaRatio * greaterPrims)
-                     * ((lessPrims == 0 || greaterPrims == 0) ? (1.0 - emptyBias) : 1.0);
+               * (lessNodeSurfaceAreaRatio * lessPrims + greaterNodeSurfaceAreaRatio * greaterPrims)
+               * ((lessPrims == 0 || greaterPrims == 0) ? (1.0 - emptyBias) : 1.0);
 
                if (splitCost < bestSACost) {
                   bestSACost = splitCost;
@@ -126,14 +126,14 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                   bestSplitAxis = splitAxis;
                }
             }
+            if (bestSplitAxis >= 0) {
+               return new PartitionResult(bestSplitAxis, bestSplit);
+            }
             if (candidate.isMax)
                ++greaterPrims;
 
          }
 
-         if (bestSplitAxis >= 0) {
-            return new PartitionResult(bestSplitAxis, bestSplit);
-         }
          /*
           * It was cheaper to create a leaf than to split along the current axis; retry the next axis...
           */
