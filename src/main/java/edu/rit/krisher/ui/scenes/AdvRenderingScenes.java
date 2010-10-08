@@ -66,7 +66,7 @@ public final class AdvRenderingScenes {
             bunnySceneReflective,
             bunnySceneKDRef,
             bunnySceneReflection,
-            createScene("Bunny KD Tree Visualization", null, true, new SAHPartitionStrategey(), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(), bunnyFactory())),
+            createScene("Bunny KD Tree Visualization", null, true, new SAHPartitionStrategey(15), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
             createScene("Lucy", null, false, new SAHPartitionStrategey(12), true, plyFactory(new File("/home/krisher/Download/lucy.ply"))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),

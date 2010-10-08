@@ -39,7 +39,7 @@ public class KDTreeTest {
 
          @Override
          public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-               final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+               final int childCount, final double splitLocation, final int splitAxis) throws Exception {
             if (!leaf) {
                Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds + " for split axis "
                                  + splitAxis + ".", splitLocation < bounds.maxXYZ[splitAxis]
@@ -57,7 +57,7 @@ public class KDTreeTest {
 
          @Override
          public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-               final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+               final int childCount, final double splitLocation, final int splitAxis) throws Exception {
             if (!leaf) {
                Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds + " for split axis "
                                  + splitAxis + ".", splitLocation < bounds.maxXYZ[splitAxis]

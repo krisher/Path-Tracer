@@ -127,7 +127,7 @@ public class KDTree implements Geometry {
          return new KDLeafNode(Arrays.copyOf(members, memberCount));
       }
 
-      final KDInteriorNode node = new KDInteriorNode((float) partition.splitLocation, partition.splitAxis);
+      final KDInteriorNode node = new KDInteriorNode( partition.splitLocation, partition.splitAxis);
       final int lessCount = partitionPrimitives(members, memberCount, bounds, partition.splitAxis, partition.splitLocation, true);
       if (lessCount > 0) {
          final double maxBound = nodeBounds.maxXYZ[partition.splitAxis];
@@ -190,10 +190,10 @@ public class KDTree implements Geometry {
    private static class KDInteriorNode implements KDNode {
       private KDNode lessChild;
       private KDNode greaterEqChild;
-      private final float splitLocation;
+      private final double splitLocation;
       private final byte axis;
 
-      KDInteriorNode(final float splitLocation, final int splitAxis) {
+      KDInteriorNode(final double splitLocation, final int splitAxis) {
          this.splitLocation = splitLocation;
          this.axis = (byte) splitAxis;
       }

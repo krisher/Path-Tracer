@@ -138,7 +138,7 @@ public class KDTreeMetrics {
 
       @Override
       public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-            final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+            final int childCount, final double splitLocation, final int splitAxis) throws Exception {
          if (leaf) {
             ++leafNodeCount;
             if (depth > maxDepth)
@@ -172,7 +172,7 @@ public class KDTreeMetrics {
 
       @Override
       public void visitNode(final int depth, final AxisAlignedBoundingBox bounds, final boolean leaf,
-            final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+            final int childCount, final double splitLocation, final int splitAxis) throws Exception {
          if (leaf) {
             final double delta = childCount - meanPrimsPerLeaf;
             variance += delta * delta;

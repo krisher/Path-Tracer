@@ -19,7 +19,7 @@ public class KDSplitMeshGenerator {
 
             @Override
             public void visitNode(final int depth, final AxisAlignedBoundingBox aabb, final boolean leaf,
-                  final int childCount, final float splitLocation, final int splitAxis) throws Exception {
+                  final int childCount, final double splitLocation, final int splitAxis) throws Exception {
                if (leaf) {
                   vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
                   vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
