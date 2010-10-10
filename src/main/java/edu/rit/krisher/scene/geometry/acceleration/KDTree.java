@@ -21,11 +21,21 @@ public class KDTree implements Geometry {
    public static final byte Z_AXIS = 2;
 
    private final KDNode root;
+   /*
+    * Array indexed by KDTree primitive index (x2) for pair containing Geometry index (into content array), and
+    * primitive index for the corresponding geometry.
+    */
    private final int[] primToGeomMap;
    private final AxisAlignedBoundingBox treeBounds;
    private final KDPartitionStrategy partitionStrategy;
    private final Geometry[] content;
 
+   /**
+    * Creates a KDTree with the specified geometry content. This uses a default partitioning strategy.
+    * 
+    * @param content
+    *           The geometry to store in the KD-Tree. At least one must be provided.
+    */
    public KDTree(final Geometry... content) {
       this(new SAHPartitionStrategey(), content);
    }
@@ -196,33 +206,40 @@ public class KDTree implements Geometry {
       public final double intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
          assert tmin <= tmax : "Bad intersection parameterization.";
-         
+
          final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
          final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
-         
-         if (cEntry <= splitLocation) { // entry point on less side of split
-            if (cExit <= splitLocation) { // exit point on less side of split, only need to check less...
+
+         if (cEntry <= splitLocation) { /* node entry point on less side of split */
+            if (cExit < splitLocation) { /* exit point on less side of split, only need to check lessChild */
                return (lessChild == null) ? 0
                      : lessChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
-            } else { //Traverses from less child to greater child
+            } else { /* Traverses from less child to greater child */
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
-               // less-child: use tmin, tsplit
+               /* first hit child; use tmin, tsplit */
                final double hitDist = (lessChild == null) ? 0
                      : lessChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
-               if ((hitDist > 0 && hitDist <= tsplit) || greaterChild == null)
+               if (greaterChild == null)
                   return hitDist;
-               if (hitDist > 0) {
-                  //Hit occurred after tSplit.  Compare to result from less child...
-                  final int primIdx = intersection.primitiveIndex;
-                  final double newHit = greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
-                  if (newHit > 0 && newHit < hitDist) return newHit; //Greater child had closer hit.
-                  intersection.primitiveIndex = primIdx;
-                  return hitDist;
+               if (hitDist <= 0) { /* No hit from lessChild */
+                  return greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
                }
-               // greater-child: use tsplit, tmax
-               return greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               assert hitDist >= tmin - Ray.SMALL_D : "An earlier node should have found this intersection";
+               if (hitDist <= tsplit) /* Won't get a closer intersection in the other child node. */
+                  return hitDist;
+               /* Hit occurred after tSplit. Compare to result from greater child. */
+               /* The hit primitive from the lessChild node will be overwritten */
+               final int primIdx = intersection.primitiveIndex;
+               final double newHit = greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               if (newHit > 0 && newHit < hitDist) {
+                  assert newHit >= tsplit - Ray.SMALL_D;
+                  return newHit; /* Greater child had closer hit. */
+               }
+               /* Restore greaterChild's primitive index as the hit result. */
+               intersection.primitiveIndex = primIdx;
+               return hitDist;
             }
-         } else { //Entry on greater side.
+         } else { /* Entry on greater side. */
             if (cExit > splitLocation) { // exit on greater/eq side of split, only check greater.
                return (greaterChild == null) ? 0
                      : greaterChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
@@ -231,27 +248,28 @@ public class KDTree implements Geometry {
                // greater-child: use tmin, tsplit
                final double hitDist = (greaterChild == null) ? 0
                      : greaterChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
-               if ((hitDist > 0 && hitDist <= tsplit) || lessChild == null) {
+               if (lessChild == null)
                   return hitDist;
+               if (hitDist <= 0) { /* No hit from lessChild */
+                  return lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
                }
-               if (hitDist > 0) {
-                  //Hit occurred after tSplit.  Compare to result from less child...
-                  final int primIdx = intersection.primitiveIndex;
-                  final double newHit = lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
-                  if (newHit > 0 && newHit < hitDist) return newHit; //Less child had closer hit.
-                  intersection.primitiveIndex = primIdx;
+               assert hitDist >= tmin - Ray.SMALL_D : "An earlier node should have found this intersection";
+               if (hitDist <= tsplit) /* Won't get a closer intersection in the other child node. */
                   return hitDist;
-               }
-               // less-child: use tsplit, tmax
-               return lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               final int primIdx = intersection.primitiveIndex;
+               final double newHit = lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               if (newHit > 0 && newHit < hitDist)
+                  return newHit; /* Greater child had closer hit. */
+               /* Restore greaterChild's primitive index as the hit result. */
+               intersection.primitiveIndex = primIdx;
+               return hitDist;
             }
          }
       }
-      
 
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-            throws Exception {
+      throws Exception {
          if (lessChild != null) {
             final double maxBound = nodeBounds.maxXYZ[axis];
             nodeBounds.maxXYZ[axis] = splitLocation;
@@ -280,13 +298,15 @@ public class KDTree implements Geometry {
       public double intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
          double minDist = 0;
+         int primIdx = -1;
          for (final int prim : primitives) {
             final double dist = KDTree.this.content[primToGeomMap[prim * 2]].intersects(intersection, ray, primToGeomMap[prim * 2 + 1]);
             if (dist > 0 && (dist < minDist || minDist <= 0)) {
-               intersection.primitiveIndex = prim;
+               primIdx = prim;
                minDist = dist;
             }
          }
+         intersection.primitiveIndex = primIdx;
          return minDist;
       }
 
@@ -296,7 +316,7 @@ public class KDTree implements Geometry {
        */
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-            throws Exception {
+      throws Exception {
          visitor.visitNode(depth, nodeBounds, true, primitives.length, 0, -1);
       }
 
