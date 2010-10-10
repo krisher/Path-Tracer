@@ -22,7 +22,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1.0, 100.0, 0.75);
+      this(maxDepth, 1.0, 100.0, 0.80);
    }
 
    public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
@@ -98,7 +98,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * Ensure that the split candidate falls inside the node's bounds.
              */
             if (candidate.splitLocation > nodeBounds.minXYZ[splitAxis]
-                                                            && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+                  && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.

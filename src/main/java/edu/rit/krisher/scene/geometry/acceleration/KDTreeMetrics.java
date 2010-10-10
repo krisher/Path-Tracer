@@ -21,6 +21,10 @@ public class KDTreeMetrics {
    public final int minLeafPrimitives;
    public final float avgLeafPrimitives;
 
+   public final int minEmptyDepth;
+   public final int maxEmptyDepth;
+   public final float avgEmptyDepth;
+
    /**
     * The variance in the number of primitives held by leaf nodes.
     */
@@ -44,6 +48,8 @@ public class KDTreeMetrics {
     * The total number of intermediate nodes.
     */
    public final int intermediateNodes;
+
+   public final int emptyNodes;
 
    /**
     * The volume of the KD-Tree.
@@ -78,6 +84,11 @@ public class KDTreeMetrics {
 
          this.intermediateNodes = visitor.intermediateNodeCount;
          this.leafNodes = visitor.leafNodeCount;
+
+         this.maxEmptyDepth = visitor.maxEmptyDepth;
+         this.minEmptyDepth = visitor.minEmptyDepth;
+         this.avgEmptyDepth = visitor.cumEmptyDepth / (float) visitor.cumEmptyNodes;
+         this.emptyNodes = visitor.cumEmptyNodes;
 
          this.totalPrimitives = visitor.cumLeafPrimitives;
          this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getTriCount();
@@ -117,6 +128,11 @@ public class KDTreeMetrics {
       builder.append("KDTree (Avg Primitives/Leaf): " + avgLeafPrimitives + "\n");
       builder.append("KDTree (Leaf Primitives Count Variance): " + primCountVariance + "\n");
       builder.append("\n");
+      builder.append("KDTree (Empty Nodes): " + emptyNodes + "\n");
+      builder.append("KDTree (Min Empty Node Depth): " + minEmptyDepth + "\n");
+      builder.append("KDTree (Max Empty Node Depth): " + maxEmptyDepth + "\n");
+      builder.append("KDTree (Avg Empty Node Depth): " + avgEmptyDepth + "\n");
+      builder.append("\n");
       return builder.toString();
    }
 
@@ -129,6 +145,11 @@ public class KDTreeMetrics {
       int maxLeafPrimitives = 0;
       int minLeafPrimitives = Integer.MAX_VALUE;
       int cumLeafPrimitives = 0;
+
+      int cumEmptyNodes = 0;
+      int minEmptyDepth = Integer.MAX_VALUE;
+      int maxEmptyDepth = -1;
+      int cumEmptyDepth = 0;
 
       int fullyPopulatedIntermediateNodes = 0;
       int intermediateNodeCount = 0;
@@ -156,6 +177,15 @@ public class KDTreeMetrics {
             ++intermediateNodeCount;
             if (childCount == 2) {
                ++fullyPopulatedIntermediateNodes;
+            }
+            if (childCount < 2) {
+               cumEmptyNodes += 2 - childCount;
+               final int emptyDepth = depth + 1;
+               if (emptyDepth < minEmptyDepth)
+                  minEmptyDepth = emptyDepth;
+               if (emptyDepth > maxEmptyDepth)
+                  maxEmptyDepth = emptyDepth;
+               cumEmptyDepth += emptyDepth * (2 - childCount);
             }
          }
       }

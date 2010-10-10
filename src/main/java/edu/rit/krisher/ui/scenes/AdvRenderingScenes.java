@@ -73,48 +73,24 @@ public final class AdvRenderingScenes {
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
             createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
             createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))),
-            createScene("Box (Debug)", null, true, new SAHPartitionStrategey(15), true, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
-                                                                                                                                               * ,
-                                                                                                                                               * new
-                                                                                                                                               * AxisAlignedBoundingBox
-                                                                                                                                               * (
-                                                                                                                                               * -
-                                                                                                                                               * 0.5
-                                                                                                                                               * ,
-                                                                                                                                               * 0
-                                                                                                                                               * ,
-                                                                                                                                               * -
-                                                                                                                                               * 2
-                                                                                                                                               * ,
-                                                                                                                                               * 1
-                                                                                                                                               * ,
-                                                                                                                                               * 0.5
-                                                                                                                                               * ,
-                                                                                                                                               * -
-                                                                                                                                               * 0.5
-                                                                                                                                               * )
-                                                                                                                                               */)),
-            createScene("Box KD Tree Visualization", null, true, new SAHPartitionStrategey(15), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
-             * ,
-             * new
-             * AxisAlignedBoundingBox
-             * (
-             * -
-             * 0.5
-             * ,
-             * 0
-             * ,
-             * -
-             * 2
-             * ,
-             * 1
-             * ,
-             * 0.5
-             * ,
-             * -
-             * 0.5
-             * )
-             */))), };
+            createScene("Box (Debug)", null, true, new SAHPartitionStrategey(15), true, new GeometryFactory() {
+               @Override
+               public Geometry createGeometry() {
+                  return groundPlane(Color.white, false, new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0));
+               }
+            }, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
+             * , new AxisAlignedBoundingBox ( - 0.5 , 0 , - 2 ,
+             * 1 , 0.5 , - 0.5 )
+             */)),
+             createScene("Box KD Tree Visualization", null, true, new SAHPartitionStrategey(15), false, createKDVisualization(blueGreenMixedRefractive, new SAHPartitionStrategey(15), new GeometryFactory() {
+                @Override
+                public Geometry createGeometry() {
+                   return groundPlane(Color.white, false, new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0));
+                }
+            }, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
+                                                                      * , new AxisAlignedBoundingBox ( - 0.5 , 0 , - 2 ,
+                                                                      * 1 , 0.5 , - 0.5 )
+                                                                      */))), };
 
    }
 
