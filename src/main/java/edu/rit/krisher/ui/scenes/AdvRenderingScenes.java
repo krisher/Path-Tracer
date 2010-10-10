@@ -87,10 +87,10 @@ public final class AdvRenderingScenes {
                 public Geometry createGeometry() {
                    return groundPlane(Color.white, false, new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0));
                 }
-            }, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
-                                                                      * , new AxisAlignedBoundingBox ( - 0.5 , 0 , - 2 ,
-                                                                      * 1 , 0.5 , - 0.5 )
-                                                                      */))), };
+             }, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
+              * , new AxisAlignedBoundingBox ( - 0.5 , 0 , - 2 ,
+              * 1 , 0.5 , - 0.5 )
+              */))), };
 
    }
 
@@ -100,7 +100,7 @@ public final class AdvRenderingScenes {
    private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), true, bunnyFactory());
 
    private static final Scene bunnySceneReflective = createScene("Bunny (Normals)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true));
-   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, false));
+   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true));
    private static final Scene bunnySceneReflection = createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory());
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
@@ -239,8 +239,8 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
-            add(new SphereLight(new Vec3(geomBounds.minXYZ[0] - geomBounds.xSpan(), geomBounds.maxXYZ[1]
-                                                                                                      + geomBounds.ySpan(), geomBounds.maxXYZ[2] + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1]
+                                                              + geomBounds.ySpan(), geomBounds.maxXYZ[2] + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
