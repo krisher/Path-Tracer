@@ -33,6 +33,8 @@ import edu.rit.krisher.scene.material.RefractiveBRDF;
 import edu.rit.krisher.ui.RTDemo;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.Quat;
+import edu.rit.krisher.vecmath.Transform;
 import edu.rit.krisher.vecmath.Vec3;
 
 public final class AdvRenderingScenes {
@@ -68,9 +70,9 @@ public final class AdvRenderingScenes {
             createScene("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(13), true, plyFactory(new File("/home/krisher/Download/lucy.ply"))),
+            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(14), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), -Math.PI / 2.0)))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
-            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
+            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
             createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
             createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))) };
@@ -259,15 +261,22 @@ public final class AdvRenderingScenes {
    }
 
    private static GeometryFactory plyFactory(final File file) {
-      return plyFactory(file, null, false);
+      return plyFactory(file, null, false, null);
    }
 
    private static GeometryFactory plyFactory(final File file, final Material material, final boolean computeNormals) {
+      return plyFactory(file, material, computeNormals, null);
+   }
+
+   private static GeometryFactory plyFactory(final File file, final Material material, final boolean computeNormals, final Transform vertTransform) {
       return new GeometryFactory() {
          @Override
          public Geometry createGeometry() {
             try {
                final TriangleMesh model = PLYParser.parseTriangleMesh(new BufferedInputStream(new FileInputStream(file)), computeNormals);
+               if (vertTransform != null) {
+                  model.transform(vertTransform);
+               }
                if (material != null)
                   model.setMaterial(material);
                return model;

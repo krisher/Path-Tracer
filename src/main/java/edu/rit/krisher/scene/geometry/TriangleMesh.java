@@ -10,6 +10,7 @@ import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
+import edu.rit.krisher.vecmath.Transform;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class TriangleMesh implements Geometry {
@@ -77,6 +78,15 @@ public class TriangleMesh implements Geometry {
          normals.put(i, v0);
       }
       return normals;
+   }
+
+   public void transform(final Transform transform) {
+      final Vec3 vert = new Vec3();
+      for (int i = 0; i < vertices.capacity(); i++) {
+         vertices.get(i, vert);
+         vertices.put(i, transform.transformPoint(vert));
+      }
+      bounds.set(vertices.computeBounds());
    }
 
    @Override

@@ -54,11 +54,4 @@ public interface Geometry {
    
    public int getPrimitiveCount();
 
-   /**
-    * Accessor for the primitive geometry that this geometry can be decomposed into.
-    * 
-    * @return A non-null array of primitives that this geometry can be decomposed into. May return:
-    *         <code>new Geometry[] {this}</code> if this geometry is alread primitive.
-    */
-//   public Geometry[] getPrimitives();
 }

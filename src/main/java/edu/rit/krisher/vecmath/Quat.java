@@ -24,7 +24,7 @@ public class Quat implements Transform {
     * @param axis
     *           The axis about which rotation should be performed.
     * @param angle
-    *           The angle to rotate by.
+    *           The angle to rotate by, in radians.
     */
    public Quat(final Vec3 axis, final double angle) {
       final double halfAngle = angle / 2.;
