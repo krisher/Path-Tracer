@@ -70,7 +70,7 @@ public final class AdvRenderingScenes {
             createScene("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(14), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), -Math.PI / 2.0)))),
+            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(14), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), Math.PI / 2.0)))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
@@ -248,8 +248,8 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
-            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            add(new SphereLight(new Vec3(geomBounds.minXYZ[0] - geomBounds.xSpan(), geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
+                  + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
