@@ -5,7 +5,7 @@ package edu.rit.krisher.scene.geometry.acceleration;
 
 import java.util.Arrays;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
 /**
  *

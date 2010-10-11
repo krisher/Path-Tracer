@@ -1,9 +1,9 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
 import edu.rit.krisher.raytracer.rays.HitData;
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 
 /**
@@ -50,7 +50,6 @@ public class KDTree implements Geometry {
          primCount += content[i].getPrimitiveCount();
       }
       final PrimitiveAABB bounds[] = new PrimitiveAABB[primCount];
-      int globalPrimIdx = 0;
 
       geomBits = (32 - Integer.numberOfLeadingZeros(content.length));
       int gMask = 0;
@@ -59,6 +58,7 @@ public class KDTree implements Geometry {
       geomMask = gMask;
 
 
+      int globalPrimIdx = 0;
       for (int geomIdx = 0; geomIdx < content.length; ++geomIdx) {
          final Geometry geom = content[geomIdx];
          treeBounds.union(geom.getBounds(-1));

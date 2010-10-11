@@ -3,10 +3,10 @@ package edu.rit.krisher.scene.light;
 import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.HitData;
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.material.Color;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 

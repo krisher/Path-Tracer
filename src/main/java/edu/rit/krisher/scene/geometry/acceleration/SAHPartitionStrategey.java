@@ -3,7 +3,7 @@ package edu.rit.krisher.scene.geometry.acceleration;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
 /**
  * Surface-Area-Heuristic based partitioning strategy for KDTree.
@@ -148,39 +148,6 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       return PartitionResult.LEAF;
    }
 
-   private static final class SplitCandidate implements Comparable<SplitCandidate> {
-      public double splitLocation;
-      public boolean isMax;
-
-      @Override
-      public int compareTo(final SplitCandidate o) {
-         if (splitLocation > o.splitLocation)
-            return 1;
-         if (splitLocation < o.splitLocation)
-            return -1;
-         if (isMax == o.isMax)
-            return 0;
-         if (isMax)
-            return 1;
-         return -1;
-      }
-
-      @Override
-      public int hashCode() {
-         final int prime = 31;
-         int result = 1;
-         long temp;
-         temp = Double.doubleToLongBits(splitLocation);
-         result = prime * result + (int) (temp ^ (temp >>> 32));
-         return result;
-      }
-
-      @Override
-      public boolean equals(final Object obj) {
-         return splitLocation == ((SplitCandidate) obj).splitLocation && isMax == ((SplitCandidate) obj).isMax;
-      }
-
-   }
 
    private static final class AABBMinComparator implements Comparator<AxisAlignedBoundingBox> {
       private final int axis;

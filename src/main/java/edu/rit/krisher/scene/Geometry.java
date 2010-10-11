@@ -1,6 +1,7 @@
 package edu.rit.krisher.scene;
 
 import edu.rit.krisher.raytracer.rays.HitData;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 
 /**

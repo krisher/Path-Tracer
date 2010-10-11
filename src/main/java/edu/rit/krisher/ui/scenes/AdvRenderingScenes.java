@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.zip.ZipInputStream;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
@@ -33,6 +32,7 @@ import edu.rit.krisher.scene.material.PhongSpecularBRDF;
 import edu.rit.krisher.scene.material.RefractiveBRDF;
 import edu.rit.krisher.ui.RTDemo;
 import edu.rit.krisher.util.Timer;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Vec3;
 
 public final class AdvRenderingScenes {
@@ -68,7 +68,7 @@ public final class AdvRenderingScenes {
             createScene("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createScene("Lucy", null, false, new SAHPartitionStrategey(12), true, plyFactory(new File("/home/krisher/Download/lucy.ply"))),
+            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(13), true, plyFactory(new File("/home/krisher/Download/lucy.ply"))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
@@ -76,7 +76,6 @@ public final class AdvRenderingScenes {
             createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))) };
 
    }
-
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
@@ -196,7 +195,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-            : groundMat, walls, geomBounds);
+                  : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -215,7 +214,40 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
+
+         }
+      };
+   }
+
+   public static Scene createSceneMultiTree(final String name, final Material groundMat, final boolean walls,
+         final KDPartitionStrategy kdStrategy, final boolean dofCamera, final GeometryFactory... geomFactories) {
+      return new AbstractSceneDescription<Camera>(name, (dofCamera) ? new DoFCamera() : new PinholeCamera()) {
+         @Override
+         protected void initScene() {
+
+            final AxisAlignedBoundingBox geomBounds = new AxisAlignedBoundingBox();
+            final Geometry[] geometry = new Geometry[geomFactories.length + 1];
+            for (int i = 0; i < geomFactories.length; ++i) {
+               geometry[i] = geomFactories[i].createGeometry();
+               geomBounds.union(geometry[i].getBounds(-1));
+
+               final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
+               final KDTree accel = new KDTree(kdStrategy, geometry[i]);
+               kdTimer.stop().print(System.out);
+               System.out.println(new KDTreeMetrics(accel));
+               add(accel);
+            }
+            add(groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1)) : groundMat, walls, geomBounds));
+            ((PinholeCamera) camera).lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
+            ((PinholeCamera) camera).setFOVAngle(56.14);
+            if (dofCamera) {
+               ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
+               ((DoFCamera) camera).setAperture(1 / 1000.0);
+            }
+            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
+                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }

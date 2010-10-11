@@ -3,7 +3,7 @@
  */
 package edu.rit.krisher.scene.geometry.acceleration;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
 /**
  * Determines how the contents of a KD Tree node should be split into two children...

@@ -3,7 +3,8 @@ package edu.rit.krisher.scene.geometry.buffer;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -110,6 +111,57 @@ public class Vec3fBuffer extends BaseBuffer implements Vec3Buffer {
          }
       }
       return bounds;
+   }
+
+   public final Vec3fBuffer getTriangleVEE(final double[] vecs, int v0Idx, int v1Idx, int v2Idx) {
+      v0Idx *= 3;
+      vecs[0] = buffer[v0Idx];
+      vecs[1] = buffer[v0Idx + 1];
+      vecs[2] = buffer[v0Idx + 2];
+
+      v1Idx *= 3;
+      vecs[3] = buffer[v1Idx] - vecs[0];
+      vecs[4] = buffer[v1Idx + 1] - vecs[1];
+      vecs[5] = buffer[v1Idx + 2] - vecs[2];
+
+      v2Idx *= 3;
+      vecs[6] = buffer[v2Idx] - vecs[0];
+      vecs[7] = buffer[v2Idx + 1] - vecs[1];
+      vecs[8] = buffer[v2Idx + 2] - vecs[2];
+
+      return this;
+   }
+
+   public double intersectsTriangle(final Ray ray, int v0Idx, int v1Idx, int v2Idx) {
+      v0Idx *= 3;
+      v1Idx *= 3;
+      v2Idx *= 3;
+      final float v0X = buffer[v0Idx];
+      final float v0Y = buffer[v0Idx + 1];
+      final float v0Z = buffer[v0Idx + 2];
+      return ray.intersectsTriangle(v0X, v0Y, v0Z, buffer[v1Idx] - v0X, buffer[v1Idx + 1] - v0Y, buffer[v1Idx + 2]
+            - v0Z, buffer[v2Idx] - v0X, buffer[v2Idx + 1] - v0Y, buffer[v2Idx + 2] - v0Z);
+   }
+   
+   public boolean intersectsTriangleBarycentric(final double[] tuv, final Ray ray, int v0Idx, int v1Idx, int v2Idx) {
+      v0Idx *= 3;
+      v1Idx *= 3;
+      v2Idx *= 3;
+      final float v0X = buffer[v0Idx];
+      final float v0Y = buffer[v0Idx + 1];
+      final float v0Z = buffer[v0Idx + 2];
+      return ray.intersectsTriangleBarycentric(tuv, v0X, v0Y, v0Z, buffer[v1Idx] - v0X, buffer[v1Idx + 1] - v0Y, buffer[v1Idx + 2] - v0Z, buffer[v2Idx] - v0X, buffer[v2Idx + 1] - v0Y, buffer[v2Idx + 2] - v0Z);
+   }
+   
+   public void getTriangleNormal(final Vec3 outNormal, int v0Idx, int v1Idx, int v2Idx) {
+      v0Idx *= 3;
+      v1Idx *= 3;
+      v2Idx *= 3;
+      final float v0X = buffer[v0Idx];
+      final float v0Y = buffer[v0Idx + 1];
+      final float v0Z = buffer[v0Idx + 2];
+      outNormal.set(buffer[v1Idx] - v0X, buffer[v1Idx + 1] - v0Y, buffer[v1Idx + 2] - v0Z);
+      outNormal.cross(buffer[v2Idx] - v0X, buffer[v2Idx + 1] - v0Y, buffer[v2Idx + 2] - v0Z).normalize();
    }
 
    @Override

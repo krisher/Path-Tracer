@@ -203,20 +203,20 @@ public class Ray {
 
    /**
     * Moller-Trumbore intersection test
-    * (http://www.graphics.cornell.edu/pubs/1997/MT97.html)
+    * (http://www.graphics.cornell.edu/pubs/1997/MT97.html).
     * 
-    * @param VEE
-    *           A (minimum) 9-element double array containing the 3 vector components for each of the triangle base
-    *           vertex, and two edges.
+    * 
     * @return The distance from the origin to the intersection point, if <= 0
     *         there was no intersection.
     */
-   public final double intersectsTriangle(final double[] VEE) {
-//      final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
-      final double pX = direction.y * VEE[8] - direction.z * VEE[7];
-      final double pY = direction.z * VEE[6] - direction.x * VEE[8];
-      final double pZ = direction.x * VEE[7] - direction.y * VEE[6];
-      final double divisor = Vec3.dot(pX, pY, pZ, VEE[3], VEE[4], VEE[5]);
+   public final double intersectsTriangle(final double v0X, final double v0Y, final double v0Z, final double e0X,
+         final double e0Y, final double e0Z, final double e1X, final double e1Y, final double e1Z) {
+      // final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
+      final double pX = direction.y * e1Z - direction.z * e1Y;
+      final double pY = direction.z * e1X - direction.x * e1Z;
+      final double pZ = direction.x * e1Y - direction.y * e1X;
+      // final double divisor = Vec3.dot(pX, pY, pZ, e0X, e0Y, e0Z);
+      final double divisor = pX * e0X + pY * e0Y + pZ * e0Z;
       /*
        * Ray nearly parallel to triangle plane...
        */
@@ -224,49 +224,52 @@ public class Ray {
          return 0;
       }
 
-//      final Vec3 translatedOrigin = new Vec3(origin);
-//      translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
-      final double translatedOriginX = origin.x - VEE[0];
-      final double translatedOriginY = origin.y - VEE[1];
-      final double translatedOriginZ = origin.z - VEE[2];
-      
-//      final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
-      final double qX = translatedOriginY * VEE[5] - translatedOriginZ * VEE[4];
-      final double qY = translatedOriginZ * VEE[3] - translatedOriginX * VEE[5];
-      final double qZ = translatedOriginX * VEE[4] - translatedOriginY * VEE[3];
+      // final Vec3 translatedOrigin = new Vec3(origin);
+      // translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
+      final double translatedOriginX = origin.x - v0X;
+      final double translatedOriginY = origin.y - v0Y;
+      final double translatedOriginZ = origin.z - v0Z;
+
+      // final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
+      final double qX = translatedOriginY * e0Z - translatedOriginZ * e0Y;
+      final double qY = translatedOriginZ * e0X - translatedOriginX * e0Z;
+      final double qZ = translatedOriginX * e0Y - translatedOriginY * e0X;
       /*
        * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
        * defined at the vertex locations:
        */
-      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
+//      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
+      final double e1Factor = (pX * translatedOriginX + pY * translatedOriginY + pZ * translatedOriginZ) / divisor;
       if (e1Factor < 0 || e1Factor > 1) {
          return 0;
       }
 
-      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
+//      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
+      final double e2Factor = (qX * direction.x + qY * direction.y + qZ * direction.z) / divisor;
       if (e2Factor < 0 || e2Factor + e1Factor > 1) {
          return 0;
       }
 
-      return Vec3.dot(qX, qY, qZ, VEE[6], VEE[7], VEE[8]) / divisor;
+      // return Vec3.dot(qX, qY, qZ, e1X, e1Y, e1Z) / divisor;
+      return (qX * e1X + qY * e1Y + qZ * e1Z) / divisor;
    }
    
    /**
     * Moller-Trumbore intersection test
-    * (http://www.graphics.cornell.edu/pubs/1997/MT97.html)
+    * (http://www.graphics.cornell.edu/pubs/1997/MT97.html).
     * 
-    * @param VEE
-    *           A (minimum) 9-element double array containing the 3 vector components for each of the triangle base
-    *           vertex, and two edges.
+    * 
     * @return The distance from the origin to the intersection point, if <= 0
     *         there was no intersection.
     */
-   public final boolean intersectsTriangleBarycentric(final double[] tuv, final double[] VEE) {
-//      final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
-      final double pX = direction.y * VEE[8] - direction.z * VEE[7];
-      final double pY = direction.z * VEE[6] - direction.x * VEE[8];
-      final double pZ = direction.x * VEE[7] - direction.y * VEE[6];
-      final double divisor = Vec3.dot(pX, pY, pZ, VEE[3], VEE[4], VEE[5]);
+   public final boolean intersectsTriangleBarycentric(final double[] tuv, final double v0X, final double v0Y, final double v0Z, final double e0X,
+         final double e0Y, final double e0Z, final double e1X, final double e1Y, final double e1Z) {
+      // final Vec3 p = new Vec3(direction).cross(VEE[6], VEE[7], VEE[8]);
+      final double pX = direction.y * e1Z - direction.z * e1Y;
+      final double pY = direction.z * e1X - direction.x * e1Z;
+      final double pZ = direction.x * e1Y - direction.y * e1X;
+      // final double divisor = Vec3.dot(pX, pY, pZ, e0X, e0Y, e0Z);
+      final double divisor = pX * e0X + pY * e0Y + pZ * e0Z;
       /*
        * Ray nearly parallel to triangle plane...
        */
@@ -274,31 +277,34 @@ public class Ray {
          return false;
       }
 
-//      final Vec3 translatedOrigin = new Vec3(origin);
-//      translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
-      final double translatedOriginX = origin.x - VEE[0];
-      final double translatedOriginY = origin.y - VEE[1];
-      final double translatedOriginZ = origin.z - VEE[2];
-      
-//      final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
-      final double qX = translatedOriginY * VEE[5] - translatedOriginZ * VEE[4];
-      final double qY = translatedOriginZ * VEE[3] - translatedOriginX * VEE[5];
-      final double qZ = translatedOriginX * VEE[4] - translatedOriginY * VEE[3];
+      // final Vec3 translatedOrigin = new Vec3(origin);
+      // translatedOrigin.subtract(VEE[0], VEE[1], VEE[2]);
+      final double translatedOriginX = origin.x - v0X;
+      final double translatedOriginY = origin.y - v0Y;
+      final double translatedOriginZ = origin.z - v0Z;
+
+      // final Vec3 q = new Vec3(translatedOrigin).cross(VEE[3], VEE[4], VEE[5]);
+      final double qX = translatedOriginY * e0Z - translatedOriginZ * e0Y;
+      final double qY = translatedOriginZ * e0X - translatedOriginX * e0Z;
+      final double qZ = translatedOriginX * e0Y - translatedOriginY * e0X;
       /*
        * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
        * defined at the vertex locations:
        */
-      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
+//      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
+      final double e1Factor = (pX * translatedOriginX + pY * translatedOriginY + pZ * translatedOriginZ) / divisor;
       if (e1Factor < 0 || e1Factor > 1) {
          return false;
       }
 
-      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
+//      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
+      final double e2Factor = (qX * direction.x + qY * direction.y + qZ * direction.z) / divisor;
       if (e2Factor < 0 || e2Factor + e1Factor > 1) {
          return false;
       }
 
-      tuv[0] = Vec3.dot(qX, qY, qZ, VEE[6], VEE[7], VEE[8]) / divisor;
+      // return Vec3.dot(qX, qY, qZ, e1X, e1Y, e1Z) / divisor;
+      tuv[0]= (qX * e1X + qY * e1Y + qZ * e1Z) / divisor;
       tuv[1] = e1Factor;
       tuv[2] = e2Factor;
       return true;

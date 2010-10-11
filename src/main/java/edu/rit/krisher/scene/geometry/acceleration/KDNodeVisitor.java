@@ -3,7 +3,7 @@
  */
 package edu.rit.krisher.scene.geometry.acceleration;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
 /**
  * KDTree node visitor interface. This is useful for analyzing the tree structure for quality and verification.

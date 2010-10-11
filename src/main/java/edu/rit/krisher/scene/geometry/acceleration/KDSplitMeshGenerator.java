@@ -1,10 +1,10 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
 public class KDSplitMeshGenerator {
 

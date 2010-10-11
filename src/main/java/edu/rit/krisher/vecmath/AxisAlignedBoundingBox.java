@@ -1,12 +1,10 @@
 /**
  * 
  */
-package edu.rit.krisher.scene;
+package edu.rit.krisher.vecmath;
 
 import java.util.Arrays;
 
-import edu.rit.krisher.vecmath.Ray;
-import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Simple Axis-Aligned Bounding Box represented by the min and max coordinates.

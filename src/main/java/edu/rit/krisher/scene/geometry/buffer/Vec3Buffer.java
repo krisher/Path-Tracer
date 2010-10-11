@@ -1,6 +1,7 @@
 package edu.rit.krisher.scene.geometry.buffer;
 
-import edu.rit.krisher.scene.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
+import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -32,6 +33,7 @@ public interface Vec3Buffer extends Buffer {
     */
    public Vec3Buffer get(double[] value, int... indices);
 
+
    public AxisAlignedBoundingBox computeBounds();
 
    /**
@@ -42,4 +44,27 @@ public interface Vec3Buffer extends Buffer {
     * @return A non-null bounding box tightly enclosing the specified vec3 locations.
     */
    public AxisAlignedBoundingBox computeBounds(int... indices);
+
+   /**
+    * Convenient and optimized method to access a triangle (three vertices) as a single vertex, and two vectors
+    * representing the edges from that vertex.
+    * 
+    * @param value
+    *           A minimum 9-element array to store the result in. The vertex X,Y,Z is stored in the first three
+    *           elements, and the two edges in the next 6.
+    * @param idx1
+    *           The index of the base vertex.
+    * @param idx2
+    *           The index of the second vertex.
+    * @param idx3
+    *           The index of the third vertex.
+    * @return this.
+    */
+   public Vec3Buffer getTriangleVEE(double[] value, int idx1, int idx2, int idx3);
+   
+   public double intersectsTriangle(Ray ray, int idx1, int idx2, int idx3);
+   
+   public boolean intersectsTriangleBarycentric(double[] outParams, Ray ray, int idx1, int idx2, int idx3);
+   
+   public void getTriangleNormal(Vec3 outNormal, int idx1, int idx2, int idx3);
 }
