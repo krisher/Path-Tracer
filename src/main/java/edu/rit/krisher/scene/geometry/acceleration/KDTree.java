@@ -1,7 +1,5 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
-import java.util.Arrays;
-
 import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 import edu.rit.krisher.scene.Geometry;
@@ -21,14 +19,13 @@ public class KDTree implements Geometry {
    public static final byte Z_AXIS = 2;
 
    private final KDNode root;
-   /*
-    * Array indexed by KDTree primitive index (x2) for pair containing Geometry index (into content array), and
-    * primitive index for the corresponding geometry.
-    */
-   private final int[] primToGeomMap;
+
    private final AxisAlignedBoundingBox treeBounds;
    private final KDPartitionStrategy partitionStrategy;
    private final Geometry[] content;
+
+   private final int geomBits;
+   private final int geomMask;
 
    /**
     * Creates a KDTree with the specified geometry content. This uses a default partitioning strategy.
@@ -44,10 +41,7 @@ public class KDTree implements Geometry {
       this.partitionStrategy = strategy;
       this.content = content;
       if (content == null || content.length == 0) {
-         root = null;
-         primToGeomMap = null;
-         treeBounds = new AxisAlignedBoundingBox();
-         return;
+         throw new IllegalArgumentException("Must specify content for a KD Tree.");
       }
 
       treeBounds = new AxisAlignedBoundingBox();
@@ -55,25 +49,26 @@ public class KDTree implements Geometry {
       for (int i = 0; i < content.length; ++i) {
          primCount += content[i].getPrimitiveCount();
       }
-      primToGeomMap = new int[primCount * 2];
-      final AxisAlignedBoundingBox bounds[] = new AxisAlignedBoundingBox[primCount];
-      final int[] members = new int[primCount];
-
+      final PrimitiveAABB bounds[] = new PrimitiveAABB[primCount];
       int globalPrimIdx = 0;
+
+      geomBits = (32 - Integer.numberOfLeadingZeros(content.length));
+      int gMask = 0;
+      for (int i = 0; i < geomBits; i++)
+         gMask |= 1 << i;
+      geomMask = gMask;
+
 
       for (int geomIdx = 0; geomIdx < content.length; ++geomIdx) {
          final Geometry geom = content[geomIdx];
          treeBounds.union(geom.getBounds(-1));
-         for (int primIdx = 0; primIdx < geom.getPrimitiveCount(); ++primIdx) {
-            bounds[globalPrimIdx] = geom.getBounds(primIdx);
-            primToGeomMap[globalPrimIdx * 2] = geomIdx;
-            primToGeomMap[globalPrimIdx * 2 + 1] = primIdx;
-            members[globalPrimIdx] = globalPrimIdx;
+         for (int primIdx = geom.getPrimitiveCount() - 1; primIdx >= 0; --primIdx) {
+            bounds[globalPrimIdx] = new PrimitiveAABB(geomIdx | (primIdx << geomBits), geom.getBounds(primIdx));
             ++globalPrimIdx;
          }
       }
 
-      root = partition(members, members.length, bounds, 0, treeBounds);
+      root = partition(bounds.length, bounds, 0, treeBounds);
    }
 
    @Override
@@ -87,7 +82,11 @@ public class KDTree implements Geometry {
    }
 
    public int getTriCount() {
-      return primToGeomMap.length / 2;
+      int count = 0;
+      for (final Geometry geom : content) {
+         count += geom.getPrimitiveCount();
+      }
+      return count;
    }
 
    /**
@@ -99,7 +98,7 @@ public class KDTree implements Geometry {
 
    @Override
    public void getHitData(final HitData data, final Ray ray, final double isectDist, final int prim) {
-      KDTree.this.content[primToGeomMap[prim * 2]].getHitData(data, ray, isectDist, primToGeomMap[prim * 2 + 1]);
+      KDTree.this.content[prim & geomMask].getHitData(data, ray, isectDist, prim >> geomBits);
    }
 
    @Override
@@ -123,59 +122,66 @@ public class KDTree implements Geometry {
       }
    }
 
-   private final KDNode partition(final int[] members, final int memberCount, final AxisAlignedBoundingBox[] bounds,
+   private final KDNode partition(final int memberCount, final PrimitiveAABB[] bounds,
          final int depth, final AxisAlignedBoundingBox nodeBounds) {
       if (memberCount == 0) {
          return new KDLeafNode(new int[0]);
       }
 
-      final PartitionResult partition = partitionStrategy.findSplitLocation(members, memberCount, bounds, nodeBounds, depth);
+      final PartitionResult partition = partitionStrategy.findSplitLocation(memberCount, bounds, nodeBounds, depth);
       if (partition == PartitionResult.LEAF) {
-         return new KDLeafNode(Arrays.copyOf(members, memberCount));
+         return new KDLeafNode(createPrimIdxArray(bounds, memberCount));
       }
 
       final KDInteriorNode node = new KDInteriorNode(partition.splitLocation, partition.splitAxis);
-      final int lessCount = partitionPrimitives(members, memberCount, bounds, partition.splitAxis, partition.splitLocation, true);
+      final int lessCount = partitionPrimitives(memberCount, bounds, partition.splitAxis, partition.splitLocation, true);
       if (lessCount > 0) {
          final double maxBound = nodeBounds.maxXYZ[partition.splitAxis];
          nodeBounds.maxXYZ[partition.splitAxis] = partition.splitLocation;
-         node.lessChild = partition(members, lessCount, bounds, depth + 1, nodeBounds);
+         node.lessChild = partition(lessCount, bounds, depth + 1, nodeBounds);
          nodeBounds.maxXYZ[partition.splitAxis] = maxBound;
       }
-      final int greaterCount = partitionPrimitives(members, memberCount, bounds, partition.splitAxis, partition.splitLocation, false);
+      final int greaterCount = partitionPrimitives(memberCount, bounds, partition.splitAxis, partition.splitLocation, false);
       if (greaterCount > 0) {
          final double minBound = nodeBounds.minXYZ[partition.splitAxis];
          nodeBounds.minXYZ[partition.splitAxis] = partition.splitLocation;
-         node.greaterChild = partition(members, greaterCount, bounds, depth + 1, nodeBounds);
+         node.greaterChild = partition(greaterCount, bounds, depth + 1, nodeBounds);
          nodeBounds.minXYZ[partition.splitAxis] = minBound;
       }
       return node;
    }
 
-   private static final int partitionPrimitives(final int[] members, final int memberCount,
+   private static final int[] createPrimIdxArray(final PrimitiveAABB[] bounds, final int count) {
+      final int[] primIdx = new int[count];
+      for (int i = 0; i < count; ++i) {
+         primIdx[i] = bounds[i].primID;
+      }
+      return primIdx;
+   }
+
+   private static final int partitionPrimitives(final int memberCount,
          final AxisAlignedBoundingBox[] bounds, final int splitAxis, final double split, final boolean less) {
       int startIdx = 0;
       int endIdx = memberCount - 1;
       if (less) {
          while (startIdx <= endIdx) {
-            if (bounds[members[startIdx]].minXYZ[splitAxis] < split
-                  || bounds[members[startIdx]].maxXYZ[splitAxis] <= split) {
+            if (bounds[startIdx].minXYZ[splitAxis] < split || bounds[startIdx].maxXYZ[splitAxis] <= split) {
                ++startIdx;
             } else {
-               final int tmp = members[endIdx];
-               members[endIdx] = members[startIdx];
-               members[startIdx] = tmp;
+               final AxisAlignedBoundingBox tmp = bounds[endIdx];
+               bounds[endIdx] = bounds[startIdx];
+               bounds[startIdx] = tmp;
                --endIdx;
             }
          }
       } else {
          while (startIdx <= endIdx) {
-            if (bounds[members[startIdx]].maxXYZ[splitAxis] > split) {
+            if (bounds[startIdx].maxXYZ[splitAxis] > split) {
                ++startIdx;
             } else {
-               final int tmp = members[endIdx];
-               members[endIdx] = members[startIdx];
-               members[startIdx] = tmp;
+               final AxisAlignedBoundingBox tmp = bounds[endIdx];
+               bounds[endIdx] = bounds[startIdx];
+               bounds[startIdx] = tmp;
                --endIdx;
             }
          }
@@ -300,7 +306,7 @@ public class KDTree implements Geometry {
          double minDist = 0;
          int primIdx = -1;
          for (final int prim : primitives) {
-            final double dist = KDTree.this.content[primToGeomMap[prim * 2]].intersects(intersection, ray, primToGeomMap[prim * 2 + 1]);
+            final double dist = KDTree.this.content[prim & geomMask].intersects(intersection, ray, prim >> geomBits);
             if (dist > 0 && (dist < minDist || minDist <= 0)) {
                primIdx = prim;
                minDist = dist;
@@ -320,5 +326,14 @@ public class KDTree implements Geometry {
          visitor.visitNode(depth, nodeBounds, true, primitives.length, 0, -1);
       }
 
+   }
+
+   private static final class PrimitiveAABB extends AxisAlignedBoundingBox {
+      final int primID;
+
+      public PrimitiveAABB(final int primID, final AxisAlignedBoundingBox aabb) {
+         super(aabb);
+         this.primID = primID;
+      }
    }
 }

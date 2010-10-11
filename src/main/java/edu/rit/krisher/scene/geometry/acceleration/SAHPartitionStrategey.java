@@ -22,7 +22,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1.0, 100.0, 0.80);
+      this(maxDepth, 1.0, 100.0, 0.10);
    }
 
    public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
@@ -34,7 +34,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    @Override
-   public PartitionResult findSplitLocation(final int[] members, final int memberCount,
+   public PartitionResult findSplitLocation(final int memberCount,
          final AxisAlignedBoundingBox[] bounds, final AxisAlignedBoundingBox nodeBounds, final int depth) {
       if (depth >= maxDepth) {
          return PartitionResult.LEAF;
@@ -66,10 +66,9 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
           * Use the bounding box edges along the split axis as candidate split locations.
           */
          for (int bbIdx = 0; bbIdx < memberCount; ++bbIdx) {
-            final int boundsIdx = members[bbIdx];
-            splitCandidates[bbIdx * 2].splitLocation = bounds[boundsIdx].minXYZ[splitAxis];
+            splitCandidates[bbIdx * 2].splitLocation = bounds[bbIdx].minXYZ[splitAxis];
             splitCandidates[bbIdx * 2].isMax = false;
-            splitCandidates[bbIdx * 2 + 1].splitLocation = bounds[boundsIdx].maxXYZ[splitAxis];
+            splitCandidates[bbIdx * 2 + 1].splitLocation = bounds[bbIdx].maxXYZ[splitAxis];
             splitCandidates[bbIdx * 2 + 1].isMax = true;
          }
          /*
@@ -85,7 +84,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
          int greaterPrims = memberCount;
 
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
-         for (final SplitCandidate candidate : splitCandidates) {
+         for (int candidateIdx = 0; candidateIdx < splitCandidates.length; ++candidateIdx) {
+            final SplitCandidate candidate = splitCandidates[candidateIdx];
             /*
              * If we have entered a new bounding box, increment the number that fall on the less side of the split
              * (since the current candidate is at the edge the node falls to the greater side of the split until after
@@ -98,7 +98,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
              * Ensure that the split candidate falls inside the node's bounds.
              */
             if (candidate.splitLocation > nodeBounds.minXYZ[splitAxis]
-                  && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+                                                            && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.

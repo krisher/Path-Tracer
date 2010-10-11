@@ -14,7 +14,7 @@ import edu.rit.krisher.vecmath.Vec3;
  * This implementation exposes internal state, violating good encapsulation design, to maximize performance and
  * flexibility.
  */
-public final class AxisAlignedBoundingBox {
+public class AxisAlignedBoundingBox {
 
    /**
     * The minimum coordinate (A non-null 3-element array). The values in this array must be less than or equal to the
@@ -85,14 +85,14 @@ public final class AxisAlignedBoundingBox {
       this.maxXYZ[2] = max.z;
    }
 
-   public void set(final AxisAlignedBoundingBox other) {
+   public final void set(final AxisAlignedBoundingBox other) {
       for (int i = 0; i < 3; ++i) {
          this.minXYZ[i] = other.minXYZ[i];
          this.maxXYZ[i] = other.maxXYZ[i];
       }
    }
 
-   public void union(final AxisAlignedBoundingBox other) {
+   public final void union(final AxisAlignedBoundingBox other) {
       for (int i = 0; i < 3; ++i) {
          if (other.minXYZ[i] < minXYZ[i])
             minXYZ[i] = other.minXYZ[i];
@@ -102,12 +102,12 @@ public final class AxisAlignedBoundingBox {
 
    }
 
-   public Vec3 centerPt() {
+   public final Vec3 centerPt() {
       return new Vec3(minXYZ[0] + (maxXYZ[0] - minXYZ[0]) * 0.5, minXYZ[1] + (maxXYZ[1] - minXYZ[1]) * 0.5, minXYZ[2]
                                                                                                                    + (maxXYZ[2] - minXYZ[2]) * 0.5);
    }
 
-   public double[] centerArray() {
+   public final double[] centerArray() {
       return new double[] { minXYZ[0] + (maxXYZ[0] - minXYZ[0]) * 0.5, minXYZ[1] + (maxXYZ[1] - minXYZ[1]) * 0.5,
             minXYZ[2] + (maxXYZ[2] - minXYZ[2]) * 0.5 };
    }
@@ -118,7 +118,7 @@ public final class AxisAlignedBoundingBox {
     * 
     * @return The size of the box in the x dimension.
     */
-   public double xSpan() {
+   public final double xSpan() {
       return maxXYZ[0] - minXYZ[0];
    }
 
@@ -128,7 +128,7 @@ public final class AxisAlignedBoundingBox {
     * 
     * @return The size of the box in the y dimension.
     */
-   public double ySpan() {
+   public final double ySpan() {
       return maxXYZ[1] - minXYZ[1];
    }
 
@@ -138,7 +138,7 @@ public final class AxisAlignedBoundingBox {
     * 
     * @return The size of the box in the z dimension.
     */
-   public double zSpan() {
+   public final double zSpan() {
       return maxXYZ[2] - minXYZ[2];
    }
 
@@ -147,7 +147,7 @@ public final class AxisAlignedBoundingBox {
     * 
     * @return The diagonal length;
     */
-   public double diagonalLength() {
+   public final double diagonalLength() {
       final double xSpan = (maxXYZ[0] - minXYZ[0]);
       final double ySpan = (maxXYZ[1] - minXYZ[1]);
       final double zSpan = (maxXYZ[2] - minXYZ[2]);
@@ -160,7 +160,7 @@ public final class AxisAlignedBoundingBox {
     * 
     * @return The surface area of the bounding box.
     */
-   public double surfaceArea() {
+   public final double surfaceArea() {
       final double xSpan = (maxXYZ[0] - minXYZ[0]);
       final double ySpan = (maxXYZ[1] - minXYZ[1]);
       final double zSpan = (maxXYZ[2] - minXYZ[2]);
@@ -172,7 +172,7 @@ public final class AxisAlignedBoundingBox {
     * 
     * @return The volume of the box.
     */
-   public double volume() {
+   public final double volume() {
       return xSpan() * ySpan() * zSpan();
    }
 
@@ -187,7 +187,7 @@ public final class AxisAlignedBoundingBox {
     *           first 2 elements of the array will contain the ray parameters of the intersection points.
     * @return <code>true</code> if the ray intersects the box, <code>false</code> if it does not.
     */
-   public boolean rayIntersectsParametric(final Ray ray, final double[] params) {
+   public final boolean rayIntersectsParametric(final Ray ray, final double[] params) {
       return ray.intersectsBoxParametric(params, minXYZ[0], minXYZ[1], minXYZ[2], maxXYZ[0], maxXYZ[1], maxXYZ[2]);
    }
 
