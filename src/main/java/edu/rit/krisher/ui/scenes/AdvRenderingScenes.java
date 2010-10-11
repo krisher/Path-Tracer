@@ -60,48 +60,23 @@ public final class AdvRenderingScenes {
 
    public static Scene[] getScenes() {
       return new Scene[] {
-            bunnySceneKDSAH1,
-            bunnySceneKDMedian,
-            bunnyScene,
-            bunnySceneReflective,
-            bunnySceneKDRef,
-            bunnySceneReflection,
-            createScene("Bunny KD Tree Visualization", null, true, new SAHPartitionStrategey(15), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
+            createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), true, bunnyFactory()),
+            createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), true, bunnyFactory()),
+            createScene("Bunny (No Accel)", null, false, null, true, bunnyFactory()),
+            createScene("Bunny SAH KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
+            createScene("Bunny Median KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueGreenMixedRefractive, new MedianPartitionStrategy(15, 2), bunnyFactory())),
+            createScene("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
+            createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
+            createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
             createScene("Lucy", null, false, new SAHPartitionStrategey(12), true, plyFactory(new File("/home/krisher/Download/lucy.ply"))),
-            createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"))),
-            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
+            createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
+            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
             createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
-            createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))),
-            createScene("Box (Debug)", null, true, new SAHPartitionStrategey(15), true, new GeometryFactory() {
-               @Override
-               public Geometry createGeometry() {
-                  return groundPlane(Color.white, false, new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0));
-               }
-            }, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
-             * , new AxisAlignedBoundingBox ( - 0.5 , 0 , - 2 ,
-             * 1 , 0.5 , - 0.5 )
-             */)),
-             createScene("Box KD Tree Visualization", null, true, new SAHPartitionStrategey(15), false, createKDVisualization(blueGreenMixedRefractive, new SAHPartitionStrategey(15), new GeometryFactory() {
-                @Override
-                public Geometry createGeometry() {
-                   return groundPlane(Color.white, false, new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0));
-                }
-             }, boxes(new AxisAlignedBoundingBox(-1, 0, -1, 0, 0.5, 0)/*
-              * , new AxisAlignedBoundingBox ( - 0.5 , 0 , - 2 ,
-              * 1 , 0.5 , - 0.5 )
-              */))), };
+            createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))) };
 
    }
 
-   private static final Scene bunnyScene = createScene("Bunny (No Accel)", null, false, null, true, bunnyFactory());
-
-   private static final Scene bunnySceneKDSAH1 = createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), true, bunnyFactory());
-   private static final Scene bunnySceneKDMedian = createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), true, bunnyFactory());
-
-   private static final Scene bunnySceneReflective = createScene("Bunny (Normals)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true));
-   private static final Scene bunnySceneKDRef = createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true));
-   private static final Scene bunnySceneReflection = createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory());
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
@@ -239,8 +214,8 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
-            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1]
-                                                              + geomBounds.ySpan(), geomBounds.maxXYZ[2] + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
+                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }

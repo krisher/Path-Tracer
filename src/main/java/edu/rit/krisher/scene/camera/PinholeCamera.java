@@ -76,7 +76,7 @@ public class PinholeCamera implements Camera {
     * @see edu.rit.krisher.scene.Camera#generateRays(double, double, double)
     */
    @Override
-   public void initializeRay(final Ray rayOut, final double x, final double y, final Random rng) {
+   public void initSampleRay(final Ray rayOut, final double x, final double y, final Random rng) {
       rayOut.direction.set(x, y, -rayZDist).normalize();
       orientation.transformVec(rayOut.direction);
       rayOut.origin.set(position);

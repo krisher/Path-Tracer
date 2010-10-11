@@ -28,6 +28,6 @@ public interface Camera {
     *           A non-null random number generator that can be used for sampling
     *           of the camera aperture.
     */
-   public void initializeRay(Ray rayOut, double x, double y, Random rng);
+   public void initSampleRay(Ray rayOut, double x, double y, Random rng);
 
 }

@@ -18,12 +18,12 @@ import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
- * Non thread-safe Path Tracer.
+ * Non thread-safe Whitted-Style Ray Tracer.
  * 
  * @author krisher
  * 
  */
-public final class PathTracer {
+public final class WhittedTracer {
 
    /**
     * Overridden to remove thread safety overhead
@@ -58,7 +58,7 @@ public final class PathTracer {
     * Creates a new path tracer.
     * 
     */
-   public PathTracer() {
+   public WhittedTracer() {
       super();
    }
 
@@ -97,24 +97,16 @@ public final class PathTracer {
                int rayIdx = 0;
                for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
                   for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
-                     /*
-                      * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
-                      * small square region of the pixel area for each sample.
-                      * 
-                      * This is not quite as good as a true Poisson distribution, but a reasonable approximation for
-                      * this purpose.
-                      */
-                     final double xSRand = rng.nextDouble();
-                     final double ySRand = rng.nextDouble();
+
                      /*
                       * Compute normalized image coordinates (-1 to 1 for the full range of the camera's FoV angle).
                       * 
                       * Note that both x and y are normalized based on the width, so the FoV represents a horizontal
                       * range.
                       */
-                     final double x = ((pixelX + workItem.blockStartX + (sampleDelta * (sampleX + xSRand))) - xCenter)
+                     final double x = ((pixelX + workItem.blockStartX + (sampleDelta * (sampleX))) - xCenter)
                      / xCenter;
-                     final double y = ((pixelY + workItem.blockStartY + (sampleDelta * (sampleY + ySRand))) - yCenter)
+                     final double y = ((pixelY + workItem.blockStartY + (sampleDelta * (sampleY))) - yCenter)
                      / xCenter;
                      final SampleRay ray = rays[rayIdx++];
                      /*
