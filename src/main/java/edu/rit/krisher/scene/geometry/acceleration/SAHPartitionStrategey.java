@@ -1,6 +1,7 @@
 package edu.rit.krisher.scene.geometry.acceleration;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 import edu.rit.krisher.scene.AxisAlignedBoundingBox;
 
@@ -34,8 +35,8 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    @Override
-   public PartitionResult findSplitLocation(final int memberCount,
-         final AxisAlignedBoundingBox[] bounds, final AxisAlignedBoundingBox nodeBounds, final int depth) {
+   public PartitionResult findSplitLocation(final int memberCount, final AxisAlignedBoundingBox[] bounds,
+         final AxisAlignedBoundingBox nodeBounds, final int depth) {
       if (depth >= maxDepth) {
          return PartitionResult.LEAF;
       }
@@ -58,24 +59,14 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? KDTree.X_AXIS
             : KDTree.Z_AXIS)
             : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
-      final SplitCandidate[] splitCandidates = new SplitCandidate[memberCount * 2];
-      for (int i = 0; i < splitCandidates.length; ++i)
-         splitCandidates[i] = new SplitCandidate();
+      final AxisAlignedBoundingBox[] maxEdges = Arrays.copyOf(bounds, memberCount);
       for (int axisAttempt = 0; axisAttempt < 3; axisAttempt++) {
-         /*
-          * Use the bounding box edges along the split axis as candidate split locations.
-          */
-         for (int bbIdx = 0; bbIdx < memberCount; ++bbIdx) {
-            splitCandidates[bbIdx * 2].splitLocation = bounds[bbIdx].minXYZ[splitAxis];
-            splitCandidates[bbIdx * 2].isMax = false;
-            splitCandidates[bbIdx * 2 + 1].splitLocation = bounds[bbIdx].maxXYZ[splitAxis];
-            splitCandidates[bbIdx * 2 + 1].isMax = true;
-         }
          /*
           * Sort the split candidates by split location so we can easily count how many members fall on each side of the
           * split plane.
           */
-         Arrays.sort(splitCandidates);
+         Arrays.sort(bounds, 0, memberCount, new AABBMinComparator(splitAxis));
+         Arrays.sort(maxEdges, 0, memberCount, new AABBMaxComparator(splitAxis));
 
          /*
           * Compute the SA-based cost of spliting at each candidate, recording the best location.
@@ -84,29 +75,42 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
          int greaterPrims = memberCount;
 
          saTemp.set(nodeBounds); // Initialize bounding box to node bounds, this is used to calculate surface area.
-         for (int candidateIdx = 0; candidateIdx < splitCandidates.length; ++candidateIdx) {
-            final SplitCandidate candidate = splitCandidates[candidateIdx];
-            /*
-             * If we have entered a new bounding box, increment the number that fall on the less side of the split
-             * (since the current candidate is at the edge the node falls to the greater side of the split until after
-             * we move to the next greater candidate).
-             */
 
-            if (candidate.isMax)
+         for (int minIdx = 0, maxIdx = 0; minIdx < memberCount || maxIdx < memberCount;) {
+            double splitLocation;
+            boolean newPrim = false;
+
+            if (minIdx >= memberCount) {
+               splitLocation = maxEdges[maxIdx].maxXYZ[splitAxis];
                --greaterPrims;
+               ++maxIdx;
+            } else if (maxIdx >= memberCount || bounds[minIdx].minXYZ[splitAxis] < maxEdges[maxIdx].maxXYZ[splitAxis]) {
+               /*
+                * A minimum
+                */
+               splitLocation = bounds[minIdx].minXYZ[splitAxis];
+               ++minIdx;
+               newPrim = true;
+            } else {
+               /*
+                * We encountered a maximum
+                */
+               splitLocation = maxEdges[maxIdx].maxXYZ[splitAxis];
+               --greaterPrims;
+               ++maxIdx;
+            }
             /*
              * Ensure that the split candidate falls inside the node's bounds.
              */
-            if (candidate.splitLocation > nodeBounds.minXYZ[splitAxis]
-                                                            && candidate.splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+            if (splitLocation > nodeBounds.minXYZ[splitAxis] && splitLocation < nodeBounds.maxXYZ[splitAxis]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.
                 */
                saTemp.minXYZ[splitAxis] = nodeBounds.minXYZ[splitAxis];
-               saTemp.maxXYZ[splitAxis] = candidate.splitLocation;
+               saTemp.maxXYZ[splitAxis] = splitLocation;
                final double lessNodeSurfaceAreaRatio = saTemp.surfaceArea() / nodeSurfaceArea;
-               saTemp.minXYZ[splitAxis] = candidate.splitLocation;
+               saTemp.minXYZ[splitAxis] = splitLocation;
                saTemp.maxXYZ[splitAxis] = nodeBounds.maxXYZ[splitAxis];
                final double greaterNodeSurfaceAreaRatio = saTemp.surfaceArea() / nodeSurfaceArea;
 
@@ -122,13 +126,12 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
                if (splitCost < bestSACost) {
                   bestSACost = splitCost;
-                  bestSplit = candidate.splitLocation;
+                  bestSplit = splitLocation;
                   bestSplitAxis = splitAxis;
                }
             }
-            if (!candidate.isMax)
+            if (newPrim)
                ++lessPrims;
-
 
          }
          if (bestSplitAxis >= 0) {
@@ -178,4 +181,33 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       }
 
    }
+
+   private static final class AABBMinComparator implements Comparator<AxisAlignedBoundingBox> {
+      private final int axis;
+
+      public AABBMinComparator(final int axis) {
+         this.axis = axis;
+      }
+
+      @Override
+      public int compare(final AxisAlignedBoundingBox o1, final AxisAlignedBoundingBox o2) {
+         return o1.minXYZ[axis] < o2.minXYZ[axis] ? -1 : (o1.minXYZ[axis] > o2.minXYZ[axis] ? 1 : 0);
+      }
+
+   };
+
+   private static final class AABBMaxComparator implements Comparator<AxisAlignedBoundingBox> {
+      private final int axis;
+
+      public AABBMaxComparator(final int axis) {
+         this.axis = axis;
+      }
+
+      @Override
+      public int compare(final AxisAlignedBoundingBox o1, final AxisAlignedBoundingBox o2) {
+         return o1.maxXYZ[axis] < o2.maxXYZ[axis] ? -1 : (o1.maxXYZ[axis] > o2.maxXYZ[axis] ? 1 : 0);
+      }
+
+   };
+
 }
