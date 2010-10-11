@@ -23,7 +23,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1.0, 100.0, 0.10);
+      this(maxDepth, 1.0, 100.0, 0.80);
    }
 
    public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
