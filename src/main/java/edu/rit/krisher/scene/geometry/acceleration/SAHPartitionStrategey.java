@@ -22,7 +22,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1, 0.75);
+      this(maxDepth, 1, 0.8);
    }
 
    /**
@@ -49,7 +49,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
       double bestSplit = 0;
       int bestSplitAxis = -1;
-      double bestSACost = memberCount; // Initialize to the cost of creating a leaf.
+      double bestSACost = memberCount * geometryIntersectionCost; // Initialize to the cost of creating a leaf.
       /*
        * The surface area of the node being split...
        */
