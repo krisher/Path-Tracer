@@ -84,7 +84,7 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       buffer[offs + 2] = value.z;
       return this;
    }
-   
+
    @Override
    public Vec3Buffer get(final double[] value, final int... indices) {
       int outOffs = 0;
@@ -97,7 +97,8 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       }
       return this;
    }
-   
+
+   @Override
    public double intersectsTriangle(final Ray ray, int v0Idx, int v1Idx, int v2Idx) {
       v0Idx *= 3;
       v1Idx *= 3;
@@ -107,7 +108,8 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       final double v0Z = buffer[v0Idx + 2];
       return ray.intersectsTriangle(v0X, v0Y, v0Z, buffer[v1Idx] - v0X, buffer[v1Idx + 1] - v0Y, buffer[v1Idx + 2] - v0Z, buffer[v2Idx] - v0X, buffer[v2Idx + 1] - v0Y, buffer[v2Idx + 2] - v0Z);
    }
-   
+
+   @Override
    public boolean intersectsTriangleBarycentric(final double[] tuv, final Ray ray, int v0Idx, int v1Idx, int v2Idx) {
       v0Idx *= 3;
       v1Idx *= 3;
@@ -117,7 +119,8 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       final double v0Z = buffer[v0Idx + 2];
       return ray.intersectsTriangleBarycentric(tuv, v0X, v0Y, v0Z, buffer[v1Idx] - v0X, buffer[v1Idx + 1] - v0Y, buffer[v1Idx + 2] - v0Z, buffer[v2Idx] - v0X, buffer[v2Idx + 1] - v0Y, buffer[v2Idx + 2] - v0Z);
    }
-   
+
+   @Override
    public void getTriangleNormal(final Vec3 outNormal, int v0Idx, int v1Idx, int v2Idx) {
       v0Idx *= 3;
       v1Idx *= 3;
@@ -128,26 +131,27 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       outNormal.set(buffer[v1Idx] - v0X, buffer[v1Idx + 1] - v0Y, buffer[v1Idx + 2] - v0Z);
       outNormal.cross(buffer[v2Idx] - v0X, buffer[v2Idx + 1] - v0Y, buffer[v2Idx + 2] - v0Z);
    }
-   
+
    /**
     * @param vecs
     */
+   @Override
    public final Vec3dBuffer getTriangleVEE(final double[] vecs, int v0Idx, int v1Idx, int v2Idx) {
       v0Idx *= 3;
       vecs[0] = buffer[v0Idx];
       vecs[1] = buffer[v0Idx + 1];
       vecs[2] = buffer[v0Idx + 2];
-      
+
       v1Idx *= 3;
       vecs[3] = buffer[v1Idx] - vecs[0];
       vecs[4] = buffer[v1Idx + 1] - vecs[1];
       vecs[5] = buffer[v1Idx + 2] - vecs[2];
-      
+
       v2Idx *= 3;
       vecs[6] = buffer[v2Idx] - vecs[0];
       vecs[7] = buffer[v2Idx + 1] - vecs[1];
       vecs[8] = buffer[v2Idx + 2] - vecs[2];
-      
+
       return this;
    }
 
@@ -157,24 +161,25 @@ public class Vec3dBuffer extends BaseBuffer implements Vec3Buffer {
       final int verts = limit() * 3;
       for (int i = 0; i < verts; i += 3) {
          for (int j = 0; j < 3; ++j) {
-            if (buffer[i + j] < bounds.minXYZ[j])
-               bounds.minXYZ[j] = buffer[i + j];
-            if (buffer[i + j] > bounds.maxXYZ[j])
-               bounds.maxXYZ[j] = buffer[i + j];
+            if (buffer[i + j] < bounds.xyzxyz[j])
+               bounds.xyzxyz[j] = buffer[i + j];
+            if (buffer[i + j] > bounds.xyzxyz[j + 3])
+               bounds.xyzxyz[j + 3] = buffer[i + j];
          }
       }
       return bounds;
    }
-   
+
+   @Override
    public AxisAlignedBoundingBox computeBounds(final int... indices) {
       final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
       for (final int index : indices) {
          final int offset = index * 3;
          for (int j = 0; j < 3; ++j) {
-            if (buffer[offset + j] < bounds.minXYZ[j])
-               bounds.minXYZ[j] = buffer[offset + j];
-            if (buffer[offset + j] > bounds.maxXYZ[j])
-               bounds.maxXYZ[j] = buffer[offset + j];
+            if (buffer[offset + j] < bounds.xyzxyz[j])
+               bounds.xyzxyz[j] = buffer[offset + j];
+            if (buffer[offset + j] > bounds.xyzxyz[j + 3])
+               bounds.xyzxyz[j + 3] = buffer[offset + j];
          }
       }
       return bounds;

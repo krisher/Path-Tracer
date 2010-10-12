@@ -85,19 +85,19 @@ public final class AdvRenderingScenes {
       final double zBorder = sceneBounds.zSpan() * 2;
       final Vec3Buffer vb = new Vec3fBuffer(walls ? 8 : 4);
       final IndexBuffer ib = new IndexBuffer(walls ? 30 : 6);
-      vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder);
-      vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.minXYZ[1], sceneBounds.minXYZ[2] - zBorder);
-      vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.minXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
-      vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.minXYZ[1], sceneBounds.maxXYZ[2] + zBorder);
+      vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[2] - zBorder);
+      vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[2] - zBorder);
+      vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[5] + zBorder);
+      vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[5] + zBorder);
       ib.put(0).put(1).put(2);
       ib.put(0).put(2).put(3);
 
       if (walls) {
          final double yBorder = sceneBounds.ySpan() * 2;
-         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.minXYZ[2] - zBorder);
-         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.minXYZ[2] - zBorder);
-         vb.put(sceneBounds.minXYZ[0] - xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.maxXYZ[2] + zBorder);
-         vb.put(sceneBounds.maxXYZ[0] + xBorder, sceneBounds.maxXYZ[1] + yBorder, sceneBounds.maxXYZ[2] + zBorder);
+         vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[2] - zBorder);
+         vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[2] - zBorder);
+         vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[5] + zBorder);
+         vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[5] + zBorder);
 
          ib.put(4).put(5).put(1);
          ib.put(4).put(1).put(0);
@@ -149,15 +149,15 @@ public final class AdvRenderingScenes {
          public Geometry createGeometry() {
             int idxBase = 0;
             for (final AxisAlignedBoundingBox aabb : aabbs) {
-               vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
-               vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
-               vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.maxXYZ[2]);
-               vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.maxXYZ[2]);
+               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[1], aabb.xyzxyz[2]);
+               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[1], aabb.xyzxyz[2]);
+               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[1], aabb.xyzxyz[5]);
+               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[1], aabb.xyzxyz[5]);
 
-               vertices.put(aabb.maxXYZ[0], aabb.maxXYZ[1], aabb.minXYZ[2]);
-               vertices.put(aabb.minXYZ[0], aabb.maxXYZ[1], aabb.minXYZ[2]);
-               vertices.put(aabb.minXYZ[0], aabb.maxXYZ[1], aabb.maxXYZ[2]);
-               vertices.put(aabb.maxXYZ[0], aabb.maxXYZ[1], aabb.maxXYZ[2]);
+               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[4], aabb.xyzxyz[2]);
+               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[4], aabb.xyzxyz[2]);
+               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[4], aabb.xyzxyz[5]);
+               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[4], aabb.xyzxyz[5]);
 
                ib.put(idxBase + 0).put(idxBase + 1).put(idxBase + 2);
                ib.put(idxBase + 0).put(idxBase + 2).put(idxBase + 3);
@@ -197,7 +197,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-                  : groundMat, walls, geomBounds);
+            : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -215,8 +215,8 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
-            add(new SphereLight(new Vec3(0, geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
+                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
@@ -248,8 +248,9 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
-            add(new SphereLight(new Vec3(geomBounds.minXYZ[0] - geomBounds.xSpan(), geomBounds.maxXYZ[1] + geomBounds.ySpan(), geomBounds.maxXYZ[2]
-                  + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            add(new SphereLight(new Vec3(geomBounds.xyzxyz[0] - geomBounds.xSpan(), geomBounds.xyzxyz[4]
+                                                                                                      + geomBounds.ySpan(), geomBounds.xyzxyz[5]
+                                                                                                                                              + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }

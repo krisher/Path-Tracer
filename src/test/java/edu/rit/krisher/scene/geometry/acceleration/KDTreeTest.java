@@ -42,14 +42,14 @@ public class KDTreeTest {
                final int childCount, final double splitLocation, final int splitAxis) throws Exception {
             if (!leaf) {
                Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds + " for split axis "
-                                 + splitAxis + ".", splitLocation < bounds.maxXYZ[splitAxis]
-                                                                                  && splitLocation > bounds.minXYZ[splitAxis]);
+                     + splitAxis + ".", splitLocation < bounds.xyzxyz[splitAxis + 3]
+                                                                                  && splitLocation > bounds.xyzxyz[splitAxis]);
             }
          }
       };
       tree.visitTreeNodes(visitor);
    }
-   
+
    @Test
    public void splitLocationsShouldBeInNodeRange1() throws Exception {
       final KDTree tree = new KDTree(PLYParser.parseTriangleMesh(new File("/home/krisher/Download/xyzrgb_dragon.ply")));
@@ -60,15 +60,15 @@ public class KDTreeTest {
                final int childCount, final double splitLocation, final int splitAxis) throws Exception {
             if (!leaf) {
                Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds + " for split axis "
-                                 + splitAxis + ".", splitLocation < bounds.maxXYZ[splitAxis]
-                                                                                  && splitLocation > bounds.minXYZ[splitAxis]);
+                     + splitAxis + ".", splitLocation < bounds.xyzxyz[splitAxis + 3]
+                                                                                  && splitLocation > bounds.xyzxyz[splitAxis]);
             }
          }
       };
       tree.visitTreeNodes(visitor);
    }
 
-   
+
    public void treeMetricsShouldNotChange() {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");

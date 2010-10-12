@@ -81,37 +81,38 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
             boolean newPrim = false;
 
             if (minIdx >= memberCount) {
-               splitLocation = maxEdges[maxIdx].maxXYZ[splitAxis];
+               splitLocation = maxEdges[maxIdx].xyzxyz[splitAxis + 3];
                --greaterPrims;
                ++maxIdx;
-            } else if (maxIdx >= memberCount || bounds[minIdx].minXYZ[splitAxis] < maxEdges[maxIdx].maxXYZ[splitAxis]) {
+            } else if (maxIdx >= memberCount
+                  || bounds[minIdx].xyzxyz[splitAxis] < maxEdges[maxIdx].xyzxyz[splitAxis + 3]) {
                /*
                 * A minimum
                 */
-               splitLocation = bounds[minIdx].minXYZ[splitAxis];
+               splitLocation = bounds[minIdx].xyzxyz[splitAxis];
                ++minIdx;
                newPrim = true;
             } else {
                /*
                 * We encountered a maximum
                 */
-               splitLocation = maxEdges[maxIdx].maxXYZ[splitAxis];
+               splitLocation = maxEdges[maxIdx].xyzxyz[splitAxis + 3];
                --greaterPrims;
                ++maxIdx;
             }
             /*
              * Ensure that the split candidate falls inside the node's bounds.
              */
-            if (splitLocation > nodeBounds.minXYZ[splitAxis] && splitLocation < nodeBounds.maxXYZ[splitAxis]) {
+            if (splitLocation > nodeBounds.xyzxyz[splitAxis] && splitLocation < nodeBounds.xyzxyz[splitAxis + 3]) {
 
                /*
                 * Compute the expected cost of traversing the children if we split at this candidate.
                 */
-               saTemp.minXYZ[splitAxis] = nodeBounds.minXYZ[splitAxis];
-               saTemp.maxXYZ[splitAxis] = splitLocation;
+               saTemp.xyzxyz[splitAxis] = nodeBounds.xyzxyz[splitAxis];
+               saTemp.xyzxyz[splitAxis + 3] = splitLocation;
                final double lessNodeSurfaceAreaRatio = saTemp.surfaceArea() / nodeSurfaceArea;
-               saTemp.minXYZ[splitAxis] = splitLocation;
-               saTemp.maxXYZ[splitAxis] = nodeBounds.maxXYZ[splitAxis];
+               saTemp.xyzxyz[splitAxis] = splitLocation;
+               saTemp.xyzxyz[splitAxis + 3] = nodeBounds.xyzxyz[splitAxis + 3];
                final double greaterNodeSurfaceAreaRatio = saTemp.surfaceArea() / nodeSurfaceArea;
 
                /*
@@ -158,7 +159,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
       @Override
       public int compare(final AxisAlignedBoundingBox o1, final AxisAlignedBoundingBox o2) {
-         return o1.minXYZ[axis] < o2.minXYZ[axis] ? -1 : (o1.minXYZ[axis] > o2.minXYZ[axis] ? 1 : 0);
+         return o1.xyzxyz[axis] < o2.xyzxyz[axis] ? -1 : (o1.xyzxyz[axis] > o2.xyzxyz[axis] ? 1 : 0);
       }
 
    };
@@ -167,12 +168,12 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       private final int axis;
 
       public AABBMaxComparator(final int axis) {
-         this.axis = axis;
+         this.axis = axis + 3;
       }
 
       @Override
       public int compare(final AxisAlignedBoundingBox o1, final AxisAlignedBoundingBox o2) {
-         return o1.maxXYZ[axis] < o2.maxXYZ[axis] ? -1 : (o1.maxXYZ[axis] > o2.maxXYZ[axis] ? 1 : 0);
+         return o1.xyzxyz[axis] < o2.xyzxyz[axis] ? -1 : (o1.xyzxyz[axis] > o2.xyzxyz[axis] ? 1 : 0);
       }
 
    };

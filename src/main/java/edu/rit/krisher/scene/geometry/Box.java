@@ -133,25 +133,26 @@ public class Box implements Geometry {
       final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
       for (int i = 1; i < 8; i++) {
          final Vec3 corner = corners[i];
-         if (corner.x < bounds.minXYZ[0])
-            bounds.minXYZ[0] = corner.x;
-         else if (corner.x > bounds.maxXYZ[0])
-            bounds.maxXYZ[0] = corner.x;
+         if (corner.x < bounds.xyzxyz[0])
+            bounds.xyzxyz[0] = corner.x;
+         else if (corner.x > bounds.xyzxyz[3])
+            bounds.xyzxyz[3] = corner.x;
 
-         if (corner.y < bounds.minXYZ[1])
-            bounds.minXYZ[1] = corner.y;
-         else if (corner.y > bounds.maxXYZ[1])
-            bounds.maxXYZ[1] = corner.y;
+         if (corner.y < bounds.xyzxyz[1])
+            bounds.xyzxyz[1] = corner.y;
+         else if (corner.y > bounds.xyzxyz[4])
+            bounds.xyzxyz[4] = corner.y;
 
-         if (corner.z < bounds.minXYZ[2])
-            bounds.minXYZ[2] = corner.z;
-         else if (corner.z > bounds.maxXYZ[2])
-            bounds.maxXYZ[2] = corner.z;
+         if (corner.z < bounds.xyzxyz[2])
+            bounds.xyzxyz[2] = corner.z;
+         else if (corner.z > bounds.xyzxyz[5])
+            bounds.xyzxyz[5] = corner.z;
       }
       return bounds;
 
    }
 
+   @Override
    public int getPrimitiveCount() {
       return 1;
    }

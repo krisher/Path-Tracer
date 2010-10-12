@@ -21,15 +21,15 @@ public class KDSplitMeshGenerator {
             public void visitNode(final int depth, final AxisAlignedBoundingBox aabb, final boolean leaf,
                   final int childCount, final double splitLocation, final int splitAxis) throws Exception {
                if (leaf) {
-                  vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
-                  vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.minXYZ[2]);
-                  vertices.put(aabb.minXYZ[0], aabb.minXYZ[1], aabb.maxXYZ[2]);
-                  vertices.put(aabb.maxXYZ[0], aabb.minXYZ[1], aabb.maxXYZ[2]);
+                  vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[1], aabb.xyzxyz[2]);
+                  vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[1], aabb.xyzxyz[2]);
+                  vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[1], aabb.xyzxyz[5]);
+                  vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[1], aabb.xyzxyz[5]);
 
-                  vertices.put(aabb.maxXYZ[0], aabb.maxXYZ[1], aabb.minXYZ[2]);
-                  vertices.put(aabb.minXYZ[0], aabb.maxXYZ[1], aabb.minXYZ[2]);
-                  vertices.put(aabb.minXYZ[0], aabb.maxXYZ[1], aabb.maxXYZ[2]);
-                  vertices.put(aabb.maxXYZ[0], aabb.maxXYZ[1], aabb.maxXYZ[2]);
+                  vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[4], aabb.xyzxyz[2]);
+                  vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[4], aabb.xyzxyz[2]);
+                  vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[4], aabb.xyzxyz[5]);
+                  vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[4], aabb.xyzxyz[5]);
 
                   ib.put(vIdx + 0).put(vIdx + 1).put(vIdx + 2);
                   ib.put(vIdx + 0).put(vIdx + 2).put(vIdx + 3);

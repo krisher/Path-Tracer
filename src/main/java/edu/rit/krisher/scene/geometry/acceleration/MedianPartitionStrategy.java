@@ -49,7 +49,7 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
          // TODO: need to ensure the split actually occurs within the bounds of the kd-node!,
          // But this generates a really bad tree.
          // Maybe try a different axis?
-         if (split >= nodeBounds.maxXYZ[splitAxis] || split <= nodeBounds.minXYZ[splitAxis]) {
+         if (split >= nodeBounds.xyzxyz[splitAxis + 3] || split <= nodeBounds.xyzxyz[splitAxis]) {
             splitAxis = (splitAxis + 1) % 3;
             continue;
          }

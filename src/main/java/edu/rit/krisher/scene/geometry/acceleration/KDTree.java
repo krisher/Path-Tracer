@@ -136,17 +136,17 @@ public class KDTree implements Geometry {
       final KDInteriorNode node = new KDInteriorNode(partition.splitLocation, partition.splitAxis);
       final int lessCount = partitionPrimitives(memberCount, bounds, partition.splitAxis, partition.splitLocation, true);
       if (lessCount > 0) {
-         final double maxBound = nodeBounds.maxXYZ[partition.splitAxis];
-         nodeBounds.maxXYZ[partition.splitAxis] = partition.splitLocation;
+         final double maxBound = nodeBounds.xyzxyz[partition.splitAxis + 3];
+         nodeBounds.xyzxyz[partition.splitAxis + 3] = partition.splitLocation;
          node.lessChild = partition(lessCount, bounds, depth + 1, nodeBounds);
-         nodeBounds.maxXYZ[partition.splitAxis] = maxBound;
+         nodeBounds.xyzxyz[partition.splitAxis + 3] = maxBound;
       }
       final int greaterCount = partitionPrimitives(memberCount, bounds, partition.splitAxis, partition.splitLocation, false);
       if (greaterCount > 0) {
-         final double minBound = nodeBounds.minXYZ[partition.splitAxis];
-         nodeBounds.minXYZ[partition.splitAxis] = partition.splitLocation;
+         final double minBound = nodeBounds.xyzxyz[partition.splitAxis];
+         nodeBounds.xyzxyz[partition.splitAxis] = partition.splitLocation;
          node.greaterChild = partition(greaterCount, bounds, depth + 1, nodeBounds);
-         nodeBounds.minXYZ[partition.splitAxis] = minBound;
+         nodeBounds.xyzxyz[partition.splitAxis] = minBound;
       }
       return node;
    }
@@ -165,7 +165,7 @@ public class KDTree implements Geometry {
       int endIdx = memberCount - 1;
       if (less) {
          while (startIdx <= endIdx) {
-            if (bounds[startIdx].minXYZ[splitAxis] < split || bounds[startIdx].maxXYZ[splitAxis] <= split) {
+            if (bounds[startIdx].xyzxyz[splitAxis] < split || bounds[startIdx].xyzxyz[splitAxis + 3] <= split) {
                ++startIdx;
             } else {
                final AxisAlignedBoundingBox tmp = bounds[endIdx];
@@ -176,7 +176,7 @@ public class KDTree implements Geometry {
          }
       } else {
          while (startIdx <= endIdx) {
-            if (bounds[startIdx].maxXYZ[splitAxis] > split) {
+            if (bounds[startIdx].xyzxyz[splitAxis + 3] > split) {
                ++startIdx;
             } else {
                final AxisAlignedBoundingBox tmp = bounds[endIdx];
@@ -277,17 +277,17 @@ public class KDTree implements Geometry {
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
       throws Exception {
          if (lessChild != null) {
-            final double maxBound = nodeBounds.maxXYZ[axis];
-            nodeBounds.maxXYZ[axis] = splitLocation;
+            final double maxBound = nodeBounds.xyzxyz[axis + 3];
+            nodeBounds.xyzxyz[axis + 3] = splitLocation;
             lessChild.visit(depth + 1, nodeBounds, visitor);
-            nodeBounds.maxXYZ[axis] = maxBound;
+            nodeBounds.xyzxyz[axis + 3] = maxBound;
          }
 
          if (greaterChild != null) {
-            final double minBound = nodeBounds.minXYZ[axis];
-            nodeBounds.minXYZ[axis] = splitLocation;
+            final double minBound = nodeBounds.xyzxyz[axis];
+            nodeBounds.xyzxyz[axis] = splitLocation;
             greaterChild.visit(depth + 1, nodeBounds, visitor);
-            nodeBounds.minXYZ[axis] = minBound;
+            nodeBounds.xyzxyz[axis] = minBound;
          }
          visitor.visitNode(depth, nodeBounds, false, ((lessChild == null) ? 0 : 1) + ((greaterChild == null) ? 0 : 1), splitLocation, axis);
       }
