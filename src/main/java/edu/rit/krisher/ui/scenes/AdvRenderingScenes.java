@@ -70,7 +70,7 @@ public final class AdvRenderingScenes {
             createSceneMultiTree("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(14), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), Math.PI / 2.0)))),
+            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), Math.PI / 2.0)))),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
@@ -81,8 +81,8 @@ public final class AdvRenderingScenes {
 
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
-      final double xBorder = sceneBounds.xSpan() * 2;
-      final double zBorder = sceneBounds.zSpan() * 2;
+      final double xBorder = sceneBounds.xSpan() * 4;
+      final double zBorder = sceneBounds.zSpan() * 4;
       final Vec3Buffer vb = new Vec3fBuffer(walls ? 8 : 4);
       final IndexBuffer ib = new IndexBuffer(walls ? 30 : 6);
       vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[2] - zBorder);
