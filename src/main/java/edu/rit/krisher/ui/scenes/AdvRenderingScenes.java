@@ -67,7 +67,7 @@ public final class AdvRenderingScenes {
             createScene("Bunny (No Accel)", null, false, null, true, bunnyFactory()),
             createScene("Bunny SAH KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
             createScene("Bunny Median KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueGreenMixedRefractive, new MedianPartitionStrategy(15, 2), bunnyFactory())),
-            createScene("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
+            createSceneMultiTree("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(14), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), Math.PI / 2.0)))),
@@ -230,7 +230,7 @@ public final class AdvRenderingScenes {
          protected void initScene() {
 
             final AxisAlignedBoundingBox geomBounds = new AxisAlignedBoundingBox();
-            final Geometry[] geometry = new Geometry[geomFactories.length + 1];
+            final Geometry[] geometry = new Geometry[geomFactories.length];
             for (int i = 0; i < geomFactories.length; ++i) {
                geometry[i] = geomFactories[i].createGeometry();
                geomBounds.union(geometry[i].getBounds(-1));

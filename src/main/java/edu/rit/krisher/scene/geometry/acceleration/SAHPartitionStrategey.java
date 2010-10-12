@@ -13,7 +13,6 @@ import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
  */
 public class SAHPartitionStrategey implements KDPartitionStrategy {
 
-   private final double kdNodeTraversalCost;
    private final double geometryIntersectionCost;
    private final double emptyBias;// .25;
    private final int maxDepth;
@@ -23,13 +22,20 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
    }
 
    public SAHPartitionStrategey(final int maxDepth) {
-      this(maxDepth, 1.0, 100.0, 0.80);
+      this(maxDepth, 1, 0.75);
    }
 
-   public SAHPartitionStrategey(final int maxDepth, final double nodeTraversalCost,
-         final double geometryIntersectionCost, final double emptyBias) {
+   /**
+    * 
+    * @param maxDepth
+    *           The absolute maximum depth of the tree.
+    * @param geometryIntersectionCost
+    *           The cost of performing a single ray intersection test against a geometric primitive, as a factor of the
+    *           cost of traversing a level in the KD Tree.
+    * @param emptyBias
+    */
+   public SAHPartitionStrategey(final int maxDepth, final double geometryIntersectionCost, final double emptyBias) {
       this.maxDepth = maxDepth;
-      this.kdNodeTraversalCost = nodeTraversalCost;
       this.geometryIntersectionCost = geometryIntersectionCost;
       this.emptyBias = Math.max(0.0, Math.min(1.0, emptyBias));
    }
@@ -43,7 +49,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
 
       double bestSplit = 0;
       int bestSplitAxis = -1;
-      double bestSACost = geometryIntersectionCost * memberCount; // Initialize to the cost of creating a leaf.
+      double bestSACost = memberCount; // Initialize to the cost of creating a leaf.
       /*
        * The surface area of the node being split...
        */
@@ -121,7 +127,7 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
                 * traversing it. The empty bias factor decreases the computed cost by a factor if the partition results
                 * in an empty child node to encourage culling of empty space.
                 */
-               final double splitCost = kdNodeTraversalCost + geometryIntersectionCost
+               final double splitCost = 1 + geometryIntersectionCost
                * (lessNodeSurfaceAreaRatio * lessPrims + greaterNodeSurfaceAreaRatio * greaterPrims)
                * ((lessPrims == 0 || greaterPrims == 0) ? (emptyBias) : 1.0);
 
@@ -148,7 +154,6 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
        */
       return PartitionResult.LEAF;
    }
-
 
    private static final class AABBMinComparator implements Comparator<AxisAlignedBoundingBox> {
       private final int axis;
