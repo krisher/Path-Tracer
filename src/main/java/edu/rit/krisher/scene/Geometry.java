@@ -1,6 +1,5 @@
 package edu.rit.krisher.scene;
 
-import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 
@@ -15,43 +14,83 @@ import edu.rit.krisher.vecmath.Ray;
 public interface Geometry {
 
    /**
+    * Constant for {@link #primitiveID} indicating that all primitives should be tested for intersection (and the
+    * intersection with the closest to the ray origin should be computed).
+    */
+   public static final int ALL_PRIMITIVES = -1;
+
+   /**
     * Given a previously computed intersection distance along the specified ray, compute the hit parameters of the
     * geometry at the intersection point.
     * 
     * @param data
-    *           Storage for the results of the hit/intersection.
+    *           The material, surface normal, and optional material parameters are populated by this method.
+    * @param hitPrimitive
+    *           The ID of the primitive that was hit (as indicated via the {@link GeometryIntersection} output from
+    *           {@link #intersects(GeometryIntersection, Ray, double)}).
     * @param ray
     *           A ray that has been previously determined to intersect this geometry.
-    * @param isectDist
-    *           The distance from the origin of the ray at which the intersection occurs.
+    * @param distance
+    *           The distance along the ray at which the intersection occured.
     */
-   public void getHitData(HitData data, Ray ray, double isectDist, int primitiveIndex);
+   public void getHitData(MaterialInfo data, int hitPrimitive, Ray ray, double distance);
 
    /**
-    * Computes the smallest positive distance along the ray to the intersection,
-    * or returns a value <= 0 if there is no intersection (we are not interested in intersections at the ray origin).
+    * Computes the smallest positive distance along the ray to the intersection, or returns a value <= 0 if there is no
+    * intersection (we are not interested in intersections at the ray origin).
     * 
     * @param ray
     *           A non-null ray to test intersection with.
+    * @param primitiveID
+    *           The primitive to check for intersection (no others should be tested) (Do not use {@link #ALL_PRIMITIVES}
+    *           here).
+    * @param maxDistance
+    *           the maximum distance along the ray from its origin to check for intersections.
     * @return the distance along the ray (from the origin) at which the intersection occurs.
     */
-   public double intersects(GeometryIntersection intersection, Ray ray, int primitiveIndex);
+   public double intersectsPrimitive(Ray ray, double maxDistance, int primitiveID);
+
+   /**
+    * Computes the smallest positive distance along the ray to the intersection, or returns a value <= 0 if there is no
+    * intersection (we are not interested in intersections at the ray origin).
+    * 
+    * @param intersection
+    *           The primitiveID is stored in this non-null GeometryIntersection.
+    * @param ray
+    *           A non-null ray to test intersection with.
+    * @param maxDistance
+    *           the maximum distance along the ray from its origin to check for intersections.
+    * @return the distance along the ray (from the origin) at which the intersection occurs.
+    */
+   public double intersects(GeometryIntersection intersection, Ray ray, double maxDistance);
 
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.
     * 
+    * @param primitiveID
+    *           The ID of a primitive (0 through 'getPrimitiveCount() - 1') to get the bounds for, or
+    *           {@link #ALL_PRIMITIVES} for the bounds of the geometry.
     * @return A non-null bounding box.
     */
-   public AxisAlignedBoundingBox getBounds(int primitiveIndex);
+   public AxisAlignedBoundingBox getBounds(int primitiveID);
 
    /**
     * Accessor for the surface area of the geometry.
     * 
-    * @return The surface area. If it is difficult to compute, use the surface area
-    *         of the bounding box as a rough approximation.
+    * @param primitiveID
+    *           The ID of a primitive (0 through 'getPrimitiveCount() - 1') to get the bounds for, or
+    *           {@link #ALL_PRIMITIVES} for the bounds of the geometry.
+    * @return The surface area. If it is difficult to compute, use the surface area of the bounding box as a rough
+    *         approximation.
     */
-   public double getSurfaceArea(int primitiveIndex);
-   
+   public double getSurfaceArea(int primitiveID);
+
+   /**
+    * Accessor for the number of primitives that this geometry consists of (values between 0 and this number are used as
+    * primitiveIDs in other methods).
+    * 
+    * @return The number of distinct primitive IDs.
+    */
    public int getPrimitiveCount();
 
 }

@@ -1,4 +1,4 @@
-package edu.rit.krisher.scene.geometry.acceleration;
+package edu.rit.krisher.scene.acceleration;
 
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 

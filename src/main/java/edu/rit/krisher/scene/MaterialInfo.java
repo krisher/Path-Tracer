@@ -1,6 +1,5 @@
-package edu.rit.krisher.raytracer.rays;
+package edu.rit.krisher.scene;
 
-import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -9,7 +8,7 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public class HitData {
+public class MaterialInfo extends GeometryIntersection {
    /**
     * The material at the hit location.
     */

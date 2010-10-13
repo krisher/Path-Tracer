@@ -7,11 +7,11 @@ import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.Random;
 
-import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
@@ -52,7 +52,7 @@ public final class PathTracer {
     * Values will always be >= 0, but are unbounded in magnitude.
     */
    private float[] pixels;
-   private final HitData hitData = new HitData();
+   private final MaterialInfo hitData = new MaterialInfo();
 
    /**
     * Creates a new path tracer.
@@ -185,19 +185,20 @@ public final class PathTracer {
             /*
              * Process the sample ray for the nearest intersection with scene geometry.
              */
-            double intersectDist = 0;
+            double intersectDist = Double.POSITIVE_INFINITY;
             Geometry hit = null;
             int hitPrimitive = -1;
 
             for (final Geometry geom : geometry) {
-               final double d = geom.intersects(intersectionInfo, ray, -1);
-               if (d > 0 && (intersectDist <= 0 || d < intersectDist)) {
+               intersectionInfo.primitiveID = -1;
+               final double d = geom.intersects(intersectionInfo, ray, intersectDist);
+               if (d > 0 && d < intersectDist) {
                   intersectDist = d;
                   hit = geom;
-                  hitPrimitive = intersectionInfo.primitiveIndex;
+                  hitPrimitive = intersectionInfo.primitiveID;
                }
             }
-            if (intersectDist <= 0) {
+            if (intersectDist == Double.POSITIVE_INFINITY) {
                /*
                 * No intersection, process for the scene background color.
                 * 
@@ -214,7 +215,7 @@ public final class PathTracer {
                 */
                continue;
             }
-            hit.getHitData(hitData, ray, intersectDist, hitPrimitive);
+            hit.getHitData(hitData, hitPrimitive, ray, intersectDist);
 
             /*
              * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
@@ -280,7 +281,7 @@ public final class PathTracer {
                       */
                      for (final Geometry geom : geometry) {
                         if (geom != light) {
-                           final double t = geom.intersects(intersectionInfo, shadowRay, -1);
+                           final double t = geom.intersects(intersectionInfo, shadowRay, Double.POSITIVE_INFINITY);
                            if (t > 0 && t < lightDist) {
                               lightDist = 0;
                               break;

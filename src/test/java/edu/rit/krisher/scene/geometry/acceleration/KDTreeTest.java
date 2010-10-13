@@ -18,6 +18,10 @@ import org.junit.Test;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
 import edu.rit.krisher.scene.Geometry;
+import edu.rit.krisher.scene.acceleration.KDNodeVisitor;
+import edu.rit.krisher.scene.acceleration.KDTree;
+import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
+import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;

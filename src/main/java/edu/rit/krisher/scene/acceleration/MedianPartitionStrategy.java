@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.rit.krisher.scene.geometry.acceleration;
+package edu.rit.krisher.scene.acceleration;
 
 import java.util.Arrays;
 

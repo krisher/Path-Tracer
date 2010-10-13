@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.rit.krisher.scene.geometry.acceleration;
+package edu.rit.krisher.scene.acceleration;
 
 /**
  * Results of a KDNode partitioning as specified by a KDPartitionStrategy. This is a value class to hold multiple return

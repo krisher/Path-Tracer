@@ -1,8 +1,8 @@
-package edu.rit.krisher.scene.geometry.acceleration;
+package edu.rit.krisher.scene.acceleration;
 
-import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 
@@ -97,18 +97,25 @@ public class KDTree implements Geometry {
    }
 
    @Override
-   public void getHitData(final HitData data, final Ray ray, final double isectDist, final int prim) {
-      KDTree.this.content[prim & geomMask].getHitData(data, ray, isectDist, prim >> geomBits);
+   public void getHitData(final MaterialInfo data, final int primitiveID, final Ray ray, final double distance) {
+      KDTree.this.content[primitiveID & geomMask].getHitData(data, primitiveID >> geomBits, ray, distance);
    }
 
    @Override
-   public double intersects(final GeometryIntersection intersection, final Ray ray, final int primIndices) {
+   public final double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
       if (root != null) {
          final double[] params = new double[2];
          if (treeBounds.rayIntersectsParametric(ray, params))
             return root.intersects(intersection, ray, params[0], params[1], ray.origin.get(), ray.direction.get());
       }
       return 0;
+   }
+
+   @Override
+   public final double intersectsPrimitive(final Ray ray,
+         final double maxDistance, final int primitiveID) {
+      // FIXME: This should never be called...
+      return intersects(new GeometryIntersection(), ray, maxDistance);
    }
 
    @Override
@@ -235,14 +242,14 @@ public class KDTree implements Geometry {
                   return hitDist;
                /* Hit occurred after tSplit. Compare to result from greater child. */
                /* The hit primitive from the lessChild node will be overwritten */
-               final int primIdx = intersection.primitiveIndex;
+               final int primIdx = intersection.primitiveID;
                final double newHit = greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
                if (newHit > 0 && newHit < hitDist) {
                   assert newHit >= tsplit - Ray.SMALL_D;
                   return newHit; /* Greater child had closer hit. */
                }
                /* Restore greaterChild's primitive index as the hit result. */
-               intersection.primitiveIndex = primIdx;
+               intersection.primitiveID = primIdx;
                return hitDist;
             }
          } else { /* Entry on greater side. */
@@ -262,12 +269,12 @@ public class KDTree implements Geometry {
                assert hitDist >= tmin - Ray.SMALL_D : "An earlier node should have found this intersection";
                if (hitDist <= tsplit) /* Won't get a closer intersection in the other child node. */
                   return hitDist;
-               final int primIdx = intersection.primitiveIndex;
+               final int primIdx = intersection.primitiveID;
                final double newHit = lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
                if (newHit > 0 && newHit < hitDist)
                   return newHit; /* Greater child had closer hit. */
                /* Restore greaterChild's primitive index as the hit result. */
-               intersection.primitiveIndex = primIdx;
+               intersection.primitiveID = primIdx;
                return hitDist;
             }
          }
@@ -306,13 +313,13 @@ public class KDTree implements Geometry {
          double minDist = 0;
          int primIdx = -1;
          for (final int prim : primitives) {
-            final double dist = KDTree.this.content[prim & geomMask].intersects(intersection, ray, prim >> geomBits);
+            final double dist = KDTree.this.content[prim & geomMask].intersectsPrimitive(ray, Double.MAX_VALUE, prim >> geomBits);
             if (dist > 0 && (dist < minDist || minDist <= 0)) {
                primIdx = prim;
                minDist = dist;
             }
          }
-         intersection.primitiveIndex = primIdx;
+         intersection.primitiveID = primIdx;
          return minDist;
       }
 

@@ -1,9 +1,9 @@
 package edu.rit.krisher.scene.geometry;
 
-import edu.rit.krisher.raytracer.rays.HitData;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
 import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.scene.material.Color;
@@ -105,24 +105,8 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public void getHitData(final HitData data, final Ray ray, final double isectDist, final int primIndex) {
-      if (primIndex < 0) {
-         int isectTri = -1;
-         for (int idx = 0; idx < triCount; ++idx) {
-            final int triangleIndexOffset = idx * 3;
-            final double t = vertices.intersectsTriangle(ray, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
-            if (isectDist == t) {
-               isectTri = idx;
-               break;
-            }
-         }
-         if (isectTri >= 0) {
-            getTriangleHitData(isectTri, data, ray);
-            return;
-         }
-      } else {
-         getTriangleHitData(primIndex, data, ray);
-      }
+   public void getHitData(final MaterialInfo data, final int primitiveID, final Ray ray, final double distance) {
+      getTriangleHitData(primitiveID, data, ray);
    }
 
    private final void normalFor(final Vec3 result, final int idx) {
@@ -131,36 +115,40 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public double intersects(final GeometryIntersection intersection, final Ray ray, final int primIndex) {
+   public double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
       double isectDist = Double.POSITIVE_INFINITY;
-      if (primIndex < 0) {
-         int isectTri = -1;
-         for (int idx = 0; idx < triCount; ++idx) {
-            final int triangleIndexOffset = idx * 3;
-            final double t = vertices.intersectsTriangle(ray, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
-            if (t > 0 && t < isectDist) {
-               isectDist = t;
-               isectTri = idx;
-            }
+
+      int isectTri = -1;
+      for (int idx = 0; idx < triCount; ++idx) {
+         final int triangleIndexOffset = idx * 3;
+         final double t = vertices.intersectsTriangle(ray, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
+         if (t > 0 && t < isectDist) {
+            isectDist = t;
+            isectTri = idx;
          }
-         if (isectTri >= 0) {
-            intersection.primitiveIndex = isectTri;
-            return isectDist;
-         }
-      } else {
-         intersection.primitiveIndex = primIndex;
-         final int triangleIndexOffset = primIndex * 3;
-         return vertices.intersectsTriangle(ray, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
       }
+      if (isectTri >= 0) {
+         intersection.primitiveID = isectTri;
+         return isectDist;
+      }
+
       return 0;
    }
 
    @Override
-   public AxisAlignedBoundingBox getBounds(final int primIndex) {
-      if (primIndex < 0) {
+   public double intersectsPrimitive(final Ray ray, final double maxDistance,
+         final int primitiveID) {
+      final int triangleIndexOffset = primitiveID * 3;
+      return vertices.intersectsTriangle(ray, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
+
+   }
+
+   @Override
+   public AxisAlignedBoundingBox getBounds(final int primID) {
+      if (primID < 0) {
          return new AxisAlignedBoundingBox(bounds);
       } else {
-         final int triangleIndexOffset = primIndex * 3;
+         final int triangleIndexOffset = primID * 3;
          return vertices.computeBounds(triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
       }
    }
@@ -181,7 +169,7 @@ public class TriangleMesh implements Geometry {
       return triCount;
    }
 
-   private final void getTriangleHitData(final int triangleIndex, final HitData data, final Ray ray) {
+   private final void getTriangleHitData(final int triangleIndex, final MaterialInfo data, final Ray ray) {
       data.material = material;
       data.materialCoords = null;
       if (normals == null) {
