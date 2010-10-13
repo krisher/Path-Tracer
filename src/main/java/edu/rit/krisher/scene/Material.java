@@ -36,42 +36,36 @@ public interface Material {
     * @param wOutgoing
     *           A normalized vector toward the material intersection point from the point where the
     *           transmitted/reflected spectrum is being sampled.
-    * @param rng
-    *           A random number generator to use
     * @param wIncoming
     *           A normalized vector toward the incident light source from the material intersection point.
     * @param parameters
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     **/
-   public void getIrradianceResponse(Color colorOut, Vec3 wOutgoing, Random rng, Vec3 wIncoming, MaterialInfo parameters);
+   public void getIrradianceResponse(Color colorOut, Vec3 wOutgoing, Vec3 wIncoming, MaterialInfo parameters);
 
    /**
-    * Computes and returns the emissive color given the specified sample
-    * direction, surface normal and material coordinates.
-    * 
-    * Emissive color contribution is independent of any irradiance at the
-    * intersection point parameters. This can be used to represent light source
-    * emission, materials that don't interact with light (e.g. simple color
-    * materials), and ambient lighting terms.
-    * 
-    * The returned value represents the radiant intensity of the source over the
-    * visible spectrum, in Watts/Steradian. The Color components may range from
-    * 0 to positive infinity.
+    * Computes and returns the emissive color given the specified sample direction, surface normal and material
+    * coordinates.
+    * <p>
+    * Emissive color contribution is independent of any irradiance at the intersection point parameters. This can be
+    * used to represent light source emission, materials that don't interact with light (e.g. simple color materials),
+    * and ambient lighting terms.
+    * <p>
+    * The returned value represents the radiant intensity of the source over the visible spectrum, in Watts/Steradian.
+    * The Color components may range from 0 to positive infinity.
     * 
     * @param emissionOut
     *           out variable (non-null) used to store the color that is emitted back toward the sample source (in the
     *           opposite direction as the sampleDirection).
     * @param sampleDirection
-    *           A normalized vector pointing toward the material intersection
-    *           (the opposite direction as the light that will be emitted)
-    * @param surfaceNormal
-    *           The surface normal at the point where the sample ray intersects
-    *           the geometry.
-    * @param materialCoords
-    *           A material-specific array of coordinates.
+    *           A normalized vector pointing toward the material intersection (the opposite direction as the light that
+    *           will be emitted)
+    * @param parameters
+    *           Material parameters including surface normal of the geometry where the intersection occurred, and
+    *           texture/material coordinates.
     */
-   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, Vec3 surfaceNormal, double... materialCoords);
+   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, MaterialInfo parameters);
 
    /**
     * Accessor to determine whether this material should be sampled for its
@@ -86,27 +80,18 @@ public interface Material {
    public boolean shouldSampleDirectIllumination();
 
    /**
-    * Computes a set of directions that should be sampled for irradiance.
+    * Computes a direction that should be sampled.
     * 
-    * @param outDirections
-    *           A non-null array to store the resulting sample directions. All
-    *           vectors placed in this array should be normalized. The length of
-    *           the array determines the maximum number of samples that should
-    *           be generated.
+    * @param sampleOut
+    *           Ray to store the desired sample direction in.
     * @param rng
     *           A random number generator for monte-carlo sampling, etc.
-    * @param radianceSampleDirection
-    *           The normalized vector indicating the direction that the
-    *           irradiance samples will be transmitted (this points toward the
-    *           material intersection point).
-    * @param surfaceNormal
-    *           The surface normal of the geometry where the sample is being
-    *           taken.
-    * @param materialCoords
-    *           The material coordinates of the sample.
-    * @return a non-negative integer indicating the number of samples returned
-    *         in out.
+    * @param wIncoming
+    *           The normalized vector indicating the direction that the irradiance samples will be transmitted (this
+    *           points toward the material intersection point). This vector must not be modified in any way.
+    * @param parameters
+    *           Material parameters including surface normal of the geometry where the intersection occurred, and
+    *           texture/material coordinates.
     */
-   public void sampleIrradiance(SampleRay sampleOut, Random rng, Vec3 radianceSampleDirection, Vec3 surfaceNormal,
-         double... materialCoords);
+   public void sampleInteraction(SampleRay sampleOut, Random rng, Vec3 wIncoming, MaterialInfo parameters);
 }

@@ -28,13 +28,13 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
       emissionOut.set(0, 0, 0);
    }
 
    @Override
-   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
+   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+         final MaterialInfo parameters) {
 
       /*
        * The specular model is not sampled for direct lighting because the light
@@ -60,9 +60,10 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, Vec3 surfaceNormal,
-         final double... materialCoords) {
-      if (radianceSampleDirection.dot(surfaceNormal) > 0) {
+   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+         final MaterialInfo parameters) {
+      Vec3 surfaceNormal = parameters.surfaceNormal;
+      if (wIncoming.dot(surfaceNormal) > 0) {
          // TODO: reflection at both interfaces of refractive material?
          // sampleOut.transmissionSpectrum.clear();
          surfaceNormal = surfaceNormal.inverted();
@@ -73,7 +74,7 @@ public class PhongSpecularBRDF implements Material {
        * Compute the mirror reflection vector...
        */
       final Vec3 directionOut = sampleOut.direction;
-      directionOut.set(radianceSampleDirection);
+      directionOut.set(wIncoming);
       directionOut.reflect(surfaceNormal);
 
       if (specExp < 100000) {
@@ -118,7 +119,7 @@ public class PhongSpecularBRDF implements Material {
             directionOut.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
          }
       }
-      sampleOut.transmissionSpectrum.set(specular.getColor(materialCoords));
+      sampleOut.transmissionSpectrum.set(specular.getColor(parameters.materialCoords));
       sampleOut.emissiveResponse = true;
    }
 

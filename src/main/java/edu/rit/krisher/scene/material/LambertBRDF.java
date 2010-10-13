@@ -16,13 +16,13 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
       emissionOut.set(0, 0, 0);
    }
 
    @Override
-   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
+   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+         final MaterialInfo parameters) {
       /*
        * BRDF = 1/pi * diffuse
        */
@@ -30,9 +30,10 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, Vec3 surfaceNormal,
-         final double... materialCoords) {
-      if (radianceSampleDirection.dot(surfaceNormal) > 0) {
+   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+         final MaterialInfo parameters) {
+      Vec3 surfaceNormal = parameters.surfaceNormal;
+      if (wIncoming.dot(surfaceNormal) > 0) {
          surfaceNormal = surfaceNormal.inverted();
       }
 
@@ -80,7 +81,7 @@ public class LambertBRDF implements Material, Cloneable {
        * Here we just return the spectral response (color), Li is handled in the
        * Path-Tracer engine.
        */
-      sampleOut.transmissionSpectrum.set(diffuse.getColor(materialCoords));
+      sampleOut.transmissionSpectrum.set(diffuse.getColor(parameters.materialCoords));
       sampleOut.emissiveResponse = false;
 
    }

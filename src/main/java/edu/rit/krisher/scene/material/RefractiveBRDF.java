@@ -29,13 +29,13 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
       emissionOut.clear();
    }
 
    @Override
-   public void getIrradianceResponse(final Color colorOut, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
+   public void getIrradianceResponse(final Color colorOut, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+         final MaterialInfo parameters) {
       /*
        * Like Phong specular, do not compute direct illumination, this will be
        * handled by highly specular bounces from irradiance sampling.
@@ -62,10 +62,10 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, final Vec3 surfaceNormal,
-         final double... materialCoords) {
-      final Vec3 sNormal = new Vec3(surfaceNormal);
-      double cosSampleAndNormal = radianceSampleDirection.dot(sNormal);
+   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+         final MaterialInfo parameters) {
+      final Vec3 sNormal = new Vec3(parameters.surfaceNormal);
+      double cosSampleAndNormal = wIncoming.dot(sNormal);
 
       final double rIdxRatio;
       final boolean exiting;
@@ -89,7 +89,7 @@ public class RefractiveBRDF implements Material {
          /*
           * Total internal reflection
           */
-         sampleOut.direction.set(radianceSampleDirection).reflect(sNormal);
+         sampleOut.direction.set(wIncoming).reflect(sNormal);
          /*
           * TODO: adjust the transmission spectrum...
           */
@@ -98,7 +98,7 @@ public class RefractiveBRDF implements Material {
          /*
           * Refraction
           */
-         sampleOut.direction.set(radianceSampleDirection).multiply(rIdxRatio);
+         sampleOut.direction.set(wIncoming).multiply(rIdxRatio);
          sampleOut.direction.scaleAdd(sNormal, (rIdxRatio * cosSampleAndNormal - Math.sqrt(snellRoot)));
 
          if (exp < 100000) {
@@ -135,7 +135,7 @@ public class RefractiveBRDF implements Material {
             final Vec3 v = new Vec3(u).cross(sampleOut.direction);
 
             sampleOut.direction.multiply(cosA).scaleAdd(u, xb).scaleAdd(v, yb);
-            if (sampleOut.direction.dot(surfaceNormal) < 0) {
+            if (sampleOut.direction.dot(parameters.surfaceNormal) < 0) {
                sampleOut.direction.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
             }
          }

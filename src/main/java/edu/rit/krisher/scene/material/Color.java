@@ -49,14 +49,13 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 responseDirection, final Vec3 surfaceNormal,
-         final double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 responseDirection, final MaterialInfo parameters) {
       emissionOut.set(this);
    }
 
    @Override
-   public void getIrradianceResponse(final Color colorOut, final Vec3 responseDirection, final Random rng,
-         final Vec3 incomingDirection, final MaterialInfo parameters) {
+   public void getIrradianceResponse(final Color colorOut, final Vec3 responseDirection, final Vec3 incomingDirection,
+         final MaterialInfo parameters) {
       colorOut.set(0, 0, 0);
    }
 
@@ -86,8 +85,8 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection,
-         final Vec3 surfaceNormal, final double... materialCoords) {
+   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+         final MaterialInfo parameters) {
       sampleOut.transmissionSpectrum.clear();
       // No lighting response...
    }

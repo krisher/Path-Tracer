@@ -38,10 +38,10 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
       double r = 0, g = 0, b = 0;
       for (final Material mat : materials.array) {
-         mat.getEmissionColor(emissionOut, sampleDirection, surfaceNormal, materialCoords);
+         mat.getEmissionColor(emissionOut, sampleDirection, parameters);
          r += emissionOut.r;
          g += emissionOut.g;
          b += emissionOut.b;
@@ -50,16 +50,13 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
-
-      // final double rand = rng.nextDouble();
-      // if (rand < kd) {
+   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+         final MaterialInfo parameters) {
       final Material[] mats = materials.array;
       final Double[] P = probabilities.array;
       double r = 0, g = 0, b = 0;
       for (int i = 0; i < mats.length; i++) {
-         mats[i].getIrradianceResponse(radiance, sampleDirection, rng, incidentLightDirection, parameters);
+         mats[i].getIrradianceResponse(radiance, sampleDirection, incidentLightDirection, parameters);
          r += P[i] * radiance.r;
          g += P[i] * radiance.g;
          b += P[i] * radiance.b;
@@ -69,8 +66,8 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleIrradiance(final SampleRay sampleOut, final Random rng, final Vec3 radianceSampleDirection, final Vec3 surfaceNormal,
-         final double... materialCoords) {
+   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+         final MaterialInfo parameters) {
 
       final double sampleType = rng.nextDouble();
       double cumP = 0;
@@ -79,7 +76,7 @@ public class CompositeBRDF implements Material, Cloneable {
       for (int i = 0; i < mats.length; i++) {
          cumP += P[i];
          if (sampleType < cumP) {
-            mats[i].sampleIrradiance(sampleOut, rng, radianceSampleDirection, surfaceNormal, materialCoords);
+            mats[i].sampleInteraction(sampleOut, rng, wIncoming, parameters);
             return;
          }
       }

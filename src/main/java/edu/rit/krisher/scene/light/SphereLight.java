@@ -3,15 +3,14 @@ package edu.rit.krisher.scene.light;
 import java.util.Random;
 
 import edu.rit.krisher.scene.EmissiveGeometry;
-import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
-public class SphereLight extends Sphere implements EmissiveGeometry {
+public final class SphereLight extends Sphere implements EmissiveGeometry {
 
-   public SphereLight(final Vec3 center, final double radius, final Material material) {
+   public SphereLight(final Vec3 center, final double radius, final Color material) {
       super(center, radius, material);
    }
 
@@ -57,7 +56,7 @@ public class SphereLight extends Sphere implements EmissiveGeometry {
       directionOut.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth)
       .scaleAdd(nv, Math.sin(randomPolar) * sinRandomAzimuth);
 
-      material.getEmissionColor(radianceOut, directionOut, directionOut.inverted(), null);
+      material.getEmissionColor(radianceOut, directionOut, null);
 
       final Ray emissionSampler = new Ray(origin, directionOut);
       final double isectDist = emissionSampler.intersectsSphere(center, radius);

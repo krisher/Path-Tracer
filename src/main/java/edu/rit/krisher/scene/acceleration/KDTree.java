@@ -204,15 +204,15 @@ public class KDTree implements Geometry {
       public void visit(int depth, AxisAlignedBoundingBox nodeBounds, KDNodeVisitor vistor) throws Exception;
    }
 
-   private static class KDInteriorNode implements KDNode {
+   private static final class KDInteriorNode implements KDNode {
       private KDNode lessChild;
       private KDNode greaterChild;
       private final double splitLocation;
-      private final byte axis;
+      private final int axis;
 
       KDInteriorNode(final double splitLocation, final int splitAxis) {
          this.splitLocation = splitLocation;
-         this.axis = (byte) splitAxis;
+         this.axis = splitAxis;
       }
 
       @Override
@@ -300,7 +300,7 @@ public class KDTree implements Geometry {
       }
    }
 
-   private class KDLeafNode implements KDNode {
+   private final class KDLeafNode implements KDNode {
       private final int[] primitives;
 
       public KDLeafNode(final int[] primitives) {

@@ -21,6 +21,14 @@ public class MaterialInfo extends GeometryIntersection {
    /**
     * The surface normal at the hit location.
     */
-   public final Vec3 surfaceNormal = new Vec3(0,1,0);
+   public final Vec3 surfaceNormal;
 
+
+   public MaterialInfo() {
+      surfaceNormal = new Vec3(0, 1, 0);
+   }
+
+   public MaterialInfo(final Vec3 surfaceNormal) {
+      this.surfaceNormal = surfaceNormal;
+   }
 }

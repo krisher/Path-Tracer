@@ -234,7 +234,7 @@ public final class PathTracer {
              * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
              */
             if (ray.emissiveResponse) {
-               shadingInfo.material.getEmissionColor(sampleColor, ray.direction, shadingInfo.surfaceNormal, shadingInfo.materialCoords);
+               shadingInfo.material.getEmissionColor(sampleColor, ray.direction, shadingInfo);
             } else
                sampleColor.set(0, 0, 0);
 
@@ -298,7 +298,7 @@ public final class PathTracer {
                          * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
                          * ray with the response of the material...
                          */
-                        shadingInfo.material.getIrradianceResponse(lightResponse, ray.direction, rng, shadowRay.direction, shadingInfo);
+                        shadingInfo.material.getIrradianceResponse(lightResponse, ray.direction, shadowRay.direction, shadingInfo);
 
                         final double diffAngle = (cosWi * cosWo) / (lightDist * lightDist);
                         sampleColor.scaleAdd(lightEnergy.r * lightResponse.r, lightEnergy.g * lightResponse.g, lightEnergy.b
@@ -316,7 +316,7 @@ public final class PathTracer {
                   /*
                    * Russian roulette for variance reduction.
                    */
-                  && rng.nextFloat() >= 1 / 6.0) {
+                  && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
                final SampleRay outRay = rays[outRayCount];
                /*
                 * Preserve the current extinction, this is only modified when the ray passes through a refractive
@@ -325,8 +325,9 @@ public final class PathTracer {
                outRay.extinction.set(ray.extinction);
                outRay.origin.set(hitPoint);
                outRay.reset();
-               shadingInfo.material.sampleIrradiance(outRay, rng, new Vec3(ray.direction), shadingInfo.surfaceNormal, shadingInfo.materialCoords);
+               shadingInfo.material.sampleInteraction(outRay, rng, ray.direction, shadingInfo);
                if (!outRay.transmissionSpectrum.isZero()) {
+                  // TODO: scale transmission by probability of reaching this depth due to RR.
                   outRay.transmissionSpectrum.multiply(rTransmission, gTransmission, bTransmission);
 
                   outRay.pixelX = ray.pixelX;
