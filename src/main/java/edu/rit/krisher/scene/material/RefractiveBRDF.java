@@ -4,6 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class RefractiveBRDF implements Material {
@@ -33,8 +34,8 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void getDirectIlluminationTransport(final Color colorOut, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getIrradianceResponse(final Color colorOut, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
       /*
        * Like Phong specular, do not compute direct illumination, this will be
        * handled by highly specular bounces from irradiance sampling.

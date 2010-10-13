@@ -4,6 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class LambertBRDF implements Material, Cloneable {
@@ -20,12 +21,12 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getDirectIlluminationTransport(final Color radiance, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
       /*
        * BRDF = 1/pi * diffuse
        */
-      radiance.scaleSet(this.diffuse.getColor(materialCoords), 1.0 / Math.PI);
+      radiance.scaleSet(this.diffuse.getColor(parameters.materialCoords), 1.0 / Math.PI);
    }
 
    @Override

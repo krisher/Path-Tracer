@@ -52,7 +52,7 @@ public final class PathTracer {
     * Values will always be >= 0, but are unbounded in magnitude.
     */
    private float[] pixels;
-   private final MaterialInfo hitData = new MaterialInfo();
+   private final MaterialInfo shadingInfo = new MaterialInfo();
 
    /**
     * Creates a new path tracer.
@@ -215,7 +215,7 @@ public final class PathTracer {
                 */
                continue;
             }
-            hit.getHitData(hitData, hitPrimitive, ray, intersectDist);
+            hit.getHitData(shadingInfo, hitPrimitive, ray, intersectDist);
 
             /*
              * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
@@ -234,7 +234,7 @@ public final class PathTracer {
              * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
              */
             if (ray.emissiveResponse) {
-               hitData.material.getEmissionColor(sampleColor, ray.direction, hitData.surfaceNormal, hitData.materialCoords);
+               shadingInfo.material.getEmissionColor(sampleColor, ray.direction, shadingInfo.surfaceNormal, shadingInfo.materialCoords);
             } else
                sampleColor.set(0, 0, 0);
 
@@ -259,12 +259,12 @@ public final class PathTracer {
              * relfection/refraction distributions are typically constrained to a small solid angle, they only respond
              * to light coming from directions that will be sampled via bounce rays.
              */
-            if (hitData.material.shouldSampleDirectIllumination()) {
+            if (shadingInfo.material.shouldSampleDirectIllumination()) {
                /*
                 * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface
                 * normal vector to avoid self-intersecting the same point due to round-off error.
                 */
-               shadowRay.origin.set(hitPoint).scaleAdd(hitData.surfaceNormal, Constants.EPSILON_D);
+               shadowRay.origin.set(hitPoint).scaleAdd(shadingInfo.surfaceNormal, Constants.EPSILON_D);
 
                for (final EmissiveGeometry light : lights) {
                   /*
@@ -274,7 +274,7 @@ public final class PathTracer {
                   /*
                    * Cosine of the angle between the geometry surface normal and the shadow ray direction
                    */
-                  final double cosWi = shadowRay.direction.dot(hitData.surfaceNormal);
+                  final double cosWi = shadowRay.direction.dot(shadingInfo.surfaceNormal);
                   if (cosWi > 0) {
                      /*
                       * Determine whether the light source is visible from the irradiated point
@@ -298,7 +298,7 @@ public final class PathTracer {
                          * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
                          * ray with the response of the material...
                          */
-                        hitData.material.getDirectIlluminationTransport(lightResponse, ray.direction, rng, shadowRay.direction, hitData.surfaceNormal, hitData.materialCoords);
+                        shadingInfo.material.getIrradianceResponse(lightResponse, ray.direction, rng, shadowRay.direction, shadingInfo);
 
                         final double diffAngle = (cosWi * cosWo) / (lightDist * lightDist);
                         sampleColor.scaleAdd(lightEnergy.r * lightResponse.r, lightEnergy.g * lightResponse.g, lightEnergy.b
@@ -325,7 +325,7 @@ public final class PathTracer {
                outRay.extinction.set(ray.extinction);
                outRay.origin.set(hitPoint);
                outRay.reset();
-               hitData.material.sampleIrradiance(outRay, rng, new Vec3(ray.direction), hitData.surfaceNormal, hitData.materialCoords);
+               shadingInfo.material.sampleIrradiance(outRay, rng, new Vec3(ray.direction), shadingInfo.surfaceNormal, shadingInfo.materialCoords);
                if (!outRay.transmissionSpectrum.isZero()) {
                   outRay.transmissionSpectrum.multiply(rTransmission, gTransmission, bTransmission);
 

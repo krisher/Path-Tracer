@@ -4,6 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class Color implements Material, Texture {
@@ -54,8 +55,8 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void getDirectIlluminationTransport(final Color colorOut, final Vec3 responseDirection, final Random rng,
-         final Vec3 incomingDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getIrradianceResponse(final Color colorOut, final Vec3 responseDirection, final Random rng,
+         final Vec3 incomingDirection, final MaterialInfo parameters) {
       colorOut.set(0, 0, 0);
    }
 

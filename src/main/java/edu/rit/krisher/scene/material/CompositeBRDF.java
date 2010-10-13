@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.collections.CopyOnWriteArrayList;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -49,8 +50,8 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getDirectIlluminationTransport(final Color radiance, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
 
       // final double rand = rng.nextDouble();
       // if (rand < kd) {
@@ -58,8 +59,7 @@ public class CompositeBRDF implements Material, Cloneable {
       final Double[] P = probabilities.array;
       double r = 0, g = 0, b = 0;
       for (int i = 0; i < mats.length; i++) {
-         mats[i].getDirectIlluminationTransport(radiance, sampleDirection, rng, incidentLightDirection, surfaceNormal,
-                                                materialCoords);
+         mats[i].getIrradianceResponse(radiance, sampleDirection, rng, incidentLightDirection, parameters);
          r += P[i] * radiance.r;
          g += P[i] * radiance.g;
          b += P[i] * radiance.b;

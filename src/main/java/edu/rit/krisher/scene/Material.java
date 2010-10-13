@@ -20,11 +20,9 @@ import edu.rit.krisher.vecmath.Vec3;
 public interface Material {
 
    /**
-    * Computes and returns a spectral response function (given the spectrum of
-    * incident light, returns the reflected/transmitted spectrum) given a sample
-    * direction, incident light direction, surface normal, and material specific
-    * coordinates of the reflection/transmission point. This is effectively a
-    * BRDF/BTDF function.
+    * Computes and returns a spectral response function (given the spectrum of incident light, returns the
+    * reflected/transmitted spectrum) given a sample direction, incident light direction, surface normal, and material
+    * specific coordinates of the reflection/transmission point. This is effectively a BRDF/BTDF function.
     * 
     * <p>
     * The returned value represents the percentage of the incoming radiant intensity (W/sr) that is transmitted, so
@@ -34,24 +32,19 @@ public interface Material {
     * fluorescence.
     * 
     * @param colorOut
-    *           the resulting color.
-    * @param sampleDirection
-    *           A normalized vector toward the material intersection point from
-    *           the point where the transmitted/reflected spectrum is being
-    *           sampled.
+    *           the resulting color response.
+    * @param wOutgoing
+    *           A normalized vector toward the material intersection point from the point where the
+    *           transmitted/reflected spectrum is being sampled.
     * @param rng
-    *           TODO
-    * @param incidentLightDirection
-    *           A normalized vector toward the incident light source from the
-    *           material intersection point.
-    * @param surfaceNormal
-    *           The surface normal of the geometry where the intersection
-    *           occurred.
-    * @param materialCoords
-    *           Material specific coordinates.
+    *           A random number generator to use
+    * @param wIncoming
+    *           A normalized vector toward the incident light source from the material intersection point.
+    * @param parameters
+    *           Material parameters including surface normal of the geometry where the intersection occurred, and
+    *           texture/material coordinates.
     **/
-   public void getDirectIlluminationTransport(Color colorOut, Vec3 sampleDirection, Random rng,
-         Vec3 incidentLightDirection, Vec3 surfaceNormal, double... materialCoords);
+   public void getIrradianceResponse(Color colorOut, Vec3 wOutgoing, Random rng, Vec3 wIncoming, MaterialInfo parameters);
 
    /**
     * Computes and returns the emissive color given the specified sample

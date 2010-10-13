@@ -4,6 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class PhongSpecularBRDF implements Material {
@@ -32,8 +33,8 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void getDirectIlluminationTransport(final Color radiance, final Vec3 sampleDirection, final Random rng,
-         final Vec3 incidentLightDirection, final Vec3 surfaceNormal, final double... materialCoords) {
+   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Random rng,
+         final Vec3 incidentLightDirection, final MaterialInfo parameters) {
 
       /*
        * The specular model is not sampled for direct lighting because the light

@@ -115,7 +115,7 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
+   public final double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
       double isectDist = Double.POSITIVE_INFINITY;
 
       int isectTri = -1;
@@ -136,7 +136,7 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public double intersectsPrimitive(final Ray ray, final double maxDistance,
+   public final double intersectsPrimitive(final Ray ray, final double maxDistance,
          final int primitiveID) {
       final int triangleIndexOffset = primitiveID * 3;
       return vertices.intersectsTriangle(ray, triangleIndices[triangleIndexOffset], triangleIndices[triangleIndexOffset + 1], triangleIndices[triangleIndexOffset + 2]);
