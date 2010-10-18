@@ -26,7 +26,8 @@ public class LambertBRDF implements Material, Cloneable {
       /*
        * BRDF = 1/pi * diffuse
        */
-      radiance.scaleSet(this.diffuse.getColor(parameters.materialCoords), 1.0 / Math.PI);
+      final Color diffColor = this.diffuse.getColor(parameters.materialCoords);
+      radiance.multiply(diffColor.r / Math.PI, diffColor.g / Math.PI, diffColor.b / Math.PI);
    }
 
    @Override

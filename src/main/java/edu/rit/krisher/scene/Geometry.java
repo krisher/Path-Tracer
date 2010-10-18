@@ -64,6 +64,7 @@ public interface Geometry {
     */
    public double intersects(GeometryIntersection intersection, Ray ray, double maxDistance);
 
+
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.
     * 

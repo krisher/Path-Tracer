@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
@@ -28,23 +29,7 @@ public final class PathTracer {
    /**
     * Overridden to remove thread safety overhead
     */
-   private final Random rng = new Random() {
-      private long seed;
-      private final static long multiplier = 0x5DEECE66DL;
-      private final static long addend = 0xBL;
-      private final static long mask = (1L << 48) - 1;
-
-      @Override
-      public final void setSeed(final long seed) {
-         this.seed = (seed ^ multiplier) & mask;
-      }
-
-      @Override
-      protected final int next(final int bits) {
-         seed = (seed * multiplier + addend) & mask;
-         return (int) (seed >>> (48 - bits));
-      }
-   };
+   private final Random rng = new UnsafePRNG();
 
    /*
     * Buffer to collect rgb pixel data
@@ -154,13 +139,9 @@ public final class PathTracer {
    private final void processRays(final WorkItem workItem, final SampleRay[] rays) {
 
       final Color sampleColor = new Color(0, 0, 0);
-      final Color lightResponse = new Color(0, 0, 0);
-      final Color lightEnergy = new Color(0, 0, 0);
 
       final Geometry[] geometry = workItem.scene.getGeometry();
       final EmissiveGeometry[] lights = workItem.scene.getLightSources();
-      final Ray shadowRay = new Ray(new Vec3(0, 0, 0), new Vec3(0, 0, 0));
-      final Vec3 directLightNormal = new Vec3();
 
       final Color bg = workItem.scene.getBackground();
       /*
@@ -169,7 +150,6 @@ public final class PathTracer {
        * The active rays are always contiguous from the beginning of the rays array.
        */
       int activeRayCount = rays.length;
-      final GeometryIntersection intersectionInfo = new GeometryIntersection();
       /*
        * All active rays are at the same depth into the path (# of bounces from the initial eye ray). Process until we
        * reach the maximum depth, or all rays have terminated.
@@ -190,12 +170,12 @@ public final class PathTracer {
             int hitPrimitive = -1;
 
             for (final Geometry geom : geometry) {
-               intersectionInfo.primitiveID = -1;
-               final double d = geom.intersects(intersectionInfo, ray, intersectDist);
+               shadingInfo.primitiveID = -1;
+               final double d = geom.intersects(shadingInfo, ray, intersectDist);
                if (d > 0 && d < intersectDist) {
                   intersectDist = d;
                   hit = geom;
-                  hitPrimitive = intersectionInfo.primitiveID;
+                  hitPrimitive = shadingInfo.primitiveID;
                }
             }
             if (intersectDist == Double.POSITIVE_INFINITY) {
@@ -215,6 +195,11 @@ public final class PathTracer {
                 */
                continue;
             }
+
+            /*
+             * The intersection point. Saved because this data may be overwritten when generating the next path segment.
+             */
+            ray.getPointOnRay(shadingInfo.hitLocation, intersectDist);
             hit.getHitData(shadingInfo, hitPrimitive, ray, intersectDist);
 
             /*
@@ -249,10 +234,7 @@ public final class PathTracer {
             final double bTransmission = ray.transmissionSpectrum.b
             * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
 
-            /*
-             * The intersection point. Saved because this data may be overwritten when generating the next path segment.
-             */
-            final Vec3 hitPoint = ray.getPointOnRay(intersectDist);
+
 
             /*
              * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -260,53 +242,7 @@ public final class PathTracer {
              * to light coming from directions that will be sampled via bounce rays.
              */
             if (shadingInfo.material.shouldSampleDirectIllumination()) {
-               /*
-                * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface
-                * normal vector to avoid self-intersecting the same point due to round-off error.
-                */
-               shadowRay.origin.set(hitPoint).scaleAdd(shadingInfo.surfaceNormal, Constants.EPSILON_D);
-
-               for (final EmissiveGeometry light : lights) {
-                  /*
-                   * Generate a random sample direction that hits the light
-                   */
-                  double lightDist = light.sampleEmissiveRadiance(shadowRay.direction, lightEnergy, directLightNormal, shadowRay.origin, rng);
-                  /*
-                   * Cosine of the angle between the geometry surface normal and the shadow ray direction
-                   */
-                  final double cosWi = shadowRay.direction.dot(shadingInfo.surfaceNormal);
-                  if (cosWi > 0) {
-                     /*
-                      * Determine whether the light source is visible from the irradiated point
-                      */
-                     for (final Geometry geom : geometry) {
-                        if (geom != light) {
-                           final double t = geom.intersects(intersectionInfo, shadowRay, Double.POSITIVE_INFINITY);
-                           if (t > 0 && t < lightDist) {
-                              lightDist = 0;
-                              break;
-                           }
-                        }
-                     }
-                     if (lightDist > 0) {
-                        /*
-                         * Cosine of the angle between the light sample point's normal and the shadow ray.
-                         */
-                        final double cosWo = -directLightNormal.dot(shadowRay.direction);
-
-                        /*
-                         * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
-                         * ray with the response of the material...
-                         */
-                        shadingInfo.material.getIrradianceResponse(lightResponse, ray.direction, shadowRay.direction, shadingInfo);
-
-                        final double diffAngle = (cosWi * cosWo) / (lightDist * lightDist);
-                        sampleColor.scaleAdd(lightEnergy.r * lightResponse.r, lightEnergy.g * lightResponse.g, lightEnergy.b
-                                             * lightResponse.b, diffAngle);
-                     }
-                  }
-
-               }
+               integrateDirectIllumination(sampleColor, geometry, lights, ray, shadingInfo, rng);
             }
 
             /*
@@ -323,7 +259,7 @@ public final class PathTracer {
                 * interface, at which point the extinction is changed in the Material model.
                 */
                outRay.extinction.set(ray.extinction);
-               outRay.origin.set(hitPoint);
+               outRay.origin.set(shadingInfo.hitLocation);
                outRay.reset();
                shadingInfo.material.sampleInteraction(outRay, rng, ray.direction, shadingInfo);
                if (!outRay.transmissionSpectrum.isZero()) {
@@ -351,6 +287,61 @@ public final class PathTracer {
          }
          activeRayCount = outRayCount;
       }
+   }
+
+   private static final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
+         final EmissiveGeometry[] lights, final SampleRay woRay,
+         final MaterialInfo shadingInfo, final Random rng) {
+      final Color lightEnergy = new Color(0, 0, 0);
+      final Vec3 directLightNormal = new Vec3();
+      final GeometryIntersection isect = new GeometryIntersection();
+      /*
+       * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
+       * vector to avoid self-intersecting the same point due to round-off error.
+       */
+      final Ray shadowRay = new Ray(new Vec3(shadingInfo.hitLocation).scaleAdd(shadingInfo.surfaceNormal, Constants.EPSILON_D), new Vec3());
+
+      for (final EmissiveGeometry light : lights) {
+         /*
+          * Generate a random sample direction that hits the light
+          */
+         double lightDist = light.sampleEmissiveRadiance(shadowRay.direction, lightEnergy, directLightNormal, shadowRay.origin, rng);
+         /*
+          * Cosine of the angle between the geometry surface normal and the shadow ray direction
+          */
+         final double cosWi = shadowRay.direction.dot(shadingInfo.surfaceNormal);
+         if (cosWi > 0) {
+            /*
+             * Determine whether the light source is visible from the irradiated point
+             */
+            for (final Geometry geom : geometry) {
+               if (geom != light) {
+                  final double isectDist = geom.intersects(isect, shadowRay, lightDist);
+                  if (isectDist > 0 && isectDist < lightDist) {
+                     lightDist = 0;
+                     break;
+                  }
+               }
+            }
+            if (lightDist > 0) {
+               /*
+                * Cosine of the angle between the light sample point's normal and the shadow ray.
+                */
+               final double cosWo = -directLightNormal.dot(shadowRay.direction);
+
+               /*
+                * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
+                * the response of the material...
+                */
+               shadingInfo.material.getIrradianceResponse(lightEnergy, woRay.direction, shadowRay.direction, shadingInfo);
+
+               final double diffAngle = (cosWi * cosWo) / (lightDist * lightDist);
+               irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, diffAngle);
+            }
+         }
+
+      }
+
    }
 
 }

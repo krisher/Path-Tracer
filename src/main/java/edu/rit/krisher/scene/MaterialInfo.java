@@ -23,6 +23,11 @@ public class MaterialInfo extends GeometryIntersection {
     */
    public final Vec3 surfaceNormal;
 
+   /**
+    * The hit location where the intersection occurred.
+    */
+   public final Vec3 hitLocation = new Vec3();
+
 
    public MaterialInfo() {
       surfaceNormal = new Vec3(0, 1, 0);

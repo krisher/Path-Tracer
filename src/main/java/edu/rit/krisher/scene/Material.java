@@ -31,8 +31,9 @@ public interface Material {
     * TODO: return a spectral response function instead of a color for improved color accuracy and support for
     * fluorescence.
     * 
-    * @param colorOut
-    *           the resulting color response.
+    * @param colorInOut
+    *           On input, this is the color of the light incident on the material, on output, stores the resulting color
+    *           response.
     * @param wOutgoing
     *           A normalized vector toward the material intersection point from the point where the
     *           transmitted/reflected spectrum is being sampled.
@@ -42,7 +43,7 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     **/
-   public void getIrradianceResponse(Color colorOut, Vec3 wOutgoing, Vec3 wIncoming, MaterialInfo parameters);
+   public void getIrradianceResponse(Color colorInOut, Vec3 wOutgoing, Vec3 wIncoming, MaterialInfo parameters);
 
    /**
     * Computes and returns the emissive color given the specified sample direction, surface normal and material

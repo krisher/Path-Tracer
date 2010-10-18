@@ -52,6 +52,8 @@ public class CompositeBRDF implements Material, Cloneable {
    @Override
    public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
          final MaterialInfo parameters) {
+      // FIXME: radiance is an input parameter (as well as output), need to either reset it to original value between
+      // each sample, or only sample one material.
       final Material[] mats = materials.array;
       final Double[] P = probabilities.array;
       double r = 0, g = 0, b = 0;

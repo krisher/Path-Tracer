@@ -32,6 +32,12 @@ public class Ray {
       return new Vec3(origin).scaleAdd(direction, distance);
    }
 
+   public final void getPointOnRay(final Vec3 resultOut, final double distance) {
+      resultOut.x = origin.x + direction.x * distance;
+      resultOut.y = origin.y + direction.y * distance;
+      resultOut.z = origin.z + direction.z * distance;
+   }
+
    public Ray getTransformedInstance(final Transform t) {
       return new Ray(t.transformPoint(new Vec3(origin)), t.transformVec(new Vec3(direction)));
    }
@@ -39,7 +45,7 @@ public class Ray {
    public double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
       final double[] result = new double[2];
       if (intersectsBoxParametric(result, new Vec3(center.x - xSize, center.y - ySize, center.z - zSize), new Vec3(center.x
-            + xSize, center.y + ySize, center.z + zSize))) {
+                                                                                                                   + xSize, center.y + ySize, center.z + zSize))) {
          return result[0] > 0 ? result[0] : result[1];
       }
       return 0;
@@ -238,13 +244,13 @@ public class Ray {
        * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
        * defined at the vertex locations:
        */
-//      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
+      //      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
       final double e1Factor = (pX * translatedOriginX + pY * translatedOriginY + pZ * translatedOriginZ) / divisor;
       if (e1Factor < 0 || e1Factor > 1) {
          return 0;
       }
 
-//      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
+      //      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
       final double e2Factor = (qX * direction.x + qY * direction.y + qZ * direction.z) / divisor;
       if (e2Factor < 0 || e2Factor + e1Factor > 1) {
          return 0;
@@ -253,7 +259,7 @@ public class Ray {
       // return Vec3.dot(qX, qY, qZ, e1X, e1Y, e1Z) / divisor;
       return (qX * e1X + qY * e1Y + qZ * e1Z) / divisor;
    }
-   
+
    /**
     * Moller-Trumbore intersection test
     * (http://www.graphics.cornell.edu/pubs/1997/MT97.html).
@@ -291,13 +297,13 @@ public class Ray {
        * Barycentric coords also result from this formulation, which could be useful for interpolating attributes
        * defined at the vertex locations:
        */
-//      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
+      //      final double e1Factor = Vec3.dot(pX, pY, pZ, translatedOriginX, translatedOriginY, translatedOriginZ) / divisor;
       final double e1Factor = (pX * translatedOriginX + pY * translatedOriginY + pZ * translatedOriginZ) / divisor;
       if (e1Factor < 0 || e1Factor > 1) {
          return false;
       }
 
-//      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
+      //      final double e2Factor = Vec3.dot(qX, qY, qZ, direction.x, direction.y, direction.z) / divisor;
       final double e2Factor = (qX * direction.x + qY * direction.y + qZ * direction.z) / divisor;
       if (e2Factor < 0 || e2Factor + e1Factor > 1) {
          return false;

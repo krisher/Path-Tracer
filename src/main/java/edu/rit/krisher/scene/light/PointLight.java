@@ -49,6 +49,7 @@ public class PointLight implements EmissiveGeometry {
       return -1;
    }
 
+
    @Override
    public double intersectsPrimitive(final Ray ray, final double maxDistance,
          final int primitiveID) {
