@@ -93,7 +93,7 @@ public class RefractiveBRDF implements Material {
          /*
           * TODO: adjust the transmission spectrum...
           */
-         sampleOut.transmissionSpectrum.set(1, 1, 1);
+         sampleOut.sampleColor.set(1, 1, 1);
       } else {
          /*
           * Refraction
@@ -140,7 +140,7 @@ public class RefractiveBRDF implements Material {
             }
          }
 
-         sampleOut.transmissionSpectrum.set(1, 1, 1);
+         sampleOut.sampleColor.set(1, 1, 1);
          if (!exiting)
             sampleOut.extinction.set(transmissionFilter);
          else

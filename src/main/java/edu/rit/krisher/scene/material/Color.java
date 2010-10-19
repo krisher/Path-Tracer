@@ -87,7 +87,7 @@ public class Color implements Material, Texture {
    @Override
    public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
-      sampleOut.transmissionSpectrum.clear();
+      sampleOut.sampleColor.clear();
       // No lighting response...
    }
 

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.raytracer.sampling.JitteredStratifiedRectangleSampling;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
@@ -38,6 +39,7 @@ public final class PathTracer {
     */
    private float[] pixels;
    private final MaterialInfo shadingInfo = new MaterialInfo();
+   private final JitteredStratifiedRectangleSampling pixelSampler = new JitteredStratifiedRectangleSampling(1);
 
    /**
     * Creates a new path tracer.
@@ -64,44 +66,30 @@ public final class PathTracer {
             Arrays.fill(pixels, 0);
 
          final Dimension imageSize = workItem.image.getResolution();
-         final float xCenter = imageSize.width / 2.0f;
-         final float yCenter = imageSize.height / 2.0f;
          final double sampleWeight = 1.0 / (workItem.pixelSampleRate * workItem.pixelSampleRate);
-         final double sampleDelta = 1.0 / workItem.pixelSampleRate;
 
          final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate];
-         for (int i = 0; i < rays.length; i++) {
-            rays[i] = new SampleRay(new Vec3(), new Vec3(), sampleWeight, 0, 0);
+         int rayIdx = 0;
+         for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
+            for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
+               /*
+                * Use of 1/<samples-per-pixel> as the sample weight effectively applies a single-pixel wide box filter
+                * to average the samples. It may be benificial to try other filters...
+                */
+               rays[rayIdx++] = new SampleRay(sampleWeight);
+            }
          }
+         pixelSampler.resize(workItem.pixelSampleRate);
          /*
           * Eye ray generation state
           */
          for (int pixelY = 0; pixelY < workItem.blockHeight; pixelY++) {
             for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
-               // TODO: Adaptive sampling...
-               int rayIdx = 0;
+               rayIdx = 0;
+               pixelSampler.generateSamples(rng);
                for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
                   for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
-                     /*
-                      * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
-                      * small square region of the pixel area for each sample.
-                      * 
-                      * This is not quite as good as a true Poisson distribution, but a reasonable approximation for
-                      * this purpose.
-                      */
-                     final double xSRand = rng.nextDouble();
-                     final double ySRand = rng.nextDouble();
-                     /*
-                      * Compute normalized image coordinates (-1 to 1 for the full range of the camera's FoV angle).
-                      * 
-                      * Note that both x and y are normalized based on the width, so the FoV represents a horizontal
-                      * range.
-                      */
-                     final double x = ((pixelX + workItem.blockStartX + (sampleDelta * (sampleX + xSRand))) - xCenter)
-                     / xCenter;
-                     final double y = ((pixelY + workItem.blockStartY + (sampleDelta * (sampleY + ySRand))) - yCenter)
-                     / xCenter;
-                     final SampleRay ray = rays[rayIdx++];
+                     final SampleRay ray = rays[rayIdx];
                      /*
                       * Reset the ray state since we are probably re-using each instance many times.
                       */
@@ -110,14 +98,19 @@ public final class PathTracer {
                      /*
                       * The contribution of the path is bounded by 1 / (samples per pixel)
                       */
-                     ray.transmissionSpectrum.set(sampleWeight, sampleWeight, sampleWeight);
+                     ray.sampleColor.set(sampleWeight, sampleWeight, sampleWeight);
                      /*
                       * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
                       * directly visible)
                       */
                      ray.emissiveResponse = true;
                      ray.extinction.clear();
-                     workItem.camera.initSampleRay(ray, x, y, rng);
+                     final double x = 2.0 * (workItem.blockStartX + pixelX + pixelSampler.xSamples[rayIdx])
+                     / imageSize.width - 1.0;
+                     final double y = 2.0 * (workItem.blockStartY + pixelY + pixelSampler.ySamples[rayIdx])
+                     / imageSize.height - 1.0;
+                     workItem.camera.sample(ray, x, y, rng);
+                     ++rayIdx;
                   }
                }
                /*
@@ -186,9 +179,9 @@ public final class PathTracer {
                 */
                // if (ray.emissiveResponse) {
                final int dst = 3 * (ray.pixelY * workItem.blockWidth + ray.pixelX);
-               pixels[dst] += bg.r * ray.transmissionSpectrum.r;
-               pixels[dst + 1] += bg.g * ray.transmissionSpectrum.g;
-               pixels[dst + 2] += bg.b * ray.transmissionSpectrum.b;
+               pixels[dst] += bg.r * ray.sampleColor.r;
+               pixels[dst + 1] += bg.g * ray.sampleColor.g;
+               pixels[dst + 2] += bg.b * ray.sampleColor.b;
                // }
                /*
                 * This path is terminated.
@@ -227,14 +220,12 @@ public final class PathTracer {
              * Save the transmission weights, they may be overwritten if the ray is reused for the next path segment
              * below.
              */
-            final double rTransmission = ray.transmissionSpectrum.r
+            final double rTransmission = ray.sampleColor.r
             * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
-            final double gTransmission = ray.transmissionSpectrum.g
+            final double gTransmission = ray.sampleColor.g
             * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * intersectDist));
-            final double bTransmission = ray.transmissionSpectrum.b
+            final double bTransmission = ray.sampleColor.b
             * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
-
-
 
             /*
              * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -262,9 +253,9 @@ public final class PathTracer {
                outRay.origin.set(shadingInfo.hitLocation);
                outRay.reset();
                shadingInfo.material.sampleInteraction(outRay, rng, ray.direction, shadingInfo);
-               if (!outRay.transmissionSpectrum.isZero()) {
+               if (!outRay.sampleColor.isZero()) {
                   // TODO: scale transmission by probability of reaching this depth due to RR.
-                  outRay.transmissionSpectrum.multiply(rTransmission, gTransmission, bTransmission);
+                  outRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
 
                   outRay.pixelX = ray.pixelX;
                   outRay.pixelY = ray.pixelY;
@@ -290,8 +281,7 @@ public final class PathTracer {
    }
 
    private static final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
-         final EmissiveGeometry[] lights, final SampleRay woRay,
-         final MaterialInfo shadingInfo, final Random rng) {
+         final EmissiveGeometry[] lights, final SampleRay woRay, final MaterialInfo shadingInfo, final Random rng) {
       final Color lightEnergy = new Color(0, 0, 0);
       final Vec3 directLightNormal = new Vec3();
       final GeometryIntersection isect = new GeometryIntersection();

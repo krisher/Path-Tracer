@@ -82,7 +82,7 @@ public class LambertBRDF implements Material, Cloneable {
        * Here we just return the spectral response (color), Li is handled in the
        * Path-Tracer engine.
        */
-      sampleOut.transmissionSpectrum.set(diffuse.getColor(parameters.materialCoords));
+      sampleOut.sampleColor.set(diffuse.getColor(parameters.materialCoords));
       sampleOut.emissiveResponse = false;
 
    }

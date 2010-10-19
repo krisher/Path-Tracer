@@ -119,7 +119,7 @@ public class PhongSpecularBRDF implements Material {
             directionOut.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
          }
       }
-      sampleOut.transmissionSpectrum.set(specular.getColor(parameters.materialCoords));
+      sampleOut.sampleColor.set(specular.getColor(parameters.materialCoords));
       sampleOut.emissiveResponse = true;
    }
 
