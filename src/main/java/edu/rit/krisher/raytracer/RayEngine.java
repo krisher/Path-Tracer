@@ -143,6 +143,10 @@ public class RayEngine {
        */
       timer.reset();
       image.imagingStarted();
+
+      /*
+       * Tiled work distribution...
+       */
       for (int i = 0; i < xBlocks; i++) {
          final int blockStartX = i * BLOCK_SIZE;
          for (int j = 0; j < yBlocks; j++) {

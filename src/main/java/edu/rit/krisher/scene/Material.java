@@ -69,16 +69,13 @@ public interface Material {
    public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, MaterialInfo parameters);
 
    /**
-    * Accessor to determine whether this material should be sampled for its
-    * response to direct illumination (shadow rays) or not. Certain materials
-    * (such as highly specular materials) will only respond to direct
-    * illumination in a very small portion of the reflectance hemisphere, which
-    * will typically be well sampled through other means.
+    * Returns true if there is any chance of transmission/reflection of light that is not very close to the perfect
+    * mirror reflection direction.
     * 
     * @return true if direct illuminant sampling should be performed for this material (in addition to casting secondary
     *         rays), false if only the secondary rays should be processed.
     */
-   public boolean shouldSampleDirectIllumination();
+   public boolean isDiffuse();
 
    /**
     * Computes a direction that should be sampled.
@@ -94,5 +91,5 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     */
-   public void sampleInteraction(SampleRay sampleOut, Random rng, Vec3 wIncoming, MaterialInfo parameters);
+   public void samplePDF(SampleRay sampleOut, Random rng, Vec3 wIncoming, MaterialInfo parameters);
 }

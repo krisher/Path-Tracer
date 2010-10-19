@@ -31,7 +31,7 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
       Vec3 surfaceNormal = parameters.surfaceNormal;
       if (wIncoming.dot(surfaceNormal) > 0) {
@@ -100,7 +100,7 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public boolean shouldSampleDirectIllumination() {
+   public boolean isDiffuse() {
       return true;
    }
 

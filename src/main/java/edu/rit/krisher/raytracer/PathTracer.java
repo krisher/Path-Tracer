@@ -232,7 +232,7 @@ public final class PathTracer {
              * relfection/refraction distributions are typically constrained to a small solid angle, they only respond
              * to light coming from directions that will be sampled via bounce rays.
              */
-            if (shadingInfo.material.shouldSampleDirectIllumination()) {
+            if (shadingInfo.material.isDiffuse()) {
                integrateDirectIllumination(sampleColor, geometry, lights, ray, shadingInfo, rng);
             }
 
@@ -252,7 +252,7 @@ public final class PathTracer {
                outRay.extinction.set(ray.extinction);
                outRay.origin.set(shadingInfo.hitLocation);
                outRay.reset();
-               shadingInfo.material.sampleInteraction(outRay, rng, ray.direction, shadingInfo);
+               shadingInfo.material.samplePDF(outRay, rng, ray.direction, shadingInfo);
                if (!outRay.sampleColor.isZero()) {
                   // TODO: scale transmission by probability of reaching this depth due to RR.
                   outRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
@@ -263,7 +263,7 @@ public final class PathTracer {
                    * Avoid precision issues when processing the ray for the next intersection.
                    */
                   outRay.origin.scaleAdd(outRay.direction, Constants.EPSILON_D);
-                  outRayCount++;
+                  ++outRayCount;
 
                }
             }

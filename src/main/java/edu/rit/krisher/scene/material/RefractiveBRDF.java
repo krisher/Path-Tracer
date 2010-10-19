@@ -57,12 +57,12 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public boolean shouldSampleDirectIllumination() {
+   public boolean isDiffuse() {
       return false;
    }
 
    @Override
-   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
       final Vec3 sNormal = new Vec3(parameters.surfaceNormal);
       double cosSampleAndNormal = wIncoming.dot(sNormal);

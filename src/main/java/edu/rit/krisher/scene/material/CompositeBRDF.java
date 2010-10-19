@@ -29,9 +29,9 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public boolean shouldSampleDirectIllumination() {
+   public boolean isDiffuse() {
       for (final Material mat : materials.array) {
-         if (mat.shouldSampleDirectIllumination())
+         if (mat.isDiffuse())
             return true;
       }
       return false;
@@ -68,7 +68,7 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
 
       final double sampleType = rng.nextDouble();
@@ -78,7 +78,7 @@ public class CompositeBRDF implements Material, Cloneable {
       for (int i = 0; i < mats.length; i++) {
          cumP += P[i];
          if (sampleType < cumP) {
-            mats[i].sampleInteraction(sampleOut, rng, wIncoming, parameters);
+            mats[i].samplePDF(sampleOut, rng, wIncoming, parameters);
             return;
          }
       }

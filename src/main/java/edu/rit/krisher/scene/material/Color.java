@@ -85,7 +85,7 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void sampleInteraction(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
       sampleOut.sampleColor.clear();
       // No lighting response...
@@ -176,7 +176,7 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public boolean shouldSampleDirectIllumination() {
+   public boolean isDiffuse() {
       return false;
    }
 }
