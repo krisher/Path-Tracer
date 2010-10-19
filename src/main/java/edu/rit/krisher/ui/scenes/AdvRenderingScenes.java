@@ -71,6 +71,9 @@ public final class AdvRenderingScenes {
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), Math.PI / 2.0)))),
+            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1,0,0), -Math.PI/2.0))),
+
+            createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),

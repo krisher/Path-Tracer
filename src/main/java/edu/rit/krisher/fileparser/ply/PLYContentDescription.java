@@ -284,6 +284,31 @@ public class PLYContentDescription {
          public Number parseBinary(final DataInputStream input, final boolean bigEndian) throws IOException {
             return input.readFloat();
          }
+      },
+
+      /**
+       * 16bit short (float in Java).
+       */
+      short16 {
+         @Override
+         public int getSizeBytes() {
+            return 2;
+         }
+
+         @Override
+         public boolean isSigned() {
+            return true;
+         }
+
+         @Override
+         public Number parseAscii(final String asciiRepresentation) {
+            return Short.parseShort(asciiRepresentation);
+         }
+
+         @Override
+         public Number parseBinary(final DataInputStream input, final boolean bigEndian) throws IOException {
+            return input.readShort();
+         }
       };
 
       /**
@@ -317,6 +342,8 @@ public class PLYContentDescription {
             return int32;
          } else if ("uchar".equals(name)) {
             return uint8;
+         } else if ("short".equals(name)) {
+	     return short16;
          } else {
             throw new IllegalArgumentException("Unsupported data type: " + name);
          }
