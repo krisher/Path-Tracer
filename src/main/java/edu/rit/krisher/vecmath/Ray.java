@@ -3,7 +3,13 @@ package edu.rit.krisher.vecmath;
 public class Ray {
    public static final double SMALL_D = 1e-15;
 
+   /**
+    * The origin of the ray.
+    */
    public final Vec3 origin;
+   /**
+    * The normalized direction of the ray.
+    */
    public final Vec3 direction;
 
    /**
@@ -22,11 +28,11 @@ public class Ray {
    }
 
    /**
-    * Returns a new Vec3 representing a point on the ray at the specified
-    * distance from the ray origin.
+    * Returns a new Vec3 representing a point on the ray at the specified distance from the ray origin.
     * 
     * @param distance
-    * @return
+    *           The distance from the ray origin.
+    * @return A new Vec3 containing a point on the ray at the specified signed distance from the ray origin.
     */
    public final Vec3 getPointOnRay(final double distance) {
       return new Vec3(origin).scaleAdd(direction, distance);
@@ -42,7 +48,7 @@ public class Ray {
       return new Ray(t.transformPoint(new Vec3(origin)), t.transformVec(new Vec3(direction)));
    }
 
-   public double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
+   public final double intersectsBox(final Vec3 center, final double xSize, final double ySize, final double zSize) {
       final double[] result = new double[2];
       if (intersectsBoxParametric(result, new Vec3(center.x - xSize, center.y - ySize, center.z - zSize), new Vec3(center.x
                                                                                                                    + xSize, center.y + ySize, center.z + zSize))) {
@@ -51,7 +57,7 @@ public class Ray {
       return 0;
    }
 
-   public boolean intersectsBoxParametric(final double[] tNearFar, final double minX, final double minY,
+   public final boolean intersectsBoxParametric(final double[] tNearFar, final double minX, final double minY,
          final double minZ, final double maxX, final double maxY, final double maxZ) {
       // final Vec3 rayOrigin = new Vec3(ray.origin);
       // rayOrigin.subtract(center);
@@ -133,11 +139,11 @@ public class Ray {
       return true;
    }
 
-   public boolean intersectsBoxParametric(final double[] paramsOut, final Vec3 minXYZ, final Vec3 maxXYZ) {
+   public final boolean intersectsBoxParametric(final double[] paramsOut, final Vec3 minXYZ, final Vec3 maxXYZ) {
       return intersectsBoxParametric(paramsOut, minXYZ.x, minXYZ.y, minXYZ.z, maxXYZ.x, maxXYZ.y, maxXYZ.z);
    }
 
-   public double intersectsPlane(final Vec3 planeNormal, final double planeDist) {
+   public final double intersectsPlane(final Vec3 planeNormal, final double planeDist) {
       final double cosAngle = planeNormal.dot(direction);
       /*
        * Check if the ray is (nearly) parallel to the plane
