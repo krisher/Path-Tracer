@@ -22,12 +22,9 @@ import edu.rit.krisher.scene.acceleration.KDTree;
 import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
-import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
-import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
-import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
-import edu.rit.krisher.vecmath.Vec3;
+
 /**
  *
  */
@@ -46,14 +43,12 @@ public class KDTreeTest {
             if (!leaf) {
                Assert.assertTrue("Split location " + splitLocation + " out of bounds: " + bounds + " for split axis "
                      + splitAxis + ".", splitLocation < bounds.xyzxyz[splitAxis + 3]
-                                                                                  && splitLocation > bounds.xyzxyz[splitAxis]);
+                     && splitLocation > bounds.xyzxyz[splitAxis]);
             }
          }
       };
       tree.visitTreeNodes(visitor);
    }
-
-
 
    public void treeMetricsShouldNotChange() {
       final TriangleMesh bunnyGeom = loadBunny();
@@ -93,31 +88,9 @@ public class KDTreeTest {
    }
 
    private static Geometry createOpenBoxGeometry() {
-      final Vec3Buffer vb = new Vec3fBuffer(8);
-      final IndexBuffer ib = new IndexBuffer(30);
-      vb.put(new Vec3(5, 0, -5));
-      vb.put(new Vec3(-5, 0, -5));
-      vb.put(new Vec3(-5, 0, 5));
-      vb.put(new Vec3(5, 0, 5));
-      ib.put(0).put(1).put(2);
-      ib.put(0).put(2).put(3);
-
-      vb.put(new Vec3(5, 10, -5));
-      vb.put(new Vec3(-5, 10, -5));
-      vb.put(new Vec3(-5, 10, 5));
-      vb.put(new Vec3(5, 10, 5));
-
-      ib.put(4).put(5).put(1);
-      ib.put(4).put(1).put(0);
-
-      ib.put(5).put(6).put(2);
-      ib.put(5).put(2).put(1);
-
-      ib.put(6).put(7).put(3);
-      ib.put(6).put(3).put(2);
-
-      ib.put(7).put(4).put(0);
-      ib.put(7).put(0).put(3);
-      return new TriangleMesh(vb, ib.getIndices());
+      final float[] vb = new float[] {5,0,-5, -5, 0, -5, -5, 0, 5, 5, 0, 5,
+            5, 10, -5, -5, 10, -5, -5, 10, 5, 5, 10, 5};
+      final int[] indices = { 0, 1, 2, 0, 2, 3, 4, 5, 1, 4, 1, 0, 5, 6, 2, 5, 2, 1, 6, 7, 3, 6, 3, 2, 7, 4, 0, 7, 0, 3 };
+      return new TriangleMesh(vb, indices);
    }
 }

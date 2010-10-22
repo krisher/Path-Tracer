@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.util.zip.ZipInputStream;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
@@ -20,9 +21,6 @@ import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.camera.DoFCamera;
 import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
-import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
-import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
-import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
@@ -70,8 +68,8 @@ public final class AdvRenderingScenes {
             createSceneMultiTree("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
             createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0,0,1), Math.PI).multiply(new Quat(new Vec3(1,0,0), Math.PI / 2.0)))),
-            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1,0,0), -Math.PI/2.0))),
+            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
+            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
 
             createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
@@ -82,40 +80,23 @@ public final class AdvRenderingScenes {
 
    }
 
+   private static final int[] floorBuff = {0,1,2,0,2,3};
+   private static final int[] floorAndWallsBuff = {0,1,2,0,2,3,4,5,1, 4,1,0, 5,6,2, 5,2,1, 6,7,3, 6,3,2, 7,4,0, 7,0,3};
    private static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
       final double xBorder = sceneBounds.xSpan() * 4;
       final double zBorder = sceneBounds.zSpan() * 4;
-      final Vec3Buffer vb = new Vec3fBuffer(walls ? 8 : 4);
-      final IndexBuffer ib = new IndexBuffer(walls ? 30 : 6);
-      vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[2] - zBorder);
-      vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[2] - zBorder);
-      vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[5] + zBorder);
-      vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[1], sceneBounds.xyzxyz[5] + zBorder);
-      ib.put(0).put(1).put(2);
-      ib.put(0).put(2).put(3);
+      final double yBorder = sceneBounds.ySpan() * 2;
+      
+      final AxisAlignedBoundingBox expandedAABB = new AxisAlignedBoundingBox(sceneBounds);
+      expandedAABB.xyzxyz[0] -= xBorder;
+      expandedAABB.xyzxyz[2] -= zBorder;
+      expandedAABB.xyzxyz[3] += xBorder;
+      expandedAABB.xyzxyz[5] += zBorder;
+      expandedAABB.xyzxyz[4] += yBorder;
+      
 
-      if (walls) {
-         final double yBorder = sceneBounds.ySpan() * 2;
-         vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[2] - zBorder);
-         vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[2] - zBorder);
-         vb.put(sceneBounds.xyzxyz[0] - xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[5] + zBorder);
-         vb.put(sceneBounds.xyzxyz[3] + xBorder, sceneBounds.xyzxyz[4] + yBorder, sceneBounds.xyzxyz[5] + zBorder);
-
-         ib.put(4).put(5).put(1);
-         ib.put(4).put(1).put(0);
-
-         ib.put(5).put(6).put(2);
-         ib.put(5).put(2).put(1);
-
-         ib.put(6).put(7).put(3);
-         ib.put(6).put(3).put(2);
-
-         ib.put(7).put(4).put(0);
-         ib.put(7).put(0).put(3);
-      }
-
-      final TriangleMesh mesh = new TriangleMesh(vb, ib.getIndices());
+      final TriangleMesh mesh = new TriangleMesh(expandedAABB.toVertexArrayF(), walls?floorAndWallsBuff:floorBuff);
       if (mat != null) {
          mesh.setMaterial(mat);
       }
@@ -143,46 +124,29 @@ public final class AdvRenderingScenes {
       };
    }
 
+   private static final int[] boxVertIndices = { 0, 1, 2, 0, 2, 3, 5, 4, 1, 4, 0, 1, 5, 2, 6, 5, 1, 2, 3, 7, 6, 3, 6,
+         2, 0, 4, 7, 0, 7, 3, 4, 5, 6, 4, 6, 7 };
+
    public static GeometryFactory boxes(final AxisAlignedBoundingBox... aabbs) {
       return new GeometryFactory() {
-         final Vec3Buffer vertices = new Vec3fBuffer(8 * aabbs.length);
-         final IndexBuffer ib = new IndexBuffer(36 * aabbs.length);
+         final FloatBuffer vertices = FloatBuffer.wrap(new float[] {8 * aabbs.length});
+         final int[] ib = new int[36 * aabbs.length];
 
          @Override
          public Geometry createGeometry() {
             int idxBase = 0;
+            int iIdx = 0;
             for (final AxisAlignedBoundingBox aabb : aabbs) {
-               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[1], aabb.xyzxyz[2]);
-               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[1], aabb.xyzxyz[2]);
-               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[1], aabb.xyzxyz[5]);
-               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[1], aabb.xyzxyz[5]);
+               vertices.put(aabb.toVertexArrayF());
 
-               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[4], aabb.xyzxyz[2]);
-               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[4], aabb.xyzxyz[2]);
-               vertices.put(aabb.xyzxyz[0], aabb.xyzxyz[4], aabb.xyzxyz[5]);
-               vertices.put(aabb.xyzxyz[3], aabb.xyzxyz[4], aabb.xyzxyz[5]);
-
-               ib.put(idxBase + 0).put(idxBase + 1).put(idxBase + 2);
-               ib.put(idxBase + 0).put(idxBase + 2).put(idxBase + 3);
-
-               ib.put(idxBase + 5).put(idxBase + 4).put(idxBase + 1);
-               ib.put(idxBase + 4).put(idxBase + 0).put(idxBase + 1);
-
-               ib.put(idxBase + 5).put(idxBase + 2).put(idxBase + 6);
-               ib.put(idxBase + 5).put(idxBase + 1).put(idxBase + 2);
-
-               ib.put(idxBase + 3).put(idxBase + 7).put(idxBase + 6);
-               ib.put(idxBase + 3).put(idxBase + 6).put(idxBase + 2);
-
-               ib.put(idxBase + 0).put(idxBase + 4).put(idxBase + 7);
-               ib.put(idxBase + 0).put(idxBase + 7).put(idxBase + 3);
-
-               ib.put(idxBase + 4).put(idxBase + 5).put(idxBase + 6);
-               ib.put(idxBase + 4).put(idxBase + 6).put(idxBase + 7);
+               for (int i = 0; i < 36; ++i) {
+                  ib[iIdx + i] = idxBase + boxVertIndices[i];
+               }
 
                idxBase += 8;
+               iIdx += 36;
             }
-            return new TriangleMesh(vertices, ib.getIndices());
+            return new TriangleMesh(vertices.array(), ib);
          }
       };
    }
@@ -200,7 +164,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-            : groundMat, walls, geomBounds);
+                  : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -219,7 +183,7 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
@@ -252,8 +216,7 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(geomBounds.xyzxyz[0] - geomBounds.xSpan(), geomBounds.xyzxyz[4]
-                                                                                                      + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-                                                                                                                                              + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                  + geomBounds.ySpan(), geomBounds.xyzxyz[5] + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
@@ -272,7 +235,8 @@ public final class AdvRenderingScenes {
       return plyFactory(file, material, computeNormals, null);
    }
 
-   private static GeometryFactory plyFactory(final File file, final Material material, final boolean computeNormals, final Transform vertTransform) {
+   private static GeometryFactory plyFactory(final File file, final Material material, final boolean computeNormals,
+         final Transform vertTransform) {
       return new GeometryFactory() {
          @Override
          public Geometry createGeometry() {

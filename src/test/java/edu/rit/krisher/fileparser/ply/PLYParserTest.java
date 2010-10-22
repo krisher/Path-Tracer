@@ -10,8 +10,6 @@ import org.junit.Test;
 
 import edu.rit.krisher.fileparser.ply.PLYContentDescription.DataType;
 import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
-import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
-import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 
 public class PLYParserTest {
 
@@ -84,10 +82,8 @@ public class PLYParserTest {
       } finally {
          zis.close();
       }
-      final Vec3fBuffer buffer = receiver.getBuffer();
-      Assert.assertEquals(35947, buffer.capacity());
-      Assert.assertEquals(35947, buffer.limit());
-      Assert.assertEquals(0, buffer.position());
+      final float[] buffer = receiver.getBuffer();
+      Assert.assertEquals(35947, buffer.length);
    }
 
    @Test
@@ -104,9 +100,7 @@ public class PLYParserTest {
       } finally {
          zis.close();
       }
-      final IndexBuffer buffer = receiver.getBuffer();
-      Assert.assertEquals(69451 * 3, buffer.capacity());
-      Assert.assertEquals(69451 * 3, buffer.limit());
-      Assert.assertEquals(0, buffer.position());
+      final int[] buffer = receiver.getIndexList();
+      Assert.assertEquals(69451 * 3, buffer.length);
    }
 }

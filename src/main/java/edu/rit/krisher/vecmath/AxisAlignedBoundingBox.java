@@ -19,7 +19,6 @@ public class AxisAlignedBoundingBox {
     */
    public final double[] xyzxyz;
 
-
    /**
     * Creates a new AxisAlignedBoundingBox with max coord negative infinity, and min coord positive infinity.
     */
@@ -188,6 +187,34 @@ public class AxisAlignedBoundingBox {
    @Override
    public String toString() {
       return "AxisAlignedBoundingBox [min/max XYZ=" + Arrays.toString(xyzxyz) + "]";
+   }
+
+   /**
+    * Creates an array containing each of the corner vertices of the bounding box, in the order:
+    * <ul>
+    *  <li>maxX, minY, minZ</li>
+    *  <li>minX, minY, minZ</li>
+    *  <li>minX, minY, maxZ</li>
+    *  <li>maxX, minY, maxZ</li>
+    *  
+    *  <li>maxX, maxY, minZ</li>
+    *  <li>minX, maxY, minZ</li>
+    *  <li>minX, maxY, maxZ</li>
+    *  <li>maxX, maxY, maxZ</li>
+    * </ul>
+    * @return
+    */
+   public float[] toVertexArrayF() {
+      return new float[] {
+            (float) xyzxyz[3], (float) xyzxyz[1], (float) xyzxyz[2], 
+            (float) xyzxyz[0], (float) xyzxyz[1], (float) xyzxyz[2], 
+            (float) xyzxyz[0], (float) xyzxyz[1], (float) xyzxyz[5],
+            (float) xyzxyz[3], (float) xyzxyz[1], (float) xyzxyz[5],
+
+            (float) xyzxyz[3], (float) xyzxyz[4], (float) xyzxyz[2], 
+            (float) xyzxyz[0], (float) xyzxyz[4],(float) xyzxyz[2], 
+            (float) xyzxyz[0], (float) xyzxyz[4], (float) xyzxyz[5], 
+            (float) xyzxyz[3], (float) xyzxyz[4], (float) xyzxyz[5] };
    }
 
 }

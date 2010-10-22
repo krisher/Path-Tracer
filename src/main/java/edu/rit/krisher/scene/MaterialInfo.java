@@ -22,6 +22,11 @@ public class MaterialInfo extends GeometryIntersection {
     * The surface normal at the hit location.
     */
    public final Vec3 surfaceNormal;
+   
+   /**
+    * The tangent vector that defines the azimuth == 0 direction for incident and outgoing rays.
+    */
+   public final Vec3 tangentVector = new Vec3();
 
    /**
     * The hit location where the intersection occurred.

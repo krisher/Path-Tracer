@@ -283,7 +283,7 @@ public class Ray {
       // final double divisor = Vec3.dot(pX, pY, pZ, e0X, e0Y, e0Z);
       final double divisor = pX * e0X + pY * e0Y + pZ * e0Z;
       /*
-       * Ray nearly parallel to triangle plane...
+       * Ray nearly parallel to triangle plane, or degenerate triangle...
        */
       if (divisor < SMALL_D && divisor > -SMALL_D) {
          return false;

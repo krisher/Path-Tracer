@@ -16,7 +16,6 @@ import java.util.Map;
 import edu.rit.krisher.fileparser.ply.ElementReceiver.ElementAttributeValues;
 import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
-import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.util.Timer;
 
 /**
@@ -94,8 +93,8 @@ public final class PLYParser {
       parsePLY(stream, elementReceivers);
       timer.stop().print(System.out);
 
-      final Vec3fBuffer vertices = vReceiver.getBuffer();
-      final int[] indices = iReceiver.getBuffer().getIndices();
+      final float[] vertices = vReceiver.getBuffer();
+      final int[] indices = iReceiver.getIndexList();
       return new TriangleMesh(vertices, (computeNormals) ? TriangleMesh.computeTriangleNormals(vertices, indices)
             : null, indices);
    }

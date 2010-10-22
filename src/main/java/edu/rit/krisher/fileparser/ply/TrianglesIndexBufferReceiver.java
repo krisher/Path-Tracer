@@ -1,25 +1,29 @@
 package edu.rit.krisher.fileparser.ply;
 
-import edu.rit.krisher.scene.geometry.buffer.IndexBuffer;
-
+/**
+ * Collects a set of triangle vertex indices from a PLY file's 'vertex_indices' element.
+ */
 public class TrianglesIndexBufferReceiver implements ElementReceiver {
 
-   private IndexBuffer buffer;
+   private int[] buffer;
 
    @Override
    public void receive(final Element element, final ElementAttributeValues values) {
-      buffer = new IndexBuffer(element.count * 3);
+      buffer = new int[element.count * 3];
       final int indicesAttr = element.indexOf("vertex_indices");
 
+      int indicesOffs = 0;
       for (int idx = 0; idx < element.count; ++idx) {
          values.nextElement();
          final Number[] indices = values.getVectorComponent(indicesAttr);
-         buffer.put(indices[0].intValue()).put(indices[1].intValue()).put(indices[2].intValue());
+         buffer[indicesOffs] = indices[0].intValue();
+         buffer[indicesOffs + 1] = indices[1].intValue();
+         buffer[indicesOffs + 2] = indices[2].intValue();
+         indicesOffs += 3;
       }
-      buffer.flip();
    }
 
-   public IndexBuffer getBuffer() {
+   public int[] getIndexList() {
       return buffer;
    }
 

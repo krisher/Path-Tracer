@@ -6,8 +6,6 @@ import org.junit.Test;
 
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
-import edu.rit.krisher.scene.geometry.buffer.Vec3Buffer;
-import edu.rit.krisher.scene.geometry.buffer.Vec3fBuffer;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
@@ -17,13 +15,9 @@ public class TriangleMeshTest {
 
    @Before
    public void initTestPLY() {
-      final Vec3Buffer verts = new Vec3fBuffer(4);
-      verts.put(new Vec3(1, 1, 0));
-      verts.put(new Vec3(-1, 1, 0));
-      verts.put(new Vec3(-1, -1, 0));
-      verts.put(new Vec3(1, -1, 0));
-      verts.flip();
-
+      final float[] verts = new float[] {
+            1,1,0, -1, 1, 0, -1, -1, 0, 1, -1, 0
+      };
       xyQuad = new TriangleMesh(verts, new int[] {0,1,2,0,2,3});
 
    }
