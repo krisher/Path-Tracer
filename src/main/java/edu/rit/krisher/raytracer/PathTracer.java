@@ -244,25 +244,25 @@ public final class PathTracer {
                    * Russian roulette for variance reduction.
                    */
                   && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
-               final SampleRay outRay = rays[outRayCount];
+               final SampleRay irradianceRay = rays[outRayCount];
                /*
                 * Preserve the current extinction, this is only modified when the ray passes through a refractive
                 * interface, at which point the extinction is changed in the Material model.
                 */
-               outRay.extinction.set(ray.extinction);
-               outRay.origin.set(shadingInfo.hitLocation);
-               outRay.reset();
-               shadingInfo.material.samplePDF(outRay, rng, ray.direction, shadingInfo);
-               if (!outRay.sampleColor.isZero()) {
+               irradianceRay.extinction.set(ray.extinction);
+               irradianceRay.origin.set(shadingInfo.hitLocation);
+               irradianceRay.reset();
+               shadingInfo.material.samplePDF(irradianceRay, rng, ray.direction, shadingInfo);
+               if (!irradianceRay.sampleColor.isZero()) {
                   // TODO: scale transmission by probability of reaching this depth due to RR.
-                  outRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
+                  irradianceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
 
-                  outRay.pixelX = ray.pixelX;
-                  outRay.pixelY = ray.pixelY;
+                  irradianceRay.pixelX = ray.pixelX;
+                  irradianceRay.pixelY = ray.pixelY;
                   /*
                    * Avoid precision issues when processing the ray for the next intersection.
                    */
-                  outRay.origin.scaleAdd(outRay.direction, Constants.EPSILON_D);
+                  irradianceRay.origin.scaleAdd(irradianceRay.direction, Constants.EPSILON_D);
                   ++outRayCount;
 
                }
@@ -283,30 +283,29 @@ public final class PathTracer {
    private static final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
          final EmissiveGeometry[] lights, final SampleRay woRay, final MaterialInfo shadingInfo, final Random rng) {
       final Color lightEnergy = new Color(0, 0, 0);
-      final Vec3 directLightNormal = new Vec3();
       final GeometryIntersection isect = new GeometryIntersection();
       /*
        * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
        * vector to avoid self-intersecting the same point due to round-off error.
        */
-      final Ray shadowRay = new Ray(new Vec3(shadingInfo.hitLocation).scaleAdd(shadingInfo.surfaceNormal, Constants.EPSILON_D), new Vec3());
+      final Ray lightSourceExitantRadianceRay = new Ray(new Vec3(shadingInfo.hitLocation).scaleAdd(shadingInfo.surfaceNormal, Constants.EPSILON_D), new Vec3());
 
       for (final EmissiveGeometry light : lights) {
          /*
           * Generate a random sample direction that hits the light
           */
-         double lightDist = light.sampleEmissiveRadiance(shadowRay.direction, lightEnergy, directLightNormal, shadowRay.origin, rng);
+         double lightDist = light.sampleEmissiveRadiance(lightSourceExitantRadianceRay.direction, lightEnergy, lightSourceExitantRadianceRay.origin, rng);
          /*
           * Cosine of the angle between the geometry surface normal and the shadow ray direction
           */
-         final double cosWi = shadowRay.direction.dot(shadingInfo.surfaceNormal);
+         final double cosWi = lightSourceExitantRadianceRay.direction.dot(shadingInfo.surfaceNormal);
          if (cosWi > 0) {
             /*
              * Determine whether the light source is visible from the irradiated point
              */
             for (final Geometry geom : geometry) {
                if (geom != light) {
-                  final double isectDist = geom.intersects(isect, shadowRay, lightDist);
+                  final double isectDist = geom.intersects(isect, lightSourceExitantRadianceRay, lightDist);
                   if (isectDist > 0 && isectDist < lightDist) {
                      lightDist = 0;
                      break;
@@ -315,17 +314,12 @@ public final class PathTracer {
             }
             if (lightDist > 0) {
                /*
-                * Cosine of the angle between the light sample point's normal and the shadow ray.
-                */
-               final double cosWo = -directLightNormal.dot(shadowRay.direction);
-
-               /*
                 * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
                 * the response of the material...
                 */
-               shadingInfo.material.getIrradianceResponse(lightEnergy, woRay.direction, shadowRay.direction, shadingInfo);
+               shadingInfo.material.getIrradianceResponse(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, shadingInfo);
 
-               final double diffAngle = (cosWi * cosWo) / (lightDist * lightDist);
+               final double diffAngle = (cosWi) / (lightDist * lightDist);
                irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, diffAngle);
             }
          }

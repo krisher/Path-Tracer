@@ -28,13 +28,12 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 normalOut,
+   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, 
          final Vec3 origin, final Random rng) {
-      directionOut.set(position).subtract(origin).normalize();
+      directionOut.set(position).subtract(origin);
+      final double dist = directionOut.length();
+      directionOut.multiply(1.0 / dist);
       radianceOut.set(material);
-      normalOut.set(origin).subtract(position);
-      final double dist = normalOut.length();
-      normalOut.multiply(1.0 / dist);
       return dist;
    }
 

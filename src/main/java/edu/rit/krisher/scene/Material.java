@@ -81,7 +81,8 @@ public interface Material {
     * Computes a direction that should be sampled.
     * 
     * @param sampleOut
-    *           Ray to store the desired sample direction in.
+    *           Ray to store the desired sample direction, and the distribution (SPD/Color) of light that will be
+    *           reflected toward the incoming sample direction.
     * @param rng
     *           A random number generator for monte-carlo sampling, etc.
     * @param wIncoming

@@ -79,6 +79,8 @@ public class LambertBRDF implements Material, Cloneable {
        * 
        * Lo = diffuse * Li.
        * 
+       * i.e. we take fewer samples in directions that are more perpendicular to the surface normal.
+       * 
        * Here we just return the spectral response (color), Li is handled in the
        * Path-Tracer engine.
        */

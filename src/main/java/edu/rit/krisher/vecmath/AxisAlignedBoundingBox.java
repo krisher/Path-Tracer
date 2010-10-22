@@ -202,7 +202,7 @@ public class AxisAlignedBoundingBox {
     *  <li>minX, maxY, maxZ</li>
     *  <li>maxX, maxY, maxZ</li>
     * </ul>
-    * @return
+    * @return A non-null array with 8 vertices == 24 floats.
     */
    public float[] toVertexArrayF() {
       return new float[] {

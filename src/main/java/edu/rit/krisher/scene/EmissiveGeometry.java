@@ -22,8 +22,6 @@ public interface EmissiveGeometry extends Geometry {
     *           The non-null vector in which to store the (normalized) result.
     * @param radianceOut
     *           The light energy that is transmitted along the sample ray.
-    * @param normalOut
-    *           The normal to the emissive geometry surface at the sample point.
     * @param origin
     *           The non-null point from which the sample is taken
     * @param rng
@@ -31,6 +29,6 @@ public interface EmissiveGeometry extends Geometry {
     *           generating uniform random variables.
     * @return this distance to the sample point.
     */
-   double sampleEmissiveRadiance(Vec3 directionOut, Color radianceOut, Vec3 normalOut, Vec3 origin, Random rng);
+   double sampleEmissiveRadiance(Vec3 directionOut, Color radianceOut,  Vec3 origin, Random rng);
 
 }

@@ -19,7 +19,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 normalOut, final Vec3 origin,
+   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 origin,
          final Random rng) {
 
       directionOut.set(center).subtract(origin);
@@ -53,21 +53,20 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       nu.cross(directionOut).normalize();
       final Vec3 nv = new Vec3(directionOut).cross(nu);
 
-      directionOut.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth)
-      .scaleAdd(nv, Math.sin(randomPolar) * sinRandomAzimuth);
+      directionOut.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth).scaleAdd(nv, Math.sin(randomPolar)
+            * sinRandomAzimuth);
 
       material.getEmissionColor(radianceOut, directionOut, null);
 
       final Ray emissionSampler = new Ray(origin, directionOut);
       final double isectDist = emissionSampler.intersectsSphere(center, radius);
-      normalOut.set(directionOut).multiply(isectDist).add(origin).subtract(center).multiply(1.0 / radius);
 
       /*
-       * Multiply by 1/distribution of light samples
+       * Multiply by 1/distribution of light samples.
+       * 
+       * Note that the cosine theta term (between surface normal and ray direction) is excluded because we would scale by that term anyway. 
        */
-      radianceOut
-      .multiply((isectDist * isectDist * (2.0 * Math.PI * (1.0 - cosMaxAngle)) / -normalOut
-            .dot(directionOut)));
+      radianceOut.multiply((isectDist * isectDist * (2.0 * Math.PI * (1.0 - cosMaxAngle))));
       return isectDist;
    }
 
