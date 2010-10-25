@@ -154,21 +154,20 @@ public class TriangleMesh implements Geometry {
       data.material = material;
       data.materialCoords = null;
       if (normals == null) {
-         getTriangleFaceNormal(data.surfaceNormal, triangleIndex);
+         getTriangleFaceNormal(data.surfaceNormal, data.tangentVector, triangleIndex);
          /*
           * Use an arbitrary triangle edge for the tangent vector.
           * TODO: u,v coordinates required to support anisotropic reflection models, for consistent orientation.
           */
 
       } else {
-         // TODO: Barycentric normal interpolation if vertex normals present... This is not the most efficient way of
-         // doing this.
+         //Barycentric normal interpolation if vertex normals present... 
          final double[] baryCoords = new double[3];
          intersectsTriangleBarycentric(baryCoords, ray, triangleIndex);
          interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], triangleIndex);
+         //TODO: Tangent vector should be based on shading (texture) coords if specified.
+         MaterialInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
       }
-      // TODO: compute tangent vector for shading coordinates...
-      // This should be based on texture coordinates if specified...
    }
 
    /**
@@ -192,7 +191,7 @@ public class TriangleMesh implements Geometry {
       vecs[8] = vertices[v2Offs + 2] - vecs[2];
    }
 
-   private final void getTriangleFaceNormal(final Vec3 outNormal, final int triangleIndex) {
+   private final void getTriangleFaceNormal(final Vec3 outNormal, final Vec3 tangent, final int triangleIndex) {
       final int triangleIndexOffset = triangleIndex * 3;
       final int v0Offs = triangleIndices[triangleIndexOffset] * 3;
       final int v1Offs = triangleIndices[triangleIndexOffset + 1] * 3;
@@ -203,6 +202,7 @@ public class TriangleMesh implements Geometry {
       final float v0Z = vertices[v0Offs + 2];
       outNormal.set(vertices[v1Offs] - v0X, vertices[v1Offs + 1] - v0Y, vertices[v1Offs + 2] - v0Z);
       outNormal.cross(vertices[v2Offs] - v0X, vertices[v2Offs + 1] - v0Y, vertices[v2Offs + 2] - v0Z).normalize();
+      tangent.set(vertices[v1Offs] - v0X, vertices[v1Offs + 1] - v0Y, vertices[v1Offs + 2] - v0Z).normalize();
    }
 
    private final double intersectsTriangle(final Ray ray, final int triangleIndex) {

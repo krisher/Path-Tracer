@@ -53,7 +53,7 @@ public class ASTMBRDFParser {
          throw new IllegalStateException("Expected NUM_POINTS declaration before VARS declaration.");
       }
 
-      final float[] thetaIThetaSDeltaPhi = new float[numPoints * 4];
+      final float[] thetaIThetaSDeltaPhi = new float[numPoints * 3];
       final float[] rgb = new float[numPoints * 3];
 
       int sampleOffs = 0;
@@ -69,11 +69,24 @@ public class ASTMBRDFParser {
          rgb[sampleOffs] = Float.parseFloat(vars[4]);
          rgb[sampleOffs + 1] = Float.parseFloat(vars[5]);
          rgb[sampleOffs + 2] = Float.parseFloat(vars[6]);
+         
+         if (rgb[sampleOffs] < 0) rgb[sampleOffs] = 0;
+         if (rgb[sampleOffs+1] < 0) rgb[sampleOffs+1] = 0;
+         if (rgb[sampleOffs+2] < 0) rgb[sampleOffs+2] = 0;
 
          sampleOffs += 3;
       }
 
       return new MeasuredIsotropicMaterial(thetaIThetaSDeltaPhi, rgb);
+   }
+   
+   public static MeasuredIsotropicMaterial getKrylonBlue() {
+      try {
+         return ASTMBRDFParser.parseRGBBRDF(ASTMBRDFParser.class.getResourceAsStream("krylon_blue_RGB.astm"));
+      } catch (final IOException e) {
+         e.printStackTrace();
+         return null;
+      }
    }
    //
    // public static void main(final String[] args) {
