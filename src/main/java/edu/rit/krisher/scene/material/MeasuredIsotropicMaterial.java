@@ -51,7 +51,7 @@ public class MeasuredIsotropicMaterial implements Material {
       for (int i = 0; i < angles.length; i += 3) {
          final double elIDiff = angles[i] - elevationI;
          final double elODiff = angles[i + 1] - elevationO;
-         final double azDiff = angles[i + 2] - dAz;
+         final double azDiff = Math.cos(angles[i + 2]) - Math.cos(dAz);
 
          final double distSq = elIDiff * elIDiff + elODiff * elODiff + azDiff * azDiff;
          if (distSq < closestDist) {
