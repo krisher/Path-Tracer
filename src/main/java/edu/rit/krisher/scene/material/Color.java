@@ -54,7 +54,7 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void getIrradianceResponse(final Color colorOut, final Vec3 responseDirection, final Vec3 incomingDirection,
+   public void evaluateBRDF(final Color colorOut, final Vec3 responseDirection, final Vec3 incomingDirection,
          final MaterialInfo parameters) {
       colorOut.set(0, 0, 0);
    }
@@ -85,7 +85,7 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
       sampleOut.sampleColor.clear();
       // No lighting response...

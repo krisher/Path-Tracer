@@ -34,7 +34,7 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void getIrradianceResponse(final Color colorOut, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+   public void evaluateBRDF(final Color colorOut, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
          final MaterialInfo parameters) {
       /*
        * Like Phong specular, do not compute direct illumination, this will be
@@ -62,7 +62,7 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
       final Vec3 sNormal = new Vec3(parameters.surfaceNormal);
       double cosSampleAndNormal = wIncoming.dot(sNormal);

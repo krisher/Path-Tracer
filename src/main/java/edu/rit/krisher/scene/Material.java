@@ -43,7 +43,7 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     **/
-   public void getIrradianceResponse(Color colorInOut, Vec3 wOutgoing, Vec3 wIncoming, MaterialInfo parameters);
+   public void evaluateBRDF(Color colorInOut, Vec3 wOutgoing, Vec3 wIncoming, MaterialInfo parameters);
 
    /**
     * Computes and returns the emissive color given the specified sample direction, surface normal and material
@@ -92,5 +92,5 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     */
-   public void samplePDF(SampleRay sampleOut, Random rng, Vec3 wIncoming, MaterialInfo parameters);
+   public void sampleBRDF(SampleRay sampleOut, Random rng, Vec3 wIncoming, MaterialInfo parameters);
 }

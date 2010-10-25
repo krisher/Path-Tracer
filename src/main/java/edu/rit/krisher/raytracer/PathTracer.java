@@ -252,7 +252,7 @@ public final class PathTracer {
                irradianceRay.extinction.set(ray.extinction);
                irradianceRay.origin.set(shadingInfo.hitLocation);
                irradianceRay.reset();
-               shadingInfo.material.samplePDF(irradianceRay, rng, ray.direction, shadingInfo);
+               shadingInfo.material.sampleBRDF(irradianceRay, rng, ray.direction, shadingInfo);
                if (!irradianceRay.sampleColor.isZero()) {
                   // TODO: scale transmission by probability of reaching this depth due to RR.
                   irradianceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
@@ -317,7 +317,7 @@ public final class PathTracer {
                 * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
                 * the response of the material...
                 */
-               shadingInfo.material.getIrradianceResponse(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, shadingInfo);
+               shadingInfo.material.evaluateBRDF(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, shadingInfo);
 
                final double diffAngle = (cosWi) / (lightDist * lightDist);
                irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, diffAngle);

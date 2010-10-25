@@ -50,7 +50,7 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+   public void evaluateBRDF(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
          final MaterialInfo parameters) {
       // FIXME: radiance is an input parameter (as well as output), need to either reset it to original value between
       // each sample, or only sample one material.
@@ -58,7 +58,7 @@ public class CompositeBRDF implements Material, Cloneable {
       final Double[] P = probabilities.array;
       double r = 0, g = 0, b = 0;
       for (int i = 0; i < mats.length; i++) {
-         mats[i].getIrradianceResponse(radiance, sampleDirection, incidentLightDirection, parameters);
+         mats[i].evaluateBRDF(radiance, sampleDirection, incidentLightDirection, parameters);
          r += P[i] * radiance.r;
          g += P[i] * radiance.g;
          b += P[i] * radiance.b;
@@ -68,7 +68,7 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
 
       final double sampleType = rng.nextDouble();
@@ -78,7 +78,7 @@ public class CompositeBRDF implements Material, Cloneable {
       for (int i = 0; i < mats.length; i++) {
          cumP += P[i];
          if (sampleType < cumP) {
-            mats[i].samplePDF(sampleOut, rng, wIncoming, parameters);
+            mats[i].sampleBRDF(sampleOut, rng, wIncoming, parameters);
             return;
          }
       }

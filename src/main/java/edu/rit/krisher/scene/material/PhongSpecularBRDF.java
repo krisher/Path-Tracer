@@ -33,7 +33,7 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void getIrradianceResponse(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+   public void evaluateBRDF(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
          final MaterialInfo parameters) {
 
       /*
@@ -60,7 +60,7 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void samplePDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
+   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
       Vec3 surfaceNormal = parameters.surfaceNormal;
       if (wIncoming.dot(surfaceNormal) > 0) {
