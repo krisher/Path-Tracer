@@ -54,18 +54,7 @@ public class LambertBRDF implements Material, Cloneable {
       final double yb = sinTheta * Math.sin(phi);
 
       final Vec3 directionOut = sampleOut.direction;
-      /*
-       * Construct orthonormal basis with vectors:
-       * 
-       * surfaceNormal, directionOut, nv
-       */
-      directionOut.set(0, 1, 0);
-      if (Math.abs(directionOut.dot(surfaceNormal)) > 0.9) {
-         // Small angle, pick a better vector...
-         directionOut.x = -1.0;
-         directionOut.y = 0;
-      }
-      directionOut.cross(surfaceNormal).normalize();
+      directionOut.set(parameters.tangentVector);
       final Vec3 nv = new Vec3(surfaceNormal).cross(directionOut);
       /*
        * Use the x,y,z values calculated above as coordinates in the ONB...

@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import edu.rit.krisher.scene.material.MeasuredIsotropicMaterial;
+import edu.rit.krisher.scene.Material;
 
 /**
  * Parser for the ASTM RGB BRDF format as used by <a
@@ -23,11 +23,11 @@ import edu.rit.krisher.scene.material.MeasuredIsotropicMaterial;
  */
 public class ASTMBRDFParser {
 
-   public static MeasuredIsotropicMaterial parseRGBBRDF(final File file) throws IOException {
+   public static Material parseRGBBRDF(final File file) throws IOException {
       return parseRGBBRDF(new FileInputStream(file));
    }
 
-   public static MeasuredIsotropicMaterial parseRGBBRDF(final InputStream stream) throws IOException {
+   public static Material parseRGBBRDF(final InputStream stream) throws IOException {
       final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 
       String line;
@@ -69,18 +69,14 @@ public class ASTMBRDFParser {
          rgb[sampleOffs] = Float.parseFloat(vars[4]);
          rgb[sampleOffs + 1] = Float.parseFloat(vars[5]);
          rgb[sampleOffs + 2] = Float.parseFloat(vars[6]);
-         
-         if (rgb[sampleOffs] < 0) rgb[sampleOffs] = 0;
-         if (rgb[sampleOffs+1] < 0) rgb[sampleOffs+1] = 0;
-         if (rgb[sampleOffs+2] < 0) rgb[sampleOffs+2] = 0;
 
          sampleOffs += 3;
       }
 
       return new MeasuredIsotropicMaterial(thetaIThetaSDeltaPhi, rgb);
    }
-   
-   public static MeasuredIsotropicMaterial getKrylonBlue() {
+
+   public static Material getKrylonBlue() {
       try {
          return ASTMBRDFParser.parseRGBBRDF(ASTMBRDFParser.class.getResourceAsStream("krylon_blue_RGB.astm"));
       } catch (final IOException e) {
