@@ -9,16 +9,11 @@ package edu.rit.krisher.scene.material;
 public interface SpectralDistribution {
 
    /**
-    * Multiplies this spectrum by the regularly spaced samples with wavelengths between startWl and endWl.
+    * Multiplies this spectrum by another distribution.
     * 
-    * @param samples
-    *           A non-null array with at least one sample value.
-    * @param startWl
-    *           The start wavelength of the samples. Power for wavelengths less than this value are assumed to be 0.
-    * @param endWl
-    *           The ending wavelength of the samples. Power for wavelengths greater than this value are assumed to be 0.
+    * @param sd The spectral distribution to multiply by.
     */
-   public void multiply(float[] samples, float startWl, float endWl);
+   public void multiply(SpectralDistribution sd);
 
    /**
     * Multiplies this spectrum by a constant scale factor.
