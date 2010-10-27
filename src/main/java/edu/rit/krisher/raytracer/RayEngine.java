@@ -72,7 +72,7 @@ public class RayEngine {
                      timer.start();
                      tracer.pathTrace(item);
                      timer.stop();
-                     timer.print(System.out);
+                     timer.print();
                   }
                } catch (final InterruptedException ie) {
                   return;

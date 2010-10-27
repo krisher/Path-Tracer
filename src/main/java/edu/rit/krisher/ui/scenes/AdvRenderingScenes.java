@@ -117,7 +117,7 @@ public final class AdvRenderingScenes {
             }
             final Timer kdTimer = new Timer("KD-Tree Construction (KD Visualization)").start();
             final KDTree accel = new KDTree(kdStrategy, geometry);
-            kdTimer.stop().print(System.out);
+            kdTimer.stop().print();
             System.out.println(new KDTreeMetrics(accel));
             System.out.println("Generating KDTree visualization mesh...");
             final TriangleMesh kdMesh = KDSplitMeshGenerator.generateLeafNodeMesh(accel);
@@ -171,7 +171,7 @@ public final class AdvRenderingScenes {
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
-               kdTimer.stop().print(System.out);
+               kdTimer.stop().print();
                System.out.println(new KDTreeMetrics(accel));
                add(accel);
             } else {
@@ -207,7 +207,7 @@ public final class AdvRenderingScenes {
 
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry[i]);
-               kdTimer.stop().print(System.out);
+               kdTimer.stop().print();
                System.out.println(new KDTreeMetrics(accel));
                add(accel);
             }

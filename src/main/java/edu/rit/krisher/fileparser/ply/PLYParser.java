@@ -91,7 +91,7 @@ public final class PLYParser {
 
       final Timer timer = new Timer("Parse PLY").start();
       parsePLY(stream, elementReceivers);
-      timer.stop().print(System.out);
+      timer.stop().print();
 
       final float[] vertices = vReceiver.getBuffer();
       final int[] indices = iReceiver.getIndexList();

@@ -56,7 +56,7 @@ public class KDTreeTest {
       timer.start();
       final KDTree tree = new KDTree(new SAHPartitionStrategey(), bunnyGeom);
       timer.stop();
-      timer.print(System.out);
+      timer.print();
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);
       System.out.println(metrics);
       // Sanity Check

@@ -1,6 +1,5 @@
 package edu.rit.krisher.util;
 
-import java.io.PrintStream;
 
 /**
  * Simple thread-safe timer utility that independently records time spent in one or more threads.
@@ -75,7 +74,13 @@ public final class Timer {
       return (startedTime.get() != null);
    }
 
-   public Timer print(final PrintStream out) {
+   /**
+    * Prints the Timer name and total elapsed time (in all threads). May not include time from other threads where the
+    * timer has been started but not yet stopped.
+    * 
+    * @return this for command chaining.
+    */
+   public Timer print() {
       final long nanoTime;
       synchronized (this) {
          if (isRunning()) {
