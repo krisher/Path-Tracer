@@ -83,7 +83,7 @@ public class PLYParserTest {
          zis.close();
       }
       final float[] buffer = receiver.getBuffer();
-      Assert.assertEquals(35947, buffer.length);
+      Assert.assertEquals(35947 * 3, buffer.length);
    }
 
    @Test
