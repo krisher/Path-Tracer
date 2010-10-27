@@ -9,8 +9,8 @@ import edu.rit.krisher.vecmath.Vec3;
 
 public class RefractiveBRDF implements Material {
 
+   private static final double inRef = 1.0; // TODO: the ray should carry the index of refraction with it...
    private final double refractiveIndex;
-   final double inRef = 1.0;
    private final Color transmissionFilter;
    private final double exp;
 
