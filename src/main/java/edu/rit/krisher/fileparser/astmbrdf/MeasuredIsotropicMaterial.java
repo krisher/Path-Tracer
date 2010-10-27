@@ -64,6 +64,9 @@ class MeasuredIsotropicMaterial implements Material {
       }
    }
 
+   private static final double sinTheta(final double cosTheta) {
+      return Math.sqrt(1.0 - cosTheta * cosTheta);
+   }
    /*
     * @see edu.rit.krisher.scene.Material#evaluateBRDF(edu.rit.krisher.scene.material.Color,
     * edu.rit.krisher.vecmath.Vec3, edu.rit.krisher.vecmath.Vec3, edu.rit.krisher.scene.MaterialInfo)
@@ -77,15 +80,12 @@ class MeasuredIsotropicMaterial implements Material {
       final Vec3 wIShading = new Vec3(wIncoming.dot(parameters.tangentVector), wIncoming.dot(sY), wIncoming.dot(parameters.surfaceNormal));
       final Vec3 wOShading = new Vec3(wOutgoingN.dot(parameters.tangentVector), wOutgoingN.dot(sY), wOutgoingN.dot(parameters.surfaceNormal));
 
-      final double elevationI = Math.acos(wIShading.z);
-      final double elevationO = Math.acos(wOShading.z);
-
       final double azI = Math.atan2(wIShading.y, wIShading.x);
       final double azO = Math.atan2(wOShading.y, wOShading.x);
 
       final double dAz = azO - azI;
 
-      final double u = (Math.sin(elevationI) * Math.sin(elevationO));
+      final double u = (sinTheta(wIShading.z) * sinTheta(wOShading.z));
       final double v = (float) Math.abs((((dAz / Math.PI) + 1.0) % 2.0) - 1.0); // Scale and normalize so
       final double w = (float) (wIShading.z * wOShading.z);
 

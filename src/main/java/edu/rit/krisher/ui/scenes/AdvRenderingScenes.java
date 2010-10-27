@@ -71,8 +71,8 @@ public final class AdvRenderingScenes {
             createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
             createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
-            
-            createSceneMultiTree("Bunny (Krylon)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(ASTMBRDFParser.getKrylonBlue(), true)),
+
+            createSceneMultiTree("Bunny (Krylon)", new LambertBRDF(new Color(0.25)), true, new SAHPartitionStrategey(), true, bunnyFactory(ASTMBRDFParser.getKrylonBlue(), true)),
 
             createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
@@ -90,14 +90,14 @@ public final class AdvRenderingScenes {
       final double xBorder = sceneBounds.xSpan() * 4;
       final double zBorder = sceneBounds.zSpan() * 4;
       final double yBorder = sceneBounds.ySpan() * 2;
-      
+
       final AxisAlignedBoundingBox expandedAABB = new AxisAlignedBoundingBox(sceneBounds);
       expandedAABB.xyzxyz[0] -= xBorder;
       expandedAABB.xyzxyz[2] -= zBorder;
       expandedAABB.xyzxyz[3] += xBorder;
       expandedAABB.xyzxyz[5] += zBorder;
       expandedAABB.xyzxyz[4] += yBorder;
-      
+
 
       final TriangleMesh mesh = new TriangleMesh(expandedAABB.toVertexArrayF(), walls?floorAndWallsBuff:floorBuff);
       if (mat != null) {
@@ -128,7 +128,7 @@ public final class AdvRenderingScenes {
    }
 
    private static final int[] boxVertIndices = { 0, 1, 2, 0, 2, 3, 5, 4, 1, 4, 0, 1, 5, 2, 6, 5, 1, 2, 3, 7, 6, 3, 6,
-         2, 0, 4, 7, 0, 7, 3, 4, 5, 6, 4, 6, 7 };
+      2, 0, 4, 7, 0, 7, 3, 4, 5, 6, 4, 6, 7 };
 
    public static GeometryFactory boxes(final AxisAlignedBoundingBox... aabbs) {
       return new GeometryFactory() {
@@ -167,7 +167,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
-                  : groundMat, walls, geomBounds);
+            : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDTree accel = new KDTree(kdStrategy, geometry);
@@ -186,7 +186,7 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
@@ -218,10 +218,10 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
-//            add(new SphereLight(new Vec3(geomBounds.xyzxyz[0] - geomBounds.xSpan(), geomBounds.xyzxyz[4]
-//                  + geomBounds.ySpan(), geomBounds.xyzxyz[5] + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            //            add(new SphereLight(new Vec3(geomBounds.xyzxyz[0] - geomBounds.xSpan(), geomBounds.xyzxyz[4]
+            //                  + geomBounds.ySpan(), geomBounds.xyzxyz[5] + geomBounds.zSpan() * 2.0), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
 
          }
