@@ -13,7 +13,7 @@ import edu.rit.krisher.vecmath.Vec3;
 public class SampleRay extends Ray {
 
    /**
-    * The color that is transmitted along this ray.
+    * The spectral distribution for this sample, may be used for reflectance ratios or power.
     */
    public final Color sampleColor;
 
@@ -23,6 +23,9 @@ public class SampleRay extends Ray {
     */
    public int pixelX;
    public int pixelY;
+   /**
+    * Flag indicating whether light incident via a direct hit on an emissive object should be considered.
+    **/
    public boolean emissiveResponse;
 
    public SampleRay(final double filterWeight) {

@@ -67,7 +67,7 @@ public final class Vec3 implements Transform {
    public final double get(final int idx) {
       return idx == 0 ? x : (idx == 1 ? y : z);
    }
-   
+
    public double[] get() {
       return new double[] {x, y, z};
    }
@@ -211,6 +211,13 @@ public final class Vec3 implements Transform {
       return vec;
    }
 
+   /**
+    * Reflects this vector about the specified reflection vector.
+    * 
+    * @param reflectionVec
+    *           A non-null unit length vector.
+    * @return this for operation chaining.
+    */
    public final Vec3 reflect(final Vec3 reflectionVec) {
       scaleAdd(reflectionVec, -2 * (dot(reflectionVec))).normalize();
       return this;

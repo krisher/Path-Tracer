@@ -55,10 +55,16 @@ class MeasuredIsotropicMaterial implements Material {
       for (int i = 0; i < measurementAngles.length; i += 3) {
          final float thetaI = measurementAngles[i];
          final float thetaO = measurementAngles[i + 1];
-         final float dPhi = measurementAngles[i + 2];
+         float dPhi = measurementAngles[i + 2];
+
+         dPhi %= 2 * Math.PI;
+         if (dPhi < 0)
+            dPhi += 2 * Math.PI;
+         if (dPhi > Math.PI)
+            dPhi = (float) (2 * Math.PI - dPhi);
 
          measurementAngles[i] = (float) (Math.sin(thetaI) * Math.sin(thetaO));
-         measurementAngles[i + 1] = (float) Math.abs((((dPhi / Math.PI) + 1.0) % 2.0) - 1.0); // Scale and normalize so
+         measurementAngles[i + 1] = (float) (dPhi / Math.PI); // Scale and normalize so
          // dPhi is in [0, 1].
          measurementAngles[i + 2] = (float) (Math.cos(thetaI) * Math.cos(thetaO));
       }
@@ -85,8 +91,15 @@ class MeasuredIsotropicMaterial implements Material {
 
       final double dAz = azO - azI;
 
+
       final double u = (sinTheta(wIShading.z) * sinTheta(wOShading.z));
-      final double v = (float) Math.abs((((dAz / Math.PI) + 1.0) % 2.0) - 1.0); // Scale and normalize so
+
+      double v = dAz % (2 * Math.PI);
+      if (v < 0)
+         v += 2 * Math.PI;
+      if (v > Math.PI)
+         v = (float) (2 * Math.PI - v);
+      v /= Math.PI;
       final double w = (float) (wIShading.z * wOShading.z);
 
       // find the closest sample...
@@ -106,6 +119,8 @@ class MeasuredIsotropicMaterial implements Material {
       }
       if (closest >= 0) {
          colorInOut.multiply(reflectance[closest], reflectance[closest + 1], reflectance[closest + 2]);
+      } else {
+         assert false : "At least one of the sample points should have been closest.";
       }
    }
 
@@ -133,8 +148,10 @@ class MeasuredIsotropicMaterial implements Material {
    @Override
    public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
-      // TODO Auto-generated method stub
-      sampleOut.sampleColor.clear();
+      sampleOut.direction.set(wIncoming).reflect(parameters.surfaceNormal);
+      sampleOut.sampleColor.set(1, 1, 1);
+      evaluateBRDF(sampleOut.sampleColor, sampleOut.direction, wIncoming, parameters);
+      sampleOut.emissiveResponse = false;
    }
 
 }
