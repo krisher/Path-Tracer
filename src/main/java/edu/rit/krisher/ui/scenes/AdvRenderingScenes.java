@@ -21,6 +21,7 @@ import edu.rit.krisher.scene.acceleration.MedianPartitionStrategy;
 import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.camera.DoFCamera;
 import edu.rit.krisher.scene.camera.PinholeCamera;
+import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
@@ -73,6 +74,7 @@ public final class AdvRenderingScenes {
             createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
 
             createSceneMultiTree("Bunny (Krylon)", new LambertBRDF(new Color(0.25)), true, new SAHPartitionStrategey(), true, bunnyFactory(ASTMBRDFParser.getKrylonBlue(), true)),
+            createScene("Spheres Measured BRDFs", new LambertBRDF(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
             createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
@@ -289,6 +291,16 @@ public final class AdvRenderingScenes {
                }
             }
             return null;
+         }
+      };
+   }
+
+   private static final GeometryFactory sphereFactory(final Vec3 position, final double radius, final Material material) {
+      return new GeometryFactory() {
+
+         @Override
+         public Geometry createGeometry() {
+            return new Sphere(position, radius, material);
          }
       };
    }

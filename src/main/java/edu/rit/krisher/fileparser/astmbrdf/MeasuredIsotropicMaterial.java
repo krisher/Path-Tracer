@@ -71,7 +71,7 @@ class MeasuredIsotropicMaterial implements Material {
    }
 
    private static final double sinTheta(final double cosTheta) {
-      return Math.sqrt(1.0 - cosTheta * cosTheta);
+      return Math.sqrt(Math.max(0, 1.0 - cosTheta * cosTheta));
    }
    /*
     * @see edu.rit.krisher.scene.Material#evaluateBRDF(edu.rit.krisher.scene.material.Color,
@@ -148,8 +148,34 @@ class MeasuredIsotropicMaterial implements Material {
    @Override
    public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
          final MaterialInfo parameters) {
-      sampleOut.direction.set(wIncoming).reflect(parameters.surfaceNormal);
-      sampleOut.sampleColor.set(1, 1, 1);
+      // sampleOut.direction.set(wIncoming).reflect(parameters.surfaceNormal);
+      Vec3 surfaceNormal = parameters.surfaceNormal;
+      if (wIncoming.dot(surfaceNormal) > 0) {
+         surfaceNormal = surfaceNormal.inverted();
+      }
+
+      /*
+       * Cosine-weighted sampling about the surface normal:
+       * 
+       * Probability of direction Ko = 1/pi * cos(theta) where theta is the angle between the surface normal and Ko.
+       * 
+       * The polar angle about the normal is chosen from a uniform distribution 0..2pi
+       */
+      final double cosTheta = Math.sqrt(1.0 - rng.nextDouble());
+      final double sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
+      final double phi = 2.0 * Math.PI * rng.nextDouble();
+      final double xb = sinTheta * Math.cos(phi);
+      final double yb = sinTheta * Math.sin(phi);
+
+      final Vec3 directionOut = sampleOut.direction;
+      directionOut.set(parameters.tangentVector);
+      final Vec3 nv = new Vec3(surfaceNormal).cross(directionOut);
+      /*
+       * Use the x,y,z values calculated above as coordinates in the ONB...
+       */
+      directionOut.multiply(xb).scaleAdd(surfaceNormal, cosTheta).scaleAdd(nv, yb);
+
+      sampleOut.sampleColor.set(1);
       evaluateBRDF(sampleOut.sampleColor, sampleOut.direction, wIncoming, parameters);
       sampleOut.emissiveResponse = false;
    }

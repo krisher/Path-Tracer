@@ -7,7 +7,6 @@ import java.awt.geom.AffineTransform;
 
 import javax.swing.JComponent;
 
-import edu.rit.krisher.raytracer.ImageBuffer;
 
 /**
  * Combination ImageBuffer (to recieve pixel data from a Ray Tracing process)

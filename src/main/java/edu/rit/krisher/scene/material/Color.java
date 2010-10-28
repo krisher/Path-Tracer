@@ -154,6 +154,11 @@ public class Color implements Material, Texture {
       return this;
    }
 
+   public Color set(final double all) {
+      this.r = this.b = this.g = all;
+      return this;
+   }
+
    public void clear() {
       this.r = this.g = this.b = 0;
    }

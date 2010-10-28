@@ -42,6 +42,7 @@ public class Sphere implements Geometry {
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
       data.surfaceNormal.set(isectNormal);
+      MaterialInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
       data.materialCoords = null;
    }
 

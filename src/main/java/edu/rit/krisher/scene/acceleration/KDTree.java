@@ -248,7 +248,7 @@ public class KDTree implements Geometry {
                final int primIdx = intersection.primitiveID;
                final double newHit = greaterChild.intersects(intersection, ray, tsplit, tmax, maxDistance, rayOriginD, rayDirectionD);
                if (newHit > 0 && newHit < hitDist) {
-                  assert newHit >= tsplit - Ray.SMALL_D;
+                  assert newHit >= tsplit - Ray.SMALL_D : newHit + " < " + tsplit + "!";
                   return newHit; /* Greater child had closer hit. */
                }
                /* Restore greaterChild's primitive index as the hit result. */

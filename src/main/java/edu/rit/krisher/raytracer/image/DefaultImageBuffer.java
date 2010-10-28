@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
-import edu.rit.krisher.raytracer.ImageBuffer;
 
 /**
  * ImageBuffer implementation supporting tone mapping, and conversion of the rgb

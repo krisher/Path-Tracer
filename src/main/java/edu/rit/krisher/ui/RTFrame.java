@@ -19,9 +19,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import net.miginfocom.swing.MigLayout;
-import edu.rit.krisher.raytracer.ImageBuffer;
 import edu.rit.krisher.raytracer.RayEngine;
 import edu.rit.krisher.raytracer.image.DisplayableImageBuffer;
+import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.scene.Scene;
 
 /**

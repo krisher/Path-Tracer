@@ -84,6 +84,15 @@ public class ASTMBRDFParser {
          return null;
       }
    }
+
+   public static Material getMystique() {
+      try {
+         return ASTMBRDFParser.parseRGBBRDF(ASTMBRDFParser.class.getResourceAsStream("garnet_red_RGB.astm"));
+      } catch (final IOException e) {
+         e.printStackTrace();
+         return null;
+      }
+   }
    //
    // public static void main(final String[] args) {
    // try {

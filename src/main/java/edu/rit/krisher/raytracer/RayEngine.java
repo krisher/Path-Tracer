@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.DefaultScene;
 import edu.rit.krisher.scene.Scene;

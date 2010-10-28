@@ -1,4 +1,4 @@
-package edu.rit.krisher.raytracer;
+package edu.rit.krisher.raytracer.image;
 
 import java.awt.Dimension;
 
