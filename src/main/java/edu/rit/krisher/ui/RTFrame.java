@@ -19,7 +19,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import net.miginfocom.swing.MigLayout;
-import edu.rit.krisher.raytracer.RayEngine;
+import edu.rit.krisher.raytracer.PathTracer;
+import edu.rit.krisher.raytracer.SceneIntegrator;
 import edu.rit.krisher.raytracer.image.DisplayableImageBuffer;
 import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.scene.Scene;
@@ -38,7 +39,7 @@ public class RTFrame extends JFrame {
    final JButton saveButton = new JButton("Save Image");
    final JFileChooser saveChooser = new JFileChooser(".");
 
-   private final RayEngine rayTracer = new RayEngine();
+   private final SceneIntegrator rayTracer = new PathTracer();
 
    public RTFrame() {
       final Container contentPane = getContentPane();
@@ -114,9 +115,9 @@ public class RTFrame extends JFrame {
             }
 
             final Scene selectedScene = rtControls.getSelectedScene();
-            RayEngine.rayTrace(progressBuffer, selectedScene.getCamera(), selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
+            rayTracer.integrate(progressBuffer, selectedScene.getCamera(), selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
          } else {
-            RayEngine.cancel(progressBuffer);
+            rayTracer.cancel(progressBuffer);
          }
       }
 
