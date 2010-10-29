@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.JitteredStratifiedRectangleSampling;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
@@ -15,6 +16,7 @@ import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.MaterialInfo;
+import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
@@ -26,13 +28,13 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public final class PathTracer extends ThreadedIntegrator {
+public final class PhotonTracer extends ThreadedIntegrator {
 
    /**
     * Creates a new path tracer.
     * 
     */
-   public PathTracer() {
+   public PhotonTracer() {
       super();
    }
    
@@ -45,14 +47,21 @@ public final class PathTracer extends ThreadedIntegrator {
    protected WorkItemProcessor[] createProcessors(final int count) {
       final WorkItemProcessor[] processors = new WorkItemProcessor[count];
       for (int i=0; i < count; ++i) {
-         processors[i] = new PathProcessor();
+         processors[i] = new PhotonIntegrator();
       }
       return processors;
+   }
+   
+   @Override
+   public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate,
+         final int recursionDepth) {
+      //TODO: create photon map; how to do this within the threading model?...
+      super.integrate(image,  scene, pixelSampleRate, recursionDepth);
    }
 
 
 
-   private static final class PathProcessor implements WorkItemProcessor {
+   private static final class PhotonIntegrator implements WorkItemProcessor {
       /**
        * Overridden to remove thread safety overhead
        */

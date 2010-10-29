@@ -49,7 +49,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
    private static final int BLOCK_SIZE = 64;
    private static final int threads = Runtime.getRuntime().availableProcessors();
    private static final NumberFormat formatter = NumberFormat.getNumberInstance();
-   private final LinkedBlockingQueue<WorkItem> workQueue = new LinkedBlockingQueue<WorkItem>();
+   private final LinkedBlockingQueue<ImageBlockWorkItem> workQueue = new LinkedBlockingQueue<ImageBlockWorkItem>();
    private final Thread[] workerThreads = new Thread[threads];
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
 
@@ -66,9 +66,6 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
     * @param image
     *           A non-null ImageBuffer. The dimensions of the ray-traced image
     *           are determined from the {@link ImageBuffer#getResolution()} method synchronously with this call.
-    * @param camera
-    *           The non-null camera that will produce the initial set of sample
-    *           rays (eye rays).
     * @param scene
     *           The non-null scene to render.
     * @param pixelSampleRate
@@ -79,7 +76,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
     *           The maximum length of a ray path. 0 means trace eye rays and
     *           direct illumination only.
     */
-   public void integrate(final ImageBuffer image, final Camera camera, final Scene scene, final int pixelSampleRate,
+   public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate,
          final int recursionDepth) {
 
       if (!started.getAndSet(true)) {
@@ -127,7 +124,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
          final int blockStartX = i * BLOCK_SIZE;
          for (int j = 0; j < yBlocks; j++) {
             final int blockStartY = j * BLOCK_SIZE;
-            workQueue.add(new WorkItem(image, scene, camera, blockStartX, blockStartY, Math.min(BLOCK_SIZE, imageSize.width
+            workQueue.add(new ImageBlockWorkItem(image, scene, blockStartX, blockStartY, Math.min(BLOCK_SIZE, imageSize.width
                   - blockStartX), Math.min(BLOCK_SIZE, imageSize.height - blockStartY), pixelSampleRate,
 
             recursionDepth, doneSignal));
@@ -154,7 +151,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
             public void run() {
                try {
                   while (!Thread.interrupted()) {
-                     final WorkItem item = workQueue.take();
+                     final ImageBlockWorkItem item = workQueue.take();
                      timer.start();
                      tracer.integrate(item);
                      timer.stop();
@@ -184,12 +181,12 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
     * @param target
     */
    public void cancel(final ImageBuffer target) {
-      final ArrayList<WorkItem> drained = new ArrayList<WorkItem>();
+      final ArrayList<ImageBlockWorkItem> drained = new ArrayList<ImageBlockWorkItem>();
       workQueue.drainTo(drained);
       AtomicInteger remaining = null;
       int removed = 0;
-      for (final Iterator<WorkItem> itr = drained.iterator(); itr.hasNext();) {
-         final WorkItem itm = itr.next();
+      for (final Iterator<ImageBlockWorkItem> itr = drained.iterator(); itr.hasNext();) {
+         final ImageBlockWorkItem itm = itr.next();
          if (itm.image == target) {
             itr.remove();
             remaining = itm.doneSignal;
@@ -222,11 +219,11 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
       /**
        * Integrates a portion of a scene that reaches the image plane described by the specified WorkItem.
        * <p>
-       * {@link WorkItem#workDone()} is invoked before this method completes.
+       * {@link ImageBlockWorkItem#workDone()} is invoked before this method completes.
        * 
        * @param workItem
        *           The non-null integration parameters.
        */
-      public void integrate(final WorkItem workItem);
+      public void integrate(final ImageBlockWorkItem workItem);
    }
 }

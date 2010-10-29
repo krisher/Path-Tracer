@@ -19,9 +19,6 @@ public interface SceneIntegrator {
     * @param image
     *           A non-null ImageBuffer. The dimensions of the ray-traced image
     *           are determined from the {@link ImageBuffer#getResolution()} method synchronously with this call.
-    * @param camera
-    *           The non-null camera that will produce the initial set of sample
-    *           rays (eye rays).
     * @param scene
     *           The non-null scene to render.
     * @param pixelSampleRate
@@ -32,7 +29,7 @@ public interface SceneIntegrator {
     *           The maximum length of a ray path. 0 means trace eye rays and
     *           direct illumination only.
     */
-   public void integrate(final ImageBuffer image, final Camera camera, final Scene scene, final int pixelSampleRate,
+   public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate,
          final int recursionDepth);
 
    

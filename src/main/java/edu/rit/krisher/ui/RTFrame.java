@@ -115,7 +115,7 @@ public class RTFrame extends JFrame {
             }
 
             final Scene selectedScene = rtControls.getSelectedScene();
-            rayTracer.integrate(progressBuffer, selectedScene.getCamera(), selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
+            rayTracer.integrate(progressBuffer, selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
          } else {
             rayTracer.cancel(progressBuffer);
          }
