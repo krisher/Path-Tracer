@@ -49,7 +49,7 @@ public class KDTree implements Geometry {
       for (int i = 0; i < content.length; ++i) {
          primCount += content[i].getPrimitiveCount();
       }
-      final PrimitiveAABB bounds[] = new PrimitiveAABB[primCount];
+      final PrimitiveAABB[] bounds = new PrimitiveAABB[primCount];
 
       geomBits = (32 - Integer.numberOfLeadingZeros(content.length));
       int gMask = 0;
@@ -78,10 +78,6 @@ public class KDTree implements Geometry {
 
    @Override
    public int getPrimitiveCount() {
-      return 1;
-   }
-
-   public int getTriCount() {
       int count = 0;
       for (final Geometry geom : content) {
          count += geom.getPrimitiveCount();
@@ -89,8 +85,11 @@ public class KDTree implements Geometry {
       return count;
    }
 
+
    /**
-    * @return the partitionStrategy
+    * Accessor for the KDTree partition strategy used to subdivide the tree nodes.
+    * 
+    * @return the partitionStrategy (as specified via a constructor).
     */
    public KDPartitionStrategy getPartitionStrategy() {
       return partitionStrategy;

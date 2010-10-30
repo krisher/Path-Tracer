@@ -2,6 +2,12 @@ package edu.rit.krisher.scene.acceleration;
 
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
+/**
+ * Various aggregate information regarding the structure of a KD-Tree instance.
+ * 
+ * @author krisher
+ * 
+ */
 public class KDTreeMetrics {
 
    /**
@@ -91,7 +97,7 @@ public class KDTreeMetrics {
          this.emptyNodes = visitor.cumEmptyNodes;
 
          this.totalPrimitives = visitor.cumLeafPrimitives;
-         this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getTriCount();
+         this.duplicatedPrimitives = visitor.cumLeafPrimitives - tree.getPrimitiveCount();
 
          final VarianceVisitor vVisitor = new VarianceVisitor(visitor.cumLeafPrimitives
                                                               / (double) visitor.leafNodeCount);
@@ -194,7 +200,7 @@ public class KDTreeMetrics {
    private static class VarianceVisitor implements KDNodeVisitor {
 
       private final double meanPrimsPerLeaf;
-      double variance = 0;
+      private double variance = 0;
 
       public VarianceVisitor(final double meanPrimsPerLeaf) {
          this.meanPrimsPerLeaf = meanPrimsPerLeaf;
