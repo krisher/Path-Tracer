@@ -19,10 +19,10 @@ public class SampleRay extends Ray {
 
    public final Color extinction = new Color(0,0,0);
    /**
-    * The pixel that this ray contributes to.
+    * The pixel location that this ray contributes to.
     */
-   public int pixelX;
-   public int pixelY;
+   public double pixelX;
+   public double pixelY;
    /**
     * Flag indicating whether light incident via a direct hit on an emissive object should be considered.
     **/

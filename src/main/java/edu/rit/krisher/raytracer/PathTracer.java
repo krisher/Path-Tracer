@@ -35,8 +35,8 @@ public final class PathTracer extends ThreadedIntegrator {
    public PathTracer() {
       super();
    }
-   
-   
+
+
 
    /* 
     * @see edu.rit.krisher.raytracer.ThreadedIntegrator#createProcessors(int)
@@ -97,38 +97,28 @@ public final class PathTracer extends ThreadedIntegrator {
             pixelSampler.resize(workItem.pixelSampleRate);
             final Camera camera = workItem.scene.getCamera();
             /*
-             * Eye ray generation state
+             * Imaging ray generation.
              */
             for (int pixelY = 0; pixelY < workItem.blockHeight; pixelY++) {
                for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
-                  rayIdx = 0;
                   pixelSampler.generateSamples(rng);
-                  for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
-                     for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
-                        final SampleRay ray = rays[rayIdx];
-                        /*
-                         * Reset the ray state since we are probably re-using each instance many times.
-                         */
-                        ray.pixelX = pixelX;
-                        ray.pixelY = pixelY;
-                        /*
-                         * The contribution of the path is bounded by 1 / (samples per pixel)
-                         */
-                        ray.sampleColor.set(sampleWeight, sampleWeight, sampleWeight);
-                        /*
-                         * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
-                         * directly visible)
-                         */
-                        ray.emissiveResponse = true;
-                        ray.extinction.clear();
-                        final double x = 2.0 * (workItem.blockStartX + pixelX + pixelSampler.xSamples[rayIdx])
-                              / imageSize.width - 1.0;
-                        final double y = 2.0 * (workItem.blockStartY + pixelY + pixelSampler.ySamples[rayIdx])
-                              / imageSize.height - 1.0;
-                        camera.sample(ray, x, y, rng);
-                        ++rayIdx;
-                     }
+                  for (rayIdx = 0; rayIdx < workItem.pixelSampleRate * workItem.pixelSampleRate; ++rayIdx) {
+                     final SampleRay ray = rays[rayIdx];
+                     /*
+                      * The contribution of the path is bounded by 1 / (samples per pixel)
+                      */
+                     ray.sampleColor.set(sampleWeight, sampleWeight, sampleWeight);
+                     /*
+                      * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
+                      * directly visible)
+                      */
+                     ray.emissiveResponse = true;
+                     ray.extinction.clear();
+
+                     ray.pixelX = workItem.blockStartX + pixelX + pixelSampler.xSamples[rayIdx];
+                     ray.pixelY = workItem.blockStartY + pixelY + pixelSampler.ySamples[rayIdx];
                   }
+                  camera.sample(rays, imageSize.width, imageSize.height, rng);
                   /*
                    * Process all of the samples for the current pixel.
                    */
@@ -195,7 +185,8 @@ public final class PathTracer extends ThreadedIntegrator {
                    * Ignore the emissive response flag since the background will not be sampled for direct illumination.
                    */
                   // if (ray.emissiveResponse) {
-                  final int dst = 3 * (ray.pixelY * workItem.blockWidth + ray.pixelX);
+                  final int dst = 3 * (((int) ray.pixelY - workItem.blockStartY) * workItem.blockWidth
+                        + (int) ray.pixelX - workItem.blockStartX);
                   pixels[dst] += bg.r * ray.sampleColor.r;
                   pixels[dst + 1] += bg.g * ray.sampleColor.g;
                   pixels[dst + 2] += bg.b * ray.sampleColor.b;
@@ -239,11 +230,11 @@ public final class PathTracer extends ThreadedIntegrator {
                 * below.
                 */
                final double rTransmission = ray.sampleColor.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
                final double gTransmission = ray.sampleColor.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * intersectDist));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * intersectDist));
                final double bTransmission = ray.sampleColor.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -259,10 +250,10 @@ public final class PathTracer extends ThreadedIntegrator {
                 * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
                 */
                if (rayDepth < workItem.recursionDepth
-               /*
-                * Russian roulette for variance reduction.
-                */
-               && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
+                     /*
+                      * Russian roulette for variance reduction.
+                      */
+                     && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
                   final SampleRay irradianceRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
@@ -290,7 +281,8 @@ public final class PathTracer extends ThreadedIntegrator {
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
-               final int dst = 3 * (ray.pixelY * workItem.blockWidth + ray.pixelX);
+               final int dst = 3 * (((int) ray.pixelY - workItem.blockStartY) * workItem.blockWidth
+                     + (int) ray.pixelX - workItem.blockStartX);
                pixels[dst] += (sampleColor.r) * rTransmission;
                pixels[dst + 1] += (sampleColor.g) * gTransmission;
                pixels[dst + 2] += (sampleColor.b) * bTransmission;

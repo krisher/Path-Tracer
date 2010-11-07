@@ -2,11 +2,10 @@ package edu.rit.krisher.scene;
 
 import java.util.Random;
 
-import edu.rit.krisher.vecmath.Ray;
+import edu.rit.krisher.raytracer.rays.SampleRay;
 
 /**
- * Interface for a camera model. This class is responsible for generating eye
- * rays in terms of an origin and direction.
+ * Interface for a camera model. This class is responsible for generating eye rays in terms of an origin and direction.
  * 
  * @author krisher
  * 
@@ -14,20 +13,19 @@ import edu.rit.krisher.vecmath.Ray;
 public interface Camera {
 
    /**
-    * Initializes the specified Ray's direction and origin
+    * Initializes the specified Ray's direction and origin.
     * 
     * @param rayOut
-    *           A non-null Ray to initialize.
-    * @param x
-    *           A normalized [-1, 1] value describing the horizontal sample
-    *           location on the image plane.
-    * @param y
-    *           A normalized [-1, 1] value describing the vertical sample
-    *           location on the image plane.
+    *           A list of non-null Rays to initialize. The pixelX and pixelY fields of the SampleRays indicate the
+    *           image-plane location to initialize the ray for. The values of all other fields are undefined. Camera
+    *           implementations should populate the ray direction and origin fields for each ray.
+    * @param imageWidth
+    *           The width (in pixels) of the image plane.
+    * @param imageHeight
+    *           The height (in pixels) of the image plane
     * @param rng
-    *           A non-null random number generator that can be used for sampling
-    *           of the camera aperture.
+    *           A non-null random number generator that can be used for sampling of the camera aperture.
     */
-   public void sample(Ray rayOut, double x, double y, Random rng);
+   public void sample(SampleRay[] rayOut, int imageWidth, int imageHeight, Random rng);
 
 }

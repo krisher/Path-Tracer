@@ -2,9 +2,9 @@ package edu.rit.krisher.scene.camera;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.vecmath.Quat;
-import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class PinholeCamera implements Camera {
@@ -15,8 +15,8 @@ public class PinholeCamera implements Camera {
    protected Vec3 position = new Vec3(0, 0, 0);
 
    /**
-    * The orientation of the camera relative to its 'home' orientation with the
-    * view vector pointing down the -z axis, and up pointing toward +y.
+    * The orientation of the camera relative to its 'home' orientation with the view vector pointing down the -z axis,
+    * and up pointing toward +y.
     */
    protected Quat orientation = new Quat();
 
@@ -25,8 +25,8 @@ public class PinholeCamera implements Camera {
     */
    protected double fieldOfView = 40.0;
    /**
-    * The distance to the imaging plane for direction of generated rays, based
-    * on the assumption that x/y values range from -1 to 1.
+    * The distance to the imaging plane for direction of generated rays, based on the assumption that x/y values range
+    * from -1 to 1.
     */
    protected double rayZDist = 1.0 / Math.tan(Math.toRadians(getFOVAngle()) / 2.0);
 
@@ -76,20 +76,21 @@ public class PinholeCamera implements Camera {
     * @see edu.rit.krisher.scene.Camera#generateRays(double, double, double)
     */
    @Override
-   public void sample(final Ray rayOut, final double x, final double y, final Random rng) {
-      rayOut.direction.set(x, y, -rayZDist).normalize();
-      orientation.transformVec(rayOut.direction);
-      rayOut.origin.set(position);
+   public void sample(final SampleRay[] rayOut, final int imageWidth, final int imageHeight, final Random rng) {
+      for (final SampleRay ray : rayOut) {
+         final double x = ray.pixelX * 2.0 / imageWidth - 1.0;
+         final double y = ray.pixelY * 2.0 / imageHeight - 1.0;
+         ray.direction.set(x, y, -rayZDist).normalize();
+         orientation.transformVec(ray.direction);
+         ray.origin.set(position);
+      }
    }
 
    /**
-    * Configures the camera's position and orientation so that it is looking
-    * toward the specified target location from the specified distance away. The
-    * azimuth describes the camera's rotation about the y axis (with a 0 value
-    * placing the camera above the -z axis, and rotation proceding clockwise --
-    * like a compass heading). Elevation is a rotation about the transformed x
-    * axis, with positive values placing the camera above the y == target.y
-    * plane looking down.
+    * Configures the camera's position and orientation so that it is looking toward the specified target location from
+    * the specified distance away. The azimuth describes the camera's rotation about the y axis (with a 0 value placing
+    * the camera above the -z axis, and rotation proceding clockwise -- like a compass heading). Elevation is a rotation
+    * about the transformed x axis, with positive values placing the camera above the y == target.y plane looking down.
     * 
     * @param target
     * @param elevationDeg
@@ -98,8 +99,7 @@ public class PinholeCamera implements Camera {
     */
    public void lookAt(final Vec3 target, final double elevationDeg, final double azimuthDeg, final double distance) {
       /*
-       * Initialize a quaternion to the appropriate rotations about the y
-       * (azimuth) and x (elevation) axes.
+       * Initialize a quaternion to the appropriate rotations about the y (azimuth) and x (elevation) axes.
        */
       final double azRads = -Math.toRadians(azimuthDeg) + Math.PI;
       final double elRads = -Math.toRadians(elevationDeg);
