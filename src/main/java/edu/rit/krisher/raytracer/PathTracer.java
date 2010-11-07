@@ -36,21 +36,17 @@ public final class PathTracer extends ThreadedIntegrator {
       super();
    }
 
-
-
-   /* 
+   /*
     * @see edu.rit.krisher.raytracer.ThreadedIntegrator#createProcessors(int)
     */
    @Override
    protected WorkItemProcessor[] createProcessors(final int count) {
       final WorkItemProcessor[] processors = new WorkItemProcessor[count];
-      for (int i=0; i < count; ++i) {
+      for (int i = 0; i < count; ++i) {
          processors[i] = new PathProcessor();
       }
       return processors;
    }
-
-
 
    private static final class PathProcessor implements WorkItemProcessor {
       /**
@@ -65,7 +61,7 @@ public final class PathTracer extends ThreadedIntegrator {
        */
       private float[] pixels;
       private final MaterialInfo shadingInfo = new MaterialInfo();
-      private final JitteredStratifiedRectangleSampling pixelSampler = new JitteredStratifiedRectangleSampling(1);
+      private final JitteredStratifiedRectangleSampling pixelSampler = new JitteredStratifiedRectangleSampling(1, 1);
 
       /*
        * @see edu.rit.krisher.raytracer.RayIntegrator#integrate(edu.rit.krisher.raytracer.WorkItem)
@@ -82,27 +78,26 @@ public final class PathTracer extends ThreadedIntegrator {
             final Dimension imageSize = workItem.image.getResolution();
             final double sampleWeight = 1.0 / (workItem.pixelSampleRate * workItem.pixelSampleRate);
 
-            final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate];
-            int rayIdx = 0;
-            for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
-               for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
-                  /*
-                   * Use of 1/<samples-per-pixel> as the sample weight effectively applies a single-pixel wide box
-                   * filter
-                   * to average the samples. It may be benificial to try other filters...
-                   */
-                  rays[rayIdx++] = new SampleRay(sampleWeight);
-               }
+            final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate
+                                                   * workItem.blockWidth * workItem.blockHeight];
+            for (int rayIdx = 0; rayIdx < rays.length; ++rayIdx) {
+               /*
+                * Use of 1/<samples-per-pixel> as the sample weight effectively applies a single-pixel wide box filter
+                * to average the samples. It may be benificial to try other filters...
+                */
+               rays[rayIdx] = new SampleRay(sampleWeight);
+
             }
-            pixelSampler.resize(workItem.pixelSampleRate);
+            pixelSampler.resize(workItem.pixelSampleRate, workItem.pixelSampleRate);
             final Camera camera = workItem.scene.getCamera();
             /*
              * Imaging ray generation.
              */
+            int rayIdx = 0;
             for (int pixelY = 0; pixelY < workItem.blockHeight; pixelY++) {
                for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
                   pixelSampler.generateSamples(rng);
-                  for (rayIdx = 0; rayIdx < workItem.pixelSampleRate * workItem.pixelSampleRate; ++rayIdx) {
+                  for (int i = 0; i < workItem.pixelSampleRate * workItem.pixelSampleRate; ++i) {
                      final SampleRay ray = rays[rayIdx];
                      /*
                       * The contribution of the path is bounded by 1 / (samples per pixel)
@@ -115,16 +110,23 @@ public final class PathTracer extends ThreadedIntegrator {
                      ray.emissiveResponse = true;
                      ray.extinction.clear();
 
-                     ray.pixelX = workItem.blockStartX + pixelX + pixelSampler.xSamples[rayIdx];
-                     ray.pixelY = workItem.blockStartY + pixelY + pixelSampler.ySamples[rayIdx];
+                     ray.pixelX = workItem.blockStartX + pixelX + (double) pixelSampler.xSamples[i];
+                     ray.pixelY = workItem.blockStartY + pixelY + (double) pixelSampler.ySamples[i];
+                     ++rayIdx;
+
+                     assert ((int) ray.pixelX) == pixelX + workItem.blockStartX : "Ray PixelX (" + ray.pixelX
+                     + ") does not match expected (" + (pixelX + workItem.blockStartX) + ") -- J: "
+                     + pixelSampler.xSamples[i];
+                     assert ((int) ray.pixelY) == (pixelY + workItem.blockStartY) : "Ray PixelY (" + ray.pixelY
+                     + ") does not match expected (" + (pixelY + workItem.blockStartY) + ") -- J: "
+                     + pixelSampler.ySamples[i];
                   }
-                  camera.sample(rays, imageSize.width, imageSize.height, rng);
-                  /*
-                   * Process all of the samples for the current pixel.
-                   */
-                  processRays(workItem, rays);
+
                }
             }
+            camera.sample(rays, imageSize.width, imageSize.height, rng);
+
+            processRays(workItem, rays);
 
             /*
              * Out of rays, push pixels back into the image...
@@ -151,8 +153,7 @@ public final class PathTracer extends ThreadedIntegrator {
          int activeRayCount = rays.length;
          /*
           * All active rays are at the same depth into the path (# of bounces from the initial eye ray). Process until
-          * we
-          * reach the maximum depth, or all rays have terminated.
+          * we reach the maximum depth, or all rays have terminated.
           */
          for (int rayDepth = 0; rayDepth <= workItem.recursionDepth && activeRayCount > 0; rayDepth++) {
             /*
@@ -239,8 +240,7 @@ public final class PathTracer extends ThreadedIntegrator {
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
                 * relfection/refraction distributions are typically constrained to a small solid angle, they only
-                * respond
-                * to light coming from directions that will be sampled via bounce rays.
+                * respond to light coming from directions that will be sampled via bounce rays.
                 */
                if (shadingInfo.material.isDiffuse()) {
                   integrateDirectIllumination(sampleColor, geometry, lights, ray, shadingInfo, rng);
@@ -281,8 +281,7 @@ public final class PathTracer extends ThreadedIntegrator {
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
-               final int dst = 3 * (((int) ray.pixelY - workItem.blockStartY) * workItem.blockWidth
-                     + (int) ray.pixelX - workItem.blockStartX);
+               final int dst = 3 * (((int) ray.pixelY - workItem.blockStartY) * workItem.blockWidth + (int) ray.pixelX - workItem.blockStartX);
                pixels[dst] += (sampleColor.r) * rTransmission;
                pixels[dst + 1] += (sampleColor.g) * gTransmission;
                pixels[dst + 2] += (sampleColor.b) * bTransmission;

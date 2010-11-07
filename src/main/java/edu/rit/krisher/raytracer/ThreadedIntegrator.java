@@ -76,6 +76,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
     *           The maximum length of a ray path. 0 means trace eye rays and
     *           direct illumination only.
     */
+   @Override
    public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate,
          final int recursionDepth) {
 
@@ -125,9 +126,9 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
          for (int j = 0; j < yBlocks; j++) {
             final int blockStartY = j * BLOCK_SIZE;
             workQueue.add(new ImageBlockWorkItem(image, scene, blockStartX, blockStartY, Math.min(BLOCK_SIZE, imageSize.width
-                  - blockStartX), Math.min(BLOCK_SIZE, imageSize.height - blockStartY), pixelSampleRate,
+                                                                                                  - blockStartX), Math.min(BLOCK_SIZE, imageSize.height - blockStartY), pixelSampleRate,
 
-            recursionDepth, doneSignal));
+                                                                                                  recursionDepth, doneSignal));
          }
       }
 
@@ -155,7 +156,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
                      timer.start();
                      tracer.integrate(item);
                      timer.stop();
-                     timer.print();
+                     // timer.print();
                   }
                } catch (final InterruptedException ie) {
                   return;
@@ -180,6 +181,7 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
     * 
     * @param target
     */
+   @Override
    public void cancel(final ImageBuffer target) {
       final ArrayList<ImageBlockWorkItem> drained = new ArrayList<ImageBlockWorkItem>();
       workQueue.drainTo(drained);
@@ -200,80 +202,80 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
          }
       }
    }
-   
-//   protected void generateEyeRays(final ImageBlockWorkItem workItem, final JitteredStratifiedRectangleSampling pixelSampler, final Random rng) {
-//      try {
-//            final int pixelCount = workItem.blockWidth * workItem.blockHeight * 3;
-//            if (pixels == null || pixels.length < pixelCount)
-//               pixels = new float[pixelCount];
-//            else
-//               Arrays.fill(pixels, 0);
-//
-//            final Dimension imageSize = workItem.image.getResolution();
-//            final double sampleWeight = 1.0 / (workItem.pixelSampleRate * workItem.pixelSampleRate);
-//
-//            final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate];
-//            int rayIdx = 0;
-//            for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
-//               for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
-//                  /*
-//                   * Use of 1/<samples-per-pixel> as the sample weight effectively applies a single-pixel wide box
-//                   * filter
-//                   * to average the samples. It may be benificial to try other filters...
-//                   */
-//                  rays[rayIdx++] = new SampleRay(sampleWeight);
-//               }
-//            }
-//            pixelSampler.resize(workItem.pixelSampleRate);
-//            final Camera camera = workItem.scene.getCamera();
-//            /*
-//             * Eye ray generation state
-//             */
-//            for (int pixelY = 0; pixelY < workItem.blockHeight; pixelY++) {
-//               for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
-//                  rayIdx = 0;
-//                  pixelSampler.generateSamples(rng);
-//                  for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
-//                     for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
-//                        final SampleRay ray = rays[rayIdx];
-//                        /*
-//                         * Reset the ray state since we are probably re-using each instance many times.
-//                         */
-//                        ray.pixelX = pixelX;
-//                        ray.pixelY = pixelY;
-//                        /*
-//                         * The contribution of the path is bounded by 1 / (samples per pixel)
-//                         */
-//                        ray.sampleColor.set(sampleWeight, sampleWeight, sampleWeight);
-//                        /*
-//                         * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
-//                         * directly visible)
-//                         */
-//                        ray.emissiveResponse = true;
-//                        ray.extinction.clear();
-//                        final double x = 2.0 * (workItem.blockStartX + pixelX + pixelSampler.xSamples[rayIdx])
-//                              / imageSize.width - 1.0;
-//                        final double y = 2.0 * (workItem.blockStartY + pixelY + pixelSampler.ySamples[rayIdx])
-//                              / imageSize.height - 1.0;
-//                        camera.sample(ray, x, y, rng);
-//                        ++rayIdx;
-//                     }
-//                  }
-//                  /*
-//                   * Process all of the samples for the current pixel.
-//                   */
-//                  processRays(workItem, rays);
-//               }
-//            }
-//
-//            /*
-//             * Out of rays, push pixels back into the image...
-//             */
-//            workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth, workItem.blockHeight, pixels);
-//         } finally {
-//            workItem.workDone();
-//         }
-//   }
+
+   //   protected void generateEyeRays(final ImageBlockWorkItem workItem, final JitteredStratifiedRectangleSampling pixelSampler, final Random rng) {
+   //      try {
+   //            final int pixelCount = workItem.blockWidth * workItem.blockHeight * 3;
+   //            if (pixels == null || pixels.length < pixelCount)
+   //               pixels = new float[pixelCount];
+   //            else
+   //               Arrays.fill(pixels, 0);
+   //
+   //            final Dimension imageSize = workItem.image.getResolution();
+   //            final double sampleWeight = 1.0 / (workItem.pixelSampleRate * workItem.pixelSampleRate);
+   //
+   //            final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate];
+   //            int rayIdx = 0;
+   //            for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
+   //               for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
+   //                  /*
+   //                   * Use of 1/<samples-per-pixel> as the sample weight effectively applies a single-pixel wide box
+   //                   * filter
+   //                   * to average the samples. It may be benificial to try other filters...
+   //                   */
+   //                  rays[rayIdx++] = new SampleRay(sampleWeight);
+   //               }
+   //            }
+   //            pixelSampler.resize(workItem.pixelSampleRate);
+   //            final Camera camera = workItem.scene.getCamera();
+   //            /*
+   //             * Eye ray generation state
+   //             */
+   //            for (int pixelY = 0; pixelY < workItem.blockHeight; pixelY++) {
+   //               for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
+   //                  rayIdx = 0;
+   //                  pixelSampler.generateSamples(rng);
+   //                  for (int sampleX = 0; sampleX < workItem.pixelSampleRate; sampleX++) {
+   //                     for (int sampleY = 0; sampleY < workItem.pixelSampleRate; sampleY++) {
+   //                        final SampleRay ray = rays[rayIdx];
+   //                        /*
+   //                         * Reset the ray state since we are probably re-using each instance many times.
+   //                         */
+   //                        ray.pixelX = pixelX;
+   //                        ray.pixelY = pixelY;
+   //                        /*
+   //                         * The contribution of the path is bounded by 1 / (samples per pixel)
+   //                         */
+   //                        ray.sampleColor.set(sampleWeight, sampleWeight, sampleWeight);
+   //                        /*
+   //                         * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
+   //                         * directly visible)
+   //                         */
+   //                        ray.emissiveResponse = true;
+   //                        ray.extinction.clear();
+   //                        final double x = 2.0 * (workItem.blockStartX + pixelX + pixelSampler.xSamples[rayIdx])
+   //                              / imageSize.width - 1.0;
+   //                        final double y = 2.0 * (workItem.blockStartY + pixelY + pixelSampler.ySamples[rayIdx])
+   //                              / imageSize.height - 1.0;
+   //                        camera.sample(ray, x, y, rng);
+   //                        ++rayIdx;
+   //                     }
+   //                  }
+   //                  /*
+   //                   * Process all of the samples for the current pixel.
+   //                   */
+   //                  processRays(workItem, rays);
+   //               }
+   //            }
+   //
+   //            /*
+   //             * Out of rays, push pixels back into the image...
+   //             */
+   //            workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth, workItem.blockHeight, pixels);
+   //         } finally {
+   //            workItem.workDone();
+   //         }
+   //   }
 
    /**
     * Creates the specified number of ItemIntegrators to process work items in different threads.
