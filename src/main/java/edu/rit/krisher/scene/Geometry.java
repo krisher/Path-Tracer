@@ -27,13 +27,13 @@ public interface Geometry {
     *           The material, surface normal, and optional material parameters are populated by this method.
     * @param hitPrimitive
     *           The ID of the primitive that was hit (as indicated via the {@link GeometryIntersection} output from
-    *           {@link #intersects(GeometryIntersection, Ray, double)}).
+    *           {@link #intersects(Ray, GeometryIntersection, double)}).
     * @param ray
     *           A ray that has been previously determined to intersect this geometry.
     * @param distance
     *           The distance along the ray at which the intersection occured.
     */
-   public void getHitData(MaterialInfo data, int hitPrimitive, Ray ray, double distance);
+   public void getHitData(IntersectionInfo data, int hitPrimitive, Ray ray, double distance);
 
    /**
     * Computes the smallest positive distance along the ray to the intersection, or returns a value <= 0 if there is no
@@ -51,19 +51,19 @@ public interface Geometry {
    public double intersectsPrimitive(Ray ray, double maxDistance, int primitiveID);
 
    /**
-    * Computes the smallest positive distance along the ray to the intersection, or returns a value <= 0 if there is no
-    * intersection (we are not interested in intersections at the ray origin).
+    * Computes the smallest positive distance along the ray to the intersection and stores the result (intersection
+    * distance, geometry and primitiveID) in intersection.
+    * If there is no intersection with <code>0 < distance < intersection.t</code>, nothing is updated and this method
+    * returns false.
     * 
-    * @param intersection
-    *           The primitiveID is stored in this non-null GeometryIntersection.
     * @param ray
     *           A non-null ray to test intersection with.
-    * @param maxDistance
-    *           the maximum distance along the ray from its origin to check for intersections.
+    * @param intersection
+    *           The intersection info to populate upon successful intersection.
+    * 
     * @return the distance along the ray (from the origin) at which the intersection occurs.
     */
-   public double intersects(GeometryIntersection intersection, Ray ray, double maxDistance);
-
+   public boolean intersects(Ray ray, GeometryIntersection intersection);
 
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.

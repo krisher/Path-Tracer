@@ -30,7 +30,10 @@ public class TriangleMeshTest {
          for (float delta2 = -1f; delta2 <= 1f; delta2 += 0.05) {
             final Ray zRay = new Ray(new Vec3(delta, delta2, -1), direction);
             intersectionInfo.primitiveID = Geometry.ALL_PRIMITIVES;
-            Assert.assertEquals(1.0f, xyQuad.intersects(intersectionInfo, zRay, Double.POSITIVE_INFINITY), 0.00000001);
+            intersectionInfo.hitGeometry = null;
+            intersectionInfo.t = Double.POSITIVE_INFINITY;
+            xyQuad.intersects(zRay, intersectionInfo);
+            Assert.assertEquals(1.0f, intersectionInfo.t, 0.00000001);
          }
       }
    }
@@ -43,7 +46,10 @@ public class TriangleMeshTest {
          for (float delta2 = -0.95f; delta2 <= 0.95f; delta2 += 0.05) {
             final Ray ray = new Ray(origin, new Vec3(delta, delta2, 0).subtract(origin).normalize());
             intersectionInfo.primitiveID = Geometry.ALL_PRIMITIVES;
-            Assert.assertTrue("Ray: " + ray + " should intersect quad.", xyQuad.intersects(intersectionInfo, ray, Double.POSITIVE_INFINITY) >= 1.0f);
+            intersectionInfo.hitGeometry = null;
+            intersectionInfo.t = Double.POSITIVE_INFINITY;
+            xyQuad.intersects(ray, intersectionInfo);
+            Assert.assertTrue("Ray: " + ray + " should intersect quad.", intersectionInfo.t >= 1.0f);
          }
       }
    }

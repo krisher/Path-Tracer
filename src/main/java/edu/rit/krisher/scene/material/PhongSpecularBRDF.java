@@ -4,7 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class PhongSpecularBRDF implements Material {
@@ -28,13 +28,13 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final IntersectionInfo parameters) {
       emissionOut.set(0, 0, 0);
    }
 
    @Override
    public void evaluateBRDF(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
-         final MaterialInfo parameters) {
+         final IntersectionInfo parameters) {
 
       /*
        * The specular model is not sampled for direct lighting because the light
@@ -60,8 +60,8 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
-         final MaterialInfo parameters) {
+   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+         final Random rng) {
       Vec3 surfaceNormal = parameters.surfaceNormal;
       if (wIncoming.dot(surfaceNormal) > 0) {
          // TODO: reflection at both interfaces of refractive material?

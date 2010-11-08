@@ -2,8 +2,9 @@ package edu.rit.krisher.raytracer.sampling;
 
 import java.util.Random;
 
+
 /**
- * Non-threadsafe sampling pattern generator for a 2D rectangular area.
+ * Thread-safe sampling pattern generator for a 2D rectangular area.
  * 
  * @author krisher
  * 
@@ -11,60 +12,36 @@ import java.util.Random;
 public final class JitteredStratifiedRectangleSampling {
 
    /**
-    * Samples for the x component of the grid, with values between 0 and 1.
-    */
-   public float[] xSamples;
-   /**
-    * Samples for the y component of the grid, with values between 0 and 1.
-    */
-   public float[] ySamples;
-   /**
-    * The number of samples in each dimension. The total number of sample pairs is this value squared.
-    */
-   private int xSampleCount;
-   private int ySampleCount;
-
-   /**
     * Creates a new sample-point generator.
     * 
-    * @param samplesPerDim
-    *           The number of samples per dimension. The total number os sample pairs is this value squared.
     */
-   public JitteredStratifiedRectangleSampling(final int xSampleCount, final int ySampleCount) {
-      this.xSampleCount = xSampleCount;
-      this.ySampleCount = ySampleCount;
-      this.xSamples = new float[xSampleCount * ySampleCount];
-      this.ySamples = new float[xSampleCount * ySampleCount];
-   }
-
-   public void resize(final int xSampleCount, final int ySampleCount) {
-      if (xSampleCount != this.xSampleCount || ySampleCount != this.ySampleCount) {
-         this.xSampleCount = xSampleCount;
-         this.ySampleCount = ySampleCount;
-         this.xSamples = new float[xSampleCount * ySampleCount];
-         this.ySamples = new float[xSampleCount * ySampleCount];
-      }
+   public JitteredStratifiedRectangleSampling() {
    }
 
    /**
     * Populates the sample arrays with new samples.
     * 
+    * @param sampleValues
+    *           A non-null array with size at least xGridSize * yGridSize * 2 to store the results in. Upon exit, the
+    *           array
+    *           will contain pairs of x,y sample offsets in the range [0,1) where each sample location is randomly
+    *           chosen from each cell in a regular grid (the unit square divided into xGridSize x yGridSize cells).
     * @param rng
     *           A non-null random number generator to generate jittered sample locations with.
     */
-   public void generateSamples(final Random rng) {
+   public void generateSamples(final float[] sampleValues, final int xGridSize, final int yGridSize, final Random rng) {
       int sampleIdx = 0;
-      for (int sampleX = 0; sampleX < xSampleCount; ++sampleX) {
-         for (int sampleY = 0; sampleY < ySampleCount; ++sampleY) {
+      for (int sampleX = 0; sampleX < xGridSize; ++sampleX) {
+         for (int sampleY = 0; sampleY < yGridSize; ++sampleY) {
             /*
              * Stratified jittered sampling, an eye ray is generated that passes through a random location in a small
              * square region of the pixel area for each sample.
              */
-            xSamples[sampleIdx] = (sampleX) / xSampleCount + rng.nextFloat() / xSampleCount;
-            assert xSamples[sampleIdx] < 1.0f;
-            ySamples[sampleIdx] = (sampleY) / ySampleCount + rng.nextFloat() / ySampleCount;
-            assert ySamples[sampleIdx] < 1.0f;
-            ++sampleIdx;
+            sampleValues[sampleIdx] = (sampleX) / xGridSize + rng.nextFloat() / xGridSize;
+            assert sampleValues[sampleIdx] < 1.0f;
+            sampleValues[sampleIdx + 1] = (sampleY) / yGridSize + rng.nextFloat() / yGridSize;
+            assert sampleValues[sampleIdx + 1] < 1.0f;
+            sampleIdx += 2;
          }
       }
    }

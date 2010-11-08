@@ -8,7 +8,8 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public class MaterialInfo extends GeometryIntersection {
+public class IntersectionInfo extends GeometryIntersection {
+   
    /**
     * The material at the hit location.
     */
@@ -28,16 +29,11 @@ public class MaterialInfo extends GeometryIntersection {
     */
    public final Vec3 tangentVector = new Vec3();
 
-   /**
-    * The hit location where the intersection occurred.
-    */
-   public final Vec3 hitLocation = new Vec3();
-
-   public MaterialInfo() {
+   public IntersectionInfo() {
       surfaceNormal = new Vec3(0, 1, 0);
    }
 
-   public MaterialInfo(final Vec3 surfaceNormal) {
+   public IntersectionInfo(final Vec3 surfaceNormal) {
       this.surfaceNormal = surfaceNormal;
    }
 

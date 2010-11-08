@@ -2,8 +2,8 @@ package edu.rit.krisher.scene.geometry;
 
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
@@ -43,7 +43,7 @@ public class Box implements Geometry {
    }
 
    @Override
-   public void getHitData(final MaterialInfo data, final int primitiveID, final Ray ray, final double distance) {
+   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
       final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(distance));
       // Figure out which face the intersection occurred on
       Vec3 isectNormal;
@@ -87,8 +87,14 @@ public class Box implements Geometry {
    }
 
    @Override
-   public double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
-      return ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
+   public boolean intersects(final Ray ray, final GeometryIntersection intersection) {
+      final double dist= ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
+      if (dist > 0 && dist < intersection.t) {
+         intersection.hitGeometry = this;
+         intersection.t = dist;
+         return true;
+      }
+      return false;
    }
 
    @Override

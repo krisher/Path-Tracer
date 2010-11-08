@@ -6,18 +6,20 @@ package edu.rit.krisher.raytracer;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.raytracer.rays.SampleRay;
-import edu.rit.krisher.raytracer.sampling.JitteredStratifiedRectangleSampling;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
-import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Constants;
@@ -30,7 +32,9 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public final class PathTracer extends ThreadedIntegrator {
+public final class PathTracer extends IntegratorUtils {
+
+   private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
 
    /**
     * Creates a new path tracer.
@@ -85,12 +89,13 @@ public final class PathTracer extends ThreadedIntegrator {
        * ImageBuffer is notified that the rendering is complete.
        */
       final AtomicInteger doneSignal = new AtomicInteger(imageChunks.length);
+      final ConcurrentLinkedQueue<Rectangle> blocks = new ConcurrentLinkedQueue<Rectangle>();
       for (final Rectangle chunk : imageChunks) {
-         final ImageBlock block = new ImageBlock(image, scene, chunk.x, chunk.y, chunk.width, chunk.height, pixelSampleRate, recursionDepth, doneSignal);
-         threadPool.submit();
-
+         blocks.add(chunk);
       }
-
+      active.put(image, doneSignal);
+      for (int i = 0; i < threads; i++)
+         threadPool.submit(new PathProcessor(scene, image, blocks, pixelSampleRate, recursionDepth, doneSignal));
    }
 
    private static final class PathProcessor implements Runnable {
@@ -105,83 +110,77 @@ public final class PathTracer extends ThreadedIntegrator {
        * Values will always be >= 0, but are unbounded in magnitude.
        */
       private float[] pixels;
-      private final MaterialInfo shadingInfo = new MaterialInfo();
-      private final JitteredStratifiedRectangleSampling pixelSampler = new JitteredStratifiedRectangleSampling(1, 1);
+      private final int pixelSampleRate;
+      private final int recursionDepth;
+      private final ImageBuffer imageBuffer;
+      private final Scene scene;
+      private final Queue<Rectangle> workQueue;
+      private final AtomicInteger doneSignal;
+
+      public PathProcessor(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
+            final int pixelSampleRate, final int recursionDepth, final AtomicInteger doneSignal) {
+         this.pixelSampleRate = pixelSampleRate;
+         this.recursionDepth = recursionDepth;
+         this.imageBuffer = image;
+         this.scene = scene;
+         this.doneSignal = doneSignal;
+         this.workQueue = workQueue;
+      }
 
       /*
        * @see edu.rit.krisher.raytracer.RayIntegrator#integrate(edu.rit.krisher.raytracer.WorkItem)
        */
       @Override
       public void run() {
-         try {
-            final int pixelCount = workItem.blockWidth * workItem.blockHeight * 3;
-            if (pixels == null || pixels.length < pixelCount)
-               pixels = new float[pixelCount];
-            else
-               Arrays.fill(pixels, 0);
+         final Dimension imageSize = imageBuffer.getResolution();
+         final double sampleWeight = 1.0 / (pixelSampleRate * pixelSampleRate);
 
-            final Dimension imageSize = workItem.image.getResolution();
-            final double sampleWeight = 1.0 / (workItem.pixelSampleRate * workItem.pixelSampleRate);
+         Rectangle rect;
+         while ((rect = workQueue.poll()) != null) {
+            try {
+               final int pixelCount = rect.width * rect.height * 3;
+               if (pixels == null || pixels.length < pixelCount)
+                  pixels = new float[pixelCount];
+               else
+                  Arrays.fill(pixels, 0);
 
-            final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate
-                                                   * workItem.blockWidth * workItem.blockHeight];
+               final SampleRay[] rays = new SampleRay[pixelSampleRate * pixelSampleRate * rect.width * rect.height];
+               for (int rayIdx = 0; rayIdx < rays.length; ++rayIdx) {
+                  rays[rayIdx] = new SampleRay(sampleWeight);
+               }
 
-            pixelSampler.resize(workItem.pixelSampleRate, workItem.pixelSampleRate);
-            final Camera camera = workItem.scene.getCamera();
-            /*
-             * Imaging ray generation.
-             */
-            int rayIdx = 0;
-            for (int pixelY = 0; pixelY < workItem.blockHeight; pixelY++) {
-               for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
-                  pixelSampler.generateSamples(rng);
-                  for (int i = 0; i < workItem.pixelSampleRate * workItem.pixelSampleRate; ++i) {
-                     final SampleRay ray = new SampleRay(sampleWeight);
-                     ray.emissiveResponse = true;
-                     ray.extinction.clear();
-                     /*
-                      * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
-                      * directly visible)
-                      */
+               /* Generate Eye Rays */
+               IntegratorUtils.generatePixelSamples(rays, rect, pixelSampleRate, rng);
+               scene.getCamera().sample(rays, imageSize.width, imageSize.height, rng);
 
+               /* Trace Rays */
+               processRays(rect, rays);
 
-                     ray.pixelX = workItem.blockStartX + pixelX + (double) pixelSampler.xSamples[i];
-                     ray.pixelY = workItem.blockStartY + pixelY + (double) pixelSampler.ySamples[i];
-
-                     rays[rayIdx] = ray;
-                     ++rayIdx;
-
-                     assert ((int) ray.pixelX) == pixelX + workItem.blockStartX : "Ray PixelX (" + ray.pixelX
-                     + ") does not match expected (" + (pixelX + workItem.blockStartX) + ") -- J: "
-                     + pixelSampler.xSamples[i];
-                     assert ((int) ray.pixelY) == (pixelY + workItem.blockStartY) : "Ray PixelY (" + ray.pixelY
-                     + ") does not match expected (" + (pixelY + workItem.blockStartY) + ") -- J: "
-                     + pixelSampler.ySamples[i];
-                  }
-
+               /* Put results back into image buffer */
+               imageBuffer.setPixels(rect.x, rect.y, rect.width, rect.height, pixels);
+            } catch (final Exception ex) {
+               ex.printStackTrace();
+            } finally {
+               final int remaining = doneSignal.decrementAndGet();
+               if (remaining == 0) {
+                  imageBuffer.imagingDone();
+                  active.remove(imageBuffer);
+                  return;
+               } else if (remaining < 0) {
+                  return; // Process was cancelled.
                }
             }
-            camera.sample(rays, imageSize.width, imageSize.height, rng);
-
-            processRays(workItem, rays);
-
-            /*
-             * Out of rays, push pixels back into the image...
-             */
-            workItem.image.setPixels(workItem.blockStartX, workItem.blockStartY, workItem.blockWidth, workItem.blockHeight, pixels);
-         } finally {
-            workItem.workDone();
          }
       }
 
-      private final void processRays(final ImageBlock workItem, final SampleRay[] rays) {
+      private final void processRays(final Rectangle rect, final SampleRay[] rays) {
 
          final Color sampleColor = new Color(0, 0, 0);
 
-         final Geometry[] geometry = workItem.scene.getGeometry();
-         final EmissiveGeometry[] lights = workItem.scene.getLightSources();
+         final Geometry[] geometry = scene.getGeometry();
+         final EmissiveGeometry[] lights = scene.getLightSources();
 
-         final Color bg = workItem.scene.getBackground();
+         final Color bg = scene.getBackground();
          /*
           * The number of rays that are still active (have not been absorbed or otherwise terminated).
           * 
@@ -192,39 +191,23 @@ public final class PathTracer extends ThreadedIntegrator {
           * All active rays are at the same depth into the path (# of bounces from the initial eye ray). Process until
           * we reach the maximum depth, or all rays have terminated.
           */
-         for (int rayDepth = 0; rayDepth <= workItem.recursionDepth && activeRayCount > 0; rayDepth++) {
+         for (int rayDepth = 0; rayDepth <= recursionDepth && activeRayCount > 0; rayDepth++) {
+            /* Process all active rays for intersection with scene geometry */
+            processIntersections(rays, activeRayCount, geometry);
             /*
              * Number of rays that will be processed in the next iteration
              */
             int outRayCount = 0;
             for (int processRayIdx = 0; processRayIdx < activeRayCount; processRayIdx++) {
                final SampleRay ray = rays[processRayIdx];
-
-               /*
-                * Process the sample ray for the nearest intersection with scene geometry.
-                */
-               double intersectDist = Double.POSITIVE_INFINITY;
-               Geometry hit = null;
-               int hitPrimitive = -1;
-
-               for (final Geometry geom : geometry) {
-                  shadingInfo.primitiveID = -1;
-                  final double d = geom.intersects(shadingInfo, ray, intersectDist);
-                  if (d > 0 && d < intersectDist) {
-                     intersectDist = d;
-                     hit = geom;
-                     hitPrimitive = shadingInfo.primitiveID;
-                  }
-               }
-               if (intersectDist == Double.POSITIVE_INFINITY) {
+               if (ray.intersection.hitGeometry == null) {
                   /*
                    * No intersection, process for the scene background color.
                    * 
                    * Ignore the emissive response flag since the background will not be sampled for direct illumination.
                    */
                   // if (ray.emissiveResponse) {
-                  final int dst = 3 * (((int) ray.pixelY - workItem.blockStartY) * workItem.blockWidth
-                        + (int) ray.pixelX - workItem.blockStartX);
+                  final int dst = 3 * (((int) ray.pixelY - rect.y) * rect.width + (int) ray.pixelX - rect.x);
                   pixels[dst] += bg.r * ray.sampleColor.r;
                   pixels[dst + 1] += bg.g * ray.sampleColor.g;
                   pixels[dst + 2] += bg.b * ray.sampleColor.b;
@@ -236,11 +219,9 @@ public final class PathTracer extends ThreadedIntegrator {
                }
 
                /*
-                * The intersection point. Saved because this data may be overwritten when generating the next path
-                * segment.
+                * Populate the intersection data...
                 */
-               ray.getPointOnRay(shadingInfo.hitLocation, intersectDist);
-               hit.getHitData(shadingInfo, hitPrimitive, ray, intersectDist);
+               ray.intersection.hitGeometry.getHitData(ray.intersection, ray.intersection.primitiveID, ray, ray.intersection.t);
 
                /*
                 * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
@@ -259,7 +240,7 @@ public final class PathTracer extends ThreadedIntegrator {
                 * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
                 */
                if (ray.emissiveResponse) {
-                  shadingInfo.material.getEmissionColor(sampleColor, ray.direction, shadingInfo);
+                  ray.intersection.material.getEmissionColor(sampleColor, ray.direction, ray.intersection);
                } else
                   sampleColor.set(0, 0, 0);
 
@@ -268,38 +249,38 @@ public final class PathTracer extends ThreadedIntegrator {
                 * below.
                 */
                final double rTransmission = ray.sampleColor.r
-               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * intersectDist));
+                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
                final double gTransmission = ray.sampleColor.g
-               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * intersectDist));
+                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
                final double bTransmission = ray.sampleColor.b
-               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * intersectDist));
+                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
                 * relfection/refraction distributions are typically constrained to a small solid angle, they only
                 * respond to light coming from directions that will be sampled via bounce rays.
                 */
-               if (shadingInfo.material.isDiffuse()) {
-                  integrateDirectIllumination(sampleColor, geometry, lights, ray, shadingInfo, rng);
+               if (ray.intersection.material.isDiffuse()) {
+                  integrateDirectIllumination(sampleColor, geometry, lights, ray, rng);
                }
 
                /*
                 * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
                 */
-               if (rayDepth < workItem.recursionDepth
-                     /*
-                      * Russian roulette for variance reduction.
-                      */
-                     && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
+               if (rayDepth < recursionDepth
+               /*
+                * Russian roulette for variance reduction.
+                */
+               && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
                   final SampleRay irradianceRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
                    * interface, at which point the extinction is changed in the Material model.
                    */
                   irradianceRay.extinction.set(ray.extinction);
-                  irradianceRay.origin.set(shadingInfo.hitLocation);
+                  irradianceRay.origin.set(ray.getPointOnRay(ray.intersection.t));
                   irradianceRay.reset();
-                  shadingInfo.material.sampleBRDF(irradianceRay, rng, ray.direction, shadingInfo);
+                  ray.intersection.material.sampleBRDF(irradianceRay, ray.direction, ray.intersection, rng);
                   if (!irradianceRay.sampleColor.isZero()) {
                      // TODO: scale transmission by probability of reaching this depth due to RR.
                      irradianceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
@@ -318,7 +299,7 @@ public final class PathTracer extends ThreadedIntegrator {
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
-               final int dst = 3 * (((int) ray.pixelY - workItem.blockStartY) * workItem.blockWidth + (int) ray.pixelX - workItem.blockStartX);
+               final int dst = 3 * (((int) ray.pixelY - rect.y) * rect.width + (int) ray.pixelX - rect.x);
                pixels[dst] += (sampleColor.r) * rTransmission;
                pixels[dst + 1] += (sampleColor.g) * gTransmission;
                pixels[dst + 2] += (sampleColor.b) * bTransmission;
@@ -329,43 +310,42 @@ public final class PathTracer extends ThreadedIntegrator {
    }
 
    private static final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
-         final EmissiveGeometry[] lights, final SampleRay woRay, final MaterialInfo shadingInfo, final Random rng) {
+         final EmissiveGeometry[] lights, final SampleRay woRay, final Random rng) {
       final Color lightEnergy = new Color(0, 0, 0);
       final GeometryIntersection isect = new GeometryIntersection();
       /*
        * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
        * vector to avoid self-intersecting the same point due to round-off error.
        */
-      final Ray lightSourceExitantRadianceRay = new Ray(new Vec3(shadingInfo.hitLocation).scaleAdd(shadingInfo.surfaceNormal, Constants.EPSILON_D), new Vec3());
+      final Ray lightSourceExitantRadianceRay = new Ray(woRay.getPointOnRay(woRay.intersection.t).scaleAdd(woRay.intersection.surfaceNormal, Constants.EPSILON_D), new Vec3());
 
       for (final EmissiveGeometry light : lights) {
          /*
           * Generate a random sample direction that hits the light
           */
-         double lightDist = light.sampleEmissiveRadiance(lightSourceExitantRadianceRay.direction, lightEnergy, lightSourceExitantRadianceRay.origin, rng);
+         final double lightDist = light.sampleEmissiveRadiance(lightSourceExitantRadianceRay.direction, lightEnergy, lightSourceExitantRadianceRay.origin, rng);
          /*
           * Cosine of the angle between the geometry surface normal and the shadow ray direction
           */
-         final double cosWi = lightSourceExitantRadianceRay.direction.dot(shadingInfo.surfaceNormal);
+         final double cosWi = lightSourceExitantRadianceRay.direction.dot(woRay.intersection.surfaceNormal);
          if (cosWi > 0) {
             /*
              * Determine whether the light source is visible from the irradiated point
              */
+            isect.hitGeometry = light;
+            isect.t = lightDist;
             for (final Geometry geom : geometry) {
                if (geom != light) {
-                  final double isectDist = geom.intersects(isect, lightSourceExitantRadianceRay, lightDist);
-                  if (isectDist > 0 && isectDist < lightDist) {
-                     lightDist = 0;
+                  if (geom.intersects(lightSourceExitantRadianceRay, isect))
                      break;
-                  }
                }
             }
-            if (lightDist > 0) {
+            if (isect.hitGeometry == light) {
                /*
                 * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
                 * the response of the material...
                 */
-               shadingInfo.material.evaluateBRDF(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, shadingInfo);
+               woRay.intersection.material.evaluateBRDF(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, woRay.intersection);
 
                final double diffAngle = (cosWi) / (lightDist * lightDist);
                irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, diffAngle);
@@ -374,6 +354,29 @@ public final class PathTracer extends ThreadedIntegrator {
 
       }
 
+   }
+
+   /**
+    * Cancels rendering for the specified ImageBuffer (that was previously passed to
+    * {@link #integrate(ImageBuffer, Camera, Scene, int, int)}).
+    * 
+    * <p>
+    * Any non-started work items are removed from the work queue, but work items already being processed are allowed to
+    * finish. Pixel data may still be sent to the specified ImageBuffer until its {@link ImageBuffer#imagingDone()}
+    * method is called.
+    * 
+    * @param target
+    */
+   @Override
+   public void cancel(final ImageBuffer target) {
+      final AtomicInteger remaining = active.get(target);
+      if (remaining != null) {
+         final int prevRemaining = remaining.getAndSet(0);
+         if (prevRemaining != 0) {
+            active.remove(target);
+            target.imagingDone();
+         }
+      }
    }
 
 }

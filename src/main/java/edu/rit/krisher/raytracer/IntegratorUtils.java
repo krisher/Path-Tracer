@@ -2,17 +2,16 @@ package edu.rit.krisher.raytracer;
 
 import java.awt.Rectangle;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.rit.krisher.raytracer.image.ImageBuffer;
+import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.DefaultScene;
-import edu.rit.krisher.scene.Scene;
+import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.util.Timer;
 
 /**
@@ -45,7 +44,7 @@ import edu.rit.krisher.util.Timer;
  * @author krisher
  * 
  */
-public abstract class ThreadedIntegrator implements SceneIntegrator {
+public abstract class IntegratorUtils implements SceneIntegrator {
    // private static final int BLOCK_SIZE = 128;
    public static final int BLOCK_SIZE = 64;
    protected static final int threads = Runtime.getRuntime().availableProcessors();
@@ -53,8 +52,8 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
    protected static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
    protected final Timer timer = new Timer("Ray Trace (Thread Timing)");
 
-   public ThreadedIntegrator() {
-
+   public IntegratorUtils() {
+      
    }
 
 
@@ -80,38 +79,50 @@ public abstract class ThreadedIntegrator implements SceneIntegrator {
       return result;
    }
 
-   /**
-    * Cancels rendering for the specified ImageBuffer (that was previously passed to
-    * {@link #integrate(ImageBuffer, Camera, Scene, int, int)}).
-    * 
-    * <p>
-    * Any non-started work items are removed from the work queue, but work items already being processed are allowed to
-    * finish. Pixel data may still be sent to the specified ImageBuffer until its {@link ImageBuffer#imagingDone()}
-    * method is called.
-    * 
-    * @param target
-    */
-   @Override
-   public void cancel(final ImageBuffer target) {
 
-      final ArrayList<Runnable> drained = new ArrayList<Runnable>();
-      threadPool.getQueue().drainTo(drained);
-      AtomicInteger remaining = null;
-      int removed = 0;
-      for (final Iterator<ImageBlock> itr = drained.iterator(); itr.hasNext();) {
-         final ImageBlock itm = itr.next();
-         if (itm.image == target) {
-            itr.remove();
-            remaining = itm.doneSignal;
-            removed++;
+
+   public static void processIntersections(final SampleRay[] rays, final int count, final Geometry[] geometry) {
+      for (int i=0; i < count; ++i) {
+         final SampleRay ray = rays[i];
+         ray.intersection.t = Double.POSITIVE_INFINITY;
+         ray.intersection.hitGeometry = null;
+         ray.intersection.primitiveID = -1;
+         for (final Geometry geom : geometry) {
+            geom.intersects(ray, ray.intersection);
          }
       }
-      for (final Runnable r : drained) {
-         threadPool.submit(r);
-      }
-      if (remaining != null) {
-         if (remaining.addAndGet(-removed) == 0) {
-            target.imagingDone();
+   }
+   
+   /**
+    * Initializes the pixelX and pixelY values of the specified SampleRays based on the specified pixel rectangle,
+    * multi-sampling rate, and random number generator for jittering the sample locations.
+    * 
+    * @param sampleRays An array of pixelRect.width * pixelRect.height * msGridSize * msGridSize sample rays.
+    * @param pixelRect The pixels for which to initialize rays.
+    * @param msGridSize The multi-sample rate for each pixel.  msGridSize * msGridSize rays will be initialized for each pixel (with different locations within the pixel.
+    * @param rng A random number generator.
+    */
+   public static final void generatePixelSamples(final SampleRay[] sampleRays, final Rectangle pixelRect,
+         final int msGridSize, final Random rng) {
+      /*
+       * Imaging ray generation.
+       */
+      int sampleIdx = 0;
+      for (int pixelY = 0; pixelY < pixelRect.height; pixelY++) {
+         for (int pixelX = 0; pixelX < pixelRect.width; pixelX++) {
+            for (int sampleX = 0; sampleX < msGridSize; ++sampleX) {
+               for (int sampleY = 0; sampleY < msGridSize; ++sampleY) {
+                  /*
+                   * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
+                   * small square region of the pixel area for each sample.
+                   */
+                  sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / msGridSize + rng.nextFloat()
+                        / msGridSize;
+                  sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / msGridSize + rng.nextFloat()
+                        / msGridSize;
+                  ++sampleIdx;
+               }
+            }
          }
       }
    }

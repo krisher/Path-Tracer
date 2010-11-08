@@ -2,8 +2,8 @@ package edu.rit.krisher.scene.geometry;
 
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.LambertBRDF;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
@@ -37,12 +37,12 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public void getHitData(final MaterialInfo data, final int primitiveID, final Ray ray, final double distance) {
+   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
       final Vec3 isectNormal = ray.getPointOnRay(distance);
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
       data.surfaceNormal.set(isectNormal);
-      MaterialInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
+      IntersectionInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
       data.materialCoords = null;
    }
 
@@ -51,8 +51,14 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
-      return ray.intersectsSphere(center, radius);
+   public boolean intersects(final Ray ray, final GeometryIntersection intersection) {
+      final double dist = ray.intersectsSphere(center, radius);
+      if (dist > 0 && dist < intersection.t) {
+         intersection.hitGeometry = this;
+         intersection.t = dist;
+         return true;
+      }
+      return false;
    }
 
    @Override

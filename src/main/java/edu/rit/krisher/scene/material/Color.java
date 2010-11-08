@@ -4,7 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class Color implements Material, Texture {
@@ -49,13 +49,13 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 responseDirection, final MaterialInfo parameters) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 responseDirection, final IntersectionInfo parameters) {
       emissionOut.set(this);
    }
 
    @Override
    public void evaluateBRDF(final Color colorOut, final Vec3 responseDirection, final Vec3 incomingDirection,
-         final MaterialInfo parameters) {
+         final IntersectionInfo parameters) {
       colorOut.set(0, 0, 0);
    }
 
@@ -85,8 +85,8 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
-         final MaterialInfo parameters) {
+   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+         final Random rng) {
       sampleOut.sampleColor.clear();
       // No lighting response...
    }

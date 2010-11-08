@@ -43,7 +43,7 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     **/
-   public void evaluateBRDF(Color colorInOut, Vec3 wOutgoing, Vec3 wIncoming, MaterialInfo parameters);
+   public void evaluateBRDF(Color colorInOut, Vec3 wOutgoing, Vec3 wIncoming, IntersectionInfo parameters);
 
    /**
     * Computes and returns the emissive color given the specified sample direction, surface normal and material
@@ -66,7 +66,7 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     */
-   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, MaterialInfo parameters);
+   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, IntersectionInfo parameters);
 
    /**
     * Returns true if there is any chance of transmission/reflection of light that is not very close to the perfect
@@ -83,14 +83,13 @@ public interface Material {
     * @param sampleOut
     *           Ray to store the desired sample direction, and the distribution (SPD/Color) of light that will be
     *           reflected toward the incoming sample direction.
-    * @param rng
-    *           A random number generator for monte-carlo sampling, etc.
     * @param wIncoming
-    *           The normalized vector indicating the direction that the irradiance samples will be transmitted (this
-    *           points toward the material intersection point). This vector must not be modified in any way.
+    *           Vector indicating the incident ray direction.
     * @param parameters
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
+    * @param rng
+    *           A random number generator for monte-carlo sampling, etc.
     */
-   public void sampleBRDF(SampleRay sampleOut, Random rng, Vec3 wIncoming, MaterialInfo parameters);
+   public void sampleBRDF(SampleRay sampleOut, Vec3 wIncoming, IntersectionInfo parameters, Random rng);
 }

@@ -2,8 +2,8 @@ package edu.rit.krisher.scene.geometry;
 
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
 import edu.rit.krisher.scene.geometry.utils.Vec3fBufferUtils;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.LambertBRDF;
@@ -94,28 +94,21 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public void getHitData(final MaterialInfo data, final int primitiveID, final Ray ray, final double distance) {
+   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
       getTriangleHitData(primitiveID, data, ray);
    }
 
    @Override
-   public final double intersects(final GeometryIntersection intersection, final Ray ray, final double maxDistance) {
-      double isectDist = Double.POSITIVE_INFINITY;
-
-      int isectTri = -1;
+   public final boolean intersects(final Ray ray, final GeometryIntersection intersection) {
       for (int idx = 0; idx < triCount; ++idx) {
          final double t = intersectsTriangle(ray, idx);
-         if (t > 0 && t < isectDist) {
-            isectDist = t;
-            isectTri = idx;
+         if (t > 0 && t < intersection.t) {
+            intersection.t = t;
+            intersection.primitiveID = idx;
+            intersection.hitGeometry = this;
          }
       }
-      if (isectTri >= 0) {
-         intersection.primitiveID = isectTri;
-         return isectDist;
-      }
-
-      return 0;
+      return intersection.hitGeometry == this;
    }
 
    @Override
@@ -150,7 +143,7 @@ public class TriangleMesh implements Geometry {
       return triCount;
    }
 
-   private final void getTriangleHitData(final int triangleIndex, final MaterialInfo data, final Ray ray) {
+   private final void getTriangleHitData(final int triangleIndex, final IntersectionInfo data, final Ray ray) {
       data.material = material;
       data.materialCoords = null;
       if (normals == null) {
@@ -166,7 +159,7 @@ public class TriangleMesh implements Geometry {
          intersectsTriangleBarycentric(baryCoords, ray, triangleIndex);
          interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], triangleIndex);
          //TODO: Tangent vector should be based on shading (texture) coords if specified.
-         MaterialInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
+         IntersectionInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
       }
    }
 

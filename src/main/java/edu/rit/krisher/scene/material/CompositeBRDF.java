@@ -5,7 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.collections.CopyOnWriteArrayList;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -38,7 +38,7 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final IntersectionInfo parameters) {
       double r = 0, g = 0, b = 0;
       for (final Material mat : materials.array) {
          mat.getEmissionColor(emissionOut, sampleDirection, parameters);
@@ -51,7 +51,7 @@ public class CompositeBRDF implements Material, Cloneable {
 
    @Override
    public void evaluateBRDF(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
-         final MaterialInfo parameters) {
+         final IntersectionInfo parameters) {
       // FIXME: radiance is an input parameter (as well as output), need to either reset it to original value between
       // each sample, or only sample one material.
       final Material[] mats = materials.array;
@@ -68,8 +68,8 @@ public class CompositeBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
-         final MaterialInfo parameters) {
+   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+         final Random rng) {
 
       final double sampleType = rng.nextDouble();
       double cumP = 0;
@@ -78,7 +78,7 @@ public class CompositeBRDF implements Material, Cloneable {
       for (int i = 0; i < mats.length; i++) {
          cumP += P[i];
          if (sampleType < cumP) {
-            mats[i].sampleBRDF(sampleOut, rng, wIncoming, parameters);
+            mats[i].sampleBRDF(sampleOut, wIncoming, parameters, rng);
             return;
          }
       }

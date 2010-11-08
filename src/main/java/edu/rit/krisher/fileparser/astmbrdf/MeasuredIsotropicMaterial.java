@@ -7,7 +7,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.MaterialInfo;
+import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Vec3;
 
@@ -79,7 +79,7 @@ class MeasuredIsotropicMaterial implements Material {
     */
    @Override
    public void evaluateBRDF(final Color colorInOut, final Vec3 wOutgoing, final Vec3 wIncoming,
-         final MaterialInfo parameters) {
+         final IntersectionInfo parameters) {
       // TODO Auto-generated method stub
       final Vec3 sY = new Vec3(parameters.surfaceNormal).cross(parameters.tangentVector);
       final Vec3 wOutgoingN = new Vec3(wOutgoing).multiply(-1);
@@ -129,7 +129,7 @@ class MeasuredIsotropicMaterial implements Material {
     * edu.rit.krisher.vecmath.Vec3, edu.rit.krisher.scene.MaterialInfo)
     */
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final MaterialInfo parameters) {
+   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final IntersectionInfo parameters) {
       emissionOut.clear();
    }
 
@@ -146,8 +146,8 @@ class MeasuredIsotropicMaterial implements Material {
     * edu.rit.krisher.vecmath.Vec3, edu.rit.krisher.scene.MaterialInfo)
     */
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Random rng, final Vec3 wIncoming,
-         final MaterialInfo parameters) {
+   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+         final Random rng) {
       // sampleOut.direction.set(wIncoming).reflect(parameters.surfaceNormal);
       Vec3 surfaceNormal = parameters.surfaceNormal;
       if (wIncoming.dot(surfaceNormal) > 0) {
