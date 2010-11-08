@@ -1,8 +1,8 @@
 package edu.rit.krisher.scene.acceleration;
 
+import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.scene.GeometryIntersection;
-import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 

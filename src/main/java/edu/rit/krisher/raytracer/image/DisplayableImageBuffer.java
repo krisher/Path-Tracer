@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JComponent;
 
@@ -28,6 +29,8 @@ public class DisplayableImageBuffer extends DefaultImageBuffer implements ImageB
          }
       }
    };
+   
+   private final AtomicInteger updatedPixelCount = new AtomicInteger(0);
 
    public DisplayableImageBuffer(final int width, final int height) {
       super(width, height);
@@ -55,8 +58,12 @@ public class DisplayableImageBuffer extends DefaultImageBuffer implements ImageB
    @Override
    public void setPixels(final int sx, final int sy, final int w, final int h, final float[] pixels) {
       super.setPixels(sx, sy, w, h, pixels);
-      // repaint();
-      imageComponent.repaint(sx, imSize.height - sy - h, w, h);
+      final int pixelsUpdated = updatedPixelCount.addAndGet(w * h);
+      if (pixelsUpdated > 10000) {
+         updatedPixelCount.addAndGet(-pixelsUpdated);
+//         imageComponent.repaint(sx, imSize.height - sy - h, w, h);
+         imageComponent.repaint();
+      }
    }
 
    @Override

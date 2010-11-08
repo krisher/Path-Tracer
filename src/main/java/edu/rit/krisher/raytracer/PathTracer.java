@@ -14,14 +14,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.rit.krisher.raytracer.image.ImageBuffer;
+import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
 import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
+import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -32,7 +33,9 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public final class PathTracer extends IntegratorUtils {
+public final class PathTracer implements SceneIntegrator {
+
+   protected final Timer timer = new Timer("Ray Trace (Thread Timing)");
 
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
 
@@ -72,7 +75,7 @@ public final class PathTracer extends IntegratorUtils {
        */
       final double rayCount = ((double) imageSize.width * imageSize.height * pixelSampleRate * pixelSampleRate
             * recursionDepth * (1.0 + scene.getLightSources().length));
-      System.out.println("Max Samples: " + formatter.format(rayCount));
+      System.out.println("Max Samples: " + IntegratorUtils.formatter.format(rayCount));
       /*
        * WorkItems may begin processing as soon as they are queued, so notify the ImageBuffer that pixels are on their
        * way...
@@ -83,7 +86,7 @@ public final class PathTracer extends IntegratorUtils {
       /*
        * Tiled work distribution...
        */
-      final Rectangle[] imageChunks = chunkRectangle(imageSize.width, imageSize.height, BLOCK_SIZE);
+      final Rectangle[] imageChunks = IntegratorUtils.chunkRectangle(imageSize.width, imageSize.height, IntegratorUtils.DEFAULT_PIXEL_BLOCK_SIZE);
       /*
        * Thread-safe spin-lock based countdown latch to monitor progress for this image. When this reaches 0, the
        * ImageBuffer is notified that the rendering is complete.
@@ -94,8 +97,8 @@ public final class PathTracer extends IntegratorUtils {
          blocks.add(chunk);
       }
       active.put(image, doneSignal);
-      for (int i = 0; i < threads; i++)
-         threadPool.submit(new PathProcessor(scene, image, blocks, pixelSampleRate, recursionDepth, doneSignal));
+      for (int i = 0; i < IntegratorUtils.threads; i++)
+         IntegratorUtils.threadPool.submit(new PathProcessor(scene, image, blocks, pixelSampleRate, recursionDepth, doneSignal));
    }
 
    private static final class PathProcessor implements Runnable {
@@ -134,7 +137,7 @@ public final class PathTracer extends IntegratorUtils {
       public void run() {
          final Dimension imageSize = imageBuffer.getResolution();
          final double sampleWeight = 1.0 / (pixelSampleRate * pixelSampleRate);
-
+         SampleRay[] rays = new SampleRay[0];
          Rectangle rect;
          while ((rect = workQueue.poll()) != null) {
             try {
@@ -144,9 +147,18 @@ public final class PathTracer extends IntegratorUtils {
                else
                   Arrays.fill(pixels, 0);
 
-               final SampleRay[] rays = new SampleRay[pixelSampleRate * pixelSampleRate * rect.width * rect.height];
-               for (int rayIdx = 0; rayIdx < rays.length; ++rayIdx) {
-                  rays[rayIdx] = new SampleRay(sampleWeight);
+               final int rayCount = pixelSampleRate * pixelSampleRate * rect.width * rect.height;
+               if (rays.length < rayCount) {
+                  rays = new SampleRay[rayCount];
+                  for (int rayIdx = 0; rayIdx < rayCount; ++rayIdx) {
+                     rays[rayIdx] = new SampleRay(sampleWeight);
+                  }
+               } else {
+                  for (int i = 0; i < rayCount; ++i) {
+                     rays[i].sampleColor.set(sampleWeight);
+                     rays[i].emissiveResponse = true;
+                     rays[i].extinction.clear();
+                  }
                }
 
                /* Generate Eye Rays */
@@ -154,12 +166,10 @@ public final class PathTracer extends IntegratorUtils {
                scene.getCamera().sample(rays, imageSize.width, imageSize.height, rng);
 
                /* Trace Rays */
-               processRays(rect, rays);
+               processRays(rect, rays, rays.length);
 
                /* Put results back into image buffer */
                imageBuffer.setPixels(rect.x, rect.y, rect.width, rect.height, pixels);
-            } catch (final Exception ex) {
-               ex.printStackTrace();
             } finally {
                final int remaining = doneSignal.decrementAndGet();
                if (remaining == 0) {
@@ -167,13 +177,13 @@ public final class PathTracer extends IntegratorUtils {
                   active.remove(imageBuffer);
                   return;
                } else if (remaining < 0) {
-                  return; // Process was cancelled.
+                  return; // Process was canceled.
                }
             }
          }
       }
 
-      private final void processRays(final Rectangle rect, final SampleRay[] rays) {
+      private final void processRays(final Rectangle rect, final SampleRay[] rays, int rayCount) {
 
          final Color sampleColor = new Color(0, 0, 0);
 
@@ -181,37 +191,28 @@ public final class PathTracer extends IntegratorUtils {
          final EmissiveGeometry[] lights = scene.getLightSources();
 
          final Color bg = scene.getBackground();
-         /*
-          * The number of rays that are still active (have not been absorbed or otherwise terminated).
-          * 
-          * The active rays are always contiguous from the beginning of the rays array.
-          */
-         int activeRayCount = rays.length;
+
          /*
           * All active rays are at the same depth into the path (# of bounces from the initial eye ray). Process until
           * we reach the maximum depth, or all rays have terminated.
           */
-         for (int rayDepth = 0; rayDepth <= recursionDepth && activeRayCount > 0; rayDepth++) {
+         for (int rayDepth = 0; rayDepth <= recursionDepth && rayCount > 0; rayDepth++) {
             /* Process all active rays for intersection with scene geometry */
-            processIntersections(rays, activeRayCount, geometry);
+            IntegratorUtils.processIntersections(rays, rayCount, geometry);
             /*
              * Number of rays that will be processed in the next iteration
              */
             int outRayCount = 0;
-            for (int processRayIdx = 0; processRayIdx < activeRayCount; processRayIdx++) {
+            for (int processRayIdx = 0; processRayIdx < rayCount; processRayIdx++) {
                final SampleRay ray = rays[processRayIdx];
                if (ray.intersection.hitGeometry == null) {
                   /*
                    * No intersection, process for the scene background color.
-                   * 
-                   * Ignore the emissive response flag since the background will not be sampled for direct illumination.
                    */
-                  // if (ray.emissiveResponse) {
                   final int dst = 3 * (((int) ray.pixelY - rect.y) * rect.width + (int) ray.pixelX - rect.x);
                   pixels[dst] += bg.r * ray.sampleColor.r;
                   pixels[dst + 1] += bg.g * ray.sampleColor.g;
                   pixels[dst + 2] += bg.b * ray.sampleColor.b;
-                  // }
                   /*
                    * This path is terminated.
                    */
@@ -272,25 +273,25 @@ public final class PathTracer extends IntegratorUtils {
                 * Russian roulette for variance reduction.
                 */
                && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
-                  final SampleRay irradianceRay = rays[outRayCount];
+                  final SampleRay bounceRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
                    * interface, at which point the extinction is changed in the Material model.
                    */
-                  irradianceRay.extinction.set(ray.extinction);
-                  irradianceRay.origin.set(ray.getPointOnRay(ray.intersection.t));
-                  irradianceRay.reset();
-                  ray.intersection.material.sampleBRDF(irradianceRay, ray.direction, ray.intersection, rng);
-                  if (!irradianceRay.sampleColor.isZero()) {
-                     // TODO: scale transmission by probability of reaching this depth due to RR.
-                     irradianceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
+                  bounceRay.extinction.set(ray.extinction);
+                  bounceRay.origin.set(ray.getPointOnRay(ray.intersection.t));
+                  bounceRay.reset();
+                  ray.intersection.material.sampleBRDF(bounceRay, ray.direction, ray.intersection, rng);
+                  if (!bounceRay.sampleColor.isZero()) {
+                     // TODO: scale transmission by inverse probability of reaching this depth due to RR.
+                     bounceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
 
-                     irradianceRay.pixelX = ray.pixelX;
-                     irradianceRay.pixelY = ray.pixelY;
+                     bounceRay.pixelX = ray.pixelX;
+                     bounceRay.pixelY = ray.pixelY;
                      /*
                       * Avoid precision issues when processing the ray for the next intersection.
                       */
-                     irradianceRay.origin.scaleAdd(irradianceRay.direction, Constants.EPSILON_D);
+                     bounceRay.origin.scaleAdd(bounceRay.direction, Constants.EPSILON_D);
                      ++outRayCount;
 
                   }
@@ -304,7 +305,7 @@ public final class PathTracer extends IntegratorUtils {
                pixels[dst + 1] += (sampleColor.g) * gTransmission;
                pixels[dst + 2] += (sampleColor.b) * bTransmission;
             }
-            activeRayCount = outRayCount;
+            rayCount = outRayCount;
          }
       }
    }

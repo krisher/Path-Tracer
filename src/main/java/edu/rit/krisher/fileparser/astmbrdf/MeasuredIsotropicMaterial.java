@@ -5,9 +5,9 @@ package edu.rit.krisher.fileparser.astmbrdf;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Vec3;
 

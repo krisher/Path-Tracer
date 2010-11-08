@@ -4,8 +4,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 

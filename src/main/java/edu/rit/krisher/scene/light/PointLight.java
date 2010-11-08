@@ -2,9 +2,9 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.EmissiveGeometry;
-import edu.rit.krisher.scene.GeometryIntersection;
-import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;

@@ -1,7 +1,9 @@
 /**
  * 
  */
-package edu.rit.krisher.scene;
+package edu.rit.krisher.raytracer.rays;
+
+import edu.rit.krisher.scene.Geometry;
 
 /**
  * Value class to store the results of intersection testing between a ray and a geometric primitive.

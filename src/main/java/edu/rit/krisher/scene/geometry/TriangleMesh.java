@@ -1,8 +1,8 @@
 package edu.rit.krisher.scene.geometry;
 
+import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.scene.GeometryIntersection;
-import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.geometry.utils.Vec3fBufferUtils;
 import edu.rit.krisher.scene.material.Color;

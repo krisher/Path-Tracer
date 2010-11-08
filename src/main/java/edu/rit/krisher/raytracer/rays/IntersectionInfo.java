@@ -1,5 +1,6 @@
-package edu.rit.krisher.scene;
+package edu.rit.krisher.raytracer.rays;
 
+import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -22,20 +23,13 @@ public class IntersectionInfo extends GeometryIntersection {
    /**
     * The surface normal at the hit location.
     */
-   public final Vec3 surfaceNormal;
+   public final Vec3 surfaceNormal = new Vec3();
 
    /**
     * The tangent vector that defines the azimuth == 0 direction for incident and outgoing rays.
     */
    public final Vec3 tangentVector = new Vec3();
 
-   public IntersectionInfo() {
-      surfaceNormal = new Vec3(0, 1, 0);
-   }
-
-   public IntersectionInfo(final Vec3 surfaceNormal) {
-      this.surfaceNormal = surfaceNormal;
-   }
 
    /**
     * Computes a unit-length vector that is perpendicular to the specified normal vector. The direction in the

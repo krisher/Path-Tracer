@@ -2,9 +2,9 @@ package edu.rit.krisher.scene.material;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
-import edu.rit.krisher.scene.IntersectionInfo;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class RefractiveBRDF implements Material {
