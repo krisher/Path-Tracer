@@ -16,7 +16,7 @@ import edu.rit.krisher.scene.Scene;
  * @author krisher
  * 
  */
-public final class ImageBlockWorkItem {
+public final class ImageBlock {
    public final int blockStartX;
    public final int blockStartY;
    public final int blockWidth;
@@ -31,7 +31,7 @@ public final class ImageBlockWorkItem {
 
    final AtomicInteger doneSignal;
 
-   public ImageBlockWorkItem(final ImageBuffer image, final Scene scene, final int blockStartX, final int blockStartY, final int blockWidth,
+   public ImageBlock(final ImageBuffer image, final Scene scene, final int blockStartX, final int blockStartY, final int blockWidth,
          final int blockHeight, final int pixelSampleRate, final int recursionDepth, final AtomicInteger doneSignal) {
       super();
       this.image = image;

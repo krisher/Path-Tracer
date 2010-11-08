@@ -4,9 +4,12 @@
 package edu.rit.krisher.raytracer;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.JitteredStratifiedRectangleSampling;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
@@ -15,6 +18,7 @@ import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.GeometryIntersection;
 import edu.rit.krisher.scene.MaterialInfo;
+import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Ray;
@@ -36,19 +40,60 @@ public final class PathTracer extends ThreadedIntegrator {
       super();
    }
 
-   /*
-    * @see edu.rit.krisher.raytracer.ThreadedIntegrator#createProcessors(int)
+   /**
+    * Asynchronously ray traces the specified scene given the camera position and ImageBuffer to store the results in.
+    * 
+    * @param image
+    *           A non-null ImageBuffer. The dimensions of the ray-traced image are determined from the
+    *           {@link ImageBuffer#getResolution()} method synchronously with this call.
+    * @param scene
+    *           The non-null scene to render.
+    * @param pixelSampleRate
+    *           The linear super-sampling rate. This value squared is the actual number of paths traced for each image
+    *           pixel. Must be greater than 0.
+    * @param recursionDepth
+    *           The maximum length of a ray path. 0 means trace eye rays and direct illumination only.
     */
    @Override
-   protected WorkItemProcessor[] createProcessors(final int count) {
-      final WorkItemProcessor[] processors = new WorkItemProcessor[count];
-      for (int i = 0; i < count; ++i) {
-         processors[i] = new PathProcessor();
+   public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate, final int recursionDepth) {
+
+      /*
+       * Imaging parameters
+       */
+      final Dimension imageSize = image.getResolution();
+      /*
+       * Estimate for the upper bound of the number of rays that will be generated, including one ray for each ray path
+       * component, and shadow rays. The actual number of rays traced will likely be lower than this, some rays will be
+       * absorbed before tracing to the maximum path length, some rays might not hit anything (for open scenes), etc.
+       */
+      final double rayCount = ((double) imageSize.width * imageSize.height * pixelSampleRate * pixelSampleRate
+            * recursionDepth * (1.0 + scene.getLightSources().length));
+      System.out.println("Max Samples: " + formatter.format(rayCount));
+      /*
+       * WorkItems may begin processing as soon as they are queued, so notify the ImageBuffer that pixels are on their
+       * way...
+       */
+      timer.reset();
+      image.imagingStarted();
+
+      /*
+       * Tiled work distribution...
+       */
+      final Rectangle[] imageChunks = chunkRectangle(imageSize.width, imageSize.height, BLOCK_SIZE);
+      /*
+       * Thread-safe spin-lock based countdown latch to monitor progress for this image. When this reaches 0, the
+       * ImageBuffer is notified that the rendering is complete.
+       */
+      final AtomicInteger doneSignal = new AtomicInteger(imageChunks.length);
+      for (final Rectangle chunk : imageChunks) {
+         final ImageBlock block = new ImageBlock(image, scene, chunk.x, chunk.y, chunk.width, chunk.height, pixelSampleRate, recursionDepth, doneSignal);
+         threadPool.submit();
+
       }
-      return processors;
+
    }
 
-   private static final class PathProcessor implements WorkItemProcessor {
+   private static final class PathProcessor implements Runnable {
       /**
        * Overridden to remove thread safety overhead
        */
@@ -67,7 +112,7 @@ public final class PathTracer extends ThreadedIntegrator {
        * @see edu.rit.krisher.raytracer.RayIntegrator#integrate(edu.rit.krisher.raytracer.WorkItem)
        */
       @Override
-      public void integrate(final ImageBlockWorkItem workItem) {
+      public void run() {
          try {
             final int pixelCount = workItem.blockWidth * workItem.blockHeight * 3;
             if (pixels == null || pixels.length < pixelCount)
@@ -80,14 +125,7 @@ public final class PathTracer extends ThreadedIntegrator {
 
             final SampleRay[] rays = new SampleRay[workItem.pixelSampleRate * workItem.pixelSampleRate
                                                    * workItem.blockWidth * workItem.blockHeight];
-            for (int rayIdx = 0; rayIdx < rays.length; ++rayIdx) {
-               /*
-                * Use of 1/<samples-per-pixel> as the sample weight effectively applies a single-pixel wide box filter
-                * to average the samples. It may be benificial to try other filters...
-                */
-               rays[rayIdx] = new SampleRay(sampleWeight);
 
-            }
             pixelSampler.resize(workItem.pixelSampleRate, workItem.pixelSampleRate);
             final Camera camera = workItem.scene.getCamera();
             /*
@@ -98,20 +136,19 @@ public final class PathTracer extends ThreadedIntegrator {
                for (int pixelX = 0; pixelX < workItem.blockWidth; pixelX++) {
                   pixelSampler.generateSamples(rng);
                   for (int i = 0; i < workItem.pixelSampleRate * workItem.pixelSampleRate; ++i) {
-                     final SampleRay ray = rays[rayIdx];
-                     /*
-                      * The contribution of the path is bounded by 1 / (samples per pixel)
-                      */
-                     ray.sampleColor.set(sampleWeight, sampleWeight, sampleWeight);
+                     final SampleRay ray = new SampleRay(sampleWeight);
+                     ray.emissiveResponse = true;
+                     ray.extinction.clear();
                      /*
                       * Eye rays transmit the emissive component of intersected objects (i.e. an emissive object is
                       * directly visible)
                       */
-                     ray.emissiveResponse = true;
-                     ray.extinction.clear();
+
 
                      ray.pixelX = workItem.blockStartX + pixelX + (double) pixelSampler.xSamples[i];
                      ray.pixelY = workItem.blockStartY + pixelY + (double) pixelSampler.ySamples[i];
+
+                     rays[rayIdx] = ray;
                      ++rayIdx;
 
                      assert ((int) ray.pixelX) == pixelX + workItem.blockStartX : "Ray PixelX (" + ray.pixelX
@@ -137,7 +174,7 @@ public final class PathTracer extends ThreadedIntegrator {
          }
       }
 
-      private final void processRays(final ImageBlockWorkItem workItem, final SampleRay[] rays) {
+      private final void processRays(final ImageBlock workItem, final SampleRay[] rays) {
 
          final Color sampleColor = new Color(0, 0, 0);
 
