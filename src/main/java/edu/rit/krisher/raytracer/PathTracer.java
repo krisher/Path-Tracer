@@ -282,6 +282,7 @@ public final class PathTracer implements SceneIntegrator {
                   ray.intersection.material.sampleBRDF(bounceRay, ray.direction, ray.intersection, rng);
                   if (!bounceRay.sampleColor.isZero()) {
                      // TODO: scale transmission by inverse probability of reaching this depth due to RR.
+//                     if (rayDepth >= 3) bounceRay.sampleColor.multiply(6.0);
                      bounceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
 
                      bounceRay.pixelX = ray.pixelX;
