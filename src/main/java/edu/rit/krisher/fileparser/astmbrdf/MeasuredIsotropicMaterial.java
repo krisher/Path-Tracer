@@ -82,9 +82,8 @@ class MeasuredIsotropicMaterial implements Material {
          final IntersectionInfo parameters) {
       // TODO Auto-generated method stub
       final Vec3 sY = new Vec3(parameters.surfaceNormal).cross(parameters.tangentVector);
-      final Vec3 wOutgoingN = new Vec3(wOutgoing).multiply(-1);
       final Vec3 wIShading = new Vec3(wIncoming.dot(parameters.tangentVector), wIncoming.dot(sY), wIncoming.dot(parameters.surfaceNormal));
-      final Vec3 wOShading = new Vec3(wOutgoingN.dot(parameters.tangentVector), wOutgoingN.dot(sY), wOutgoingN.dot(parameters.surfaceNormal));
+      final Vec3 wOShading = new Vec3(wOutgoing.dot(parameters.tangentVector), wOutgoing.dot(sY), wOutgoing.dot(parameters.surfaceNormal));
 
       final double azI = Math.atan2(wIShading.y, wIShading.x);
       final double azO = Math.atan2(wOShading.y, wOShading.x);

@@ -21,13 +21,14 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void evaluateBRDF(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+   public void evaluateBRDF(final Color radiance, final Vec3 wo, final Vec3 wi,
          final IntersectionInfo parameters) {
       /*
        * BRDF = 1/pi * diffuse
        */
       final Color diffColor = this.diffuse.getColor(parameters.materialCoords);
-      radiance.multiply(diffColor.r / Math.PI, diffColor.g / Math.PI, diffColor.b / Math.PI);
+      final double factor = parameters.surfaceNormal.dot(wi) / Math.PI;
+      radiance.multiply(diffColor.r * factor, diffColor.g * factor, diffColor.b * factor);
    }
 
    @Override

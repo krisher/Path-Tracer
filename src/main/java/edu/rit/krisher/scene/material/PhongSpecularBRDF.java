@@ -33,7 +33,7 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void evaluateBRDF(final Color radiance, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+   public void evaluateBRDF(final Color radiance, final Vec3 wo, final Vec3 wi,
          final IntersectionInfo parameters) {
 
       /*

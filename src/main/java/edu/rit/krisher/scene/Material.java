@@ -21,30 +21,25 @@ import edu.rit.krisher.vecmath.Vec3;
 public interface Material {
 
    /**
-    * Computes and returns a spectral response function (given the spectrum of incident light, returns the
-    * reflected/transmitted spectrum) given a sample direction, incident light direction, surface normal, and material
-    * specific coordinates of the reflection/transmission point. This is effectively a BRDF/BTDF function.
+    * Given the provided incident light direction, and given incident light power distribution, compute the exitant
+    * light power distribution in the provided exitant direction.
     * 
     * <p>
     * The returned value represents the percentage of the incoming radiant intensity (W/sr) that is transmitted, so
     * Color component values must range from 0 to 1.<br>
     * 
-    * TODO: return a spectral response function instead of a color for improved color accuracy and support for
-    * fluorescence.
-    * 
     * @param colorInOut
     *           On input, this is the color of the light incident on the material, on output, stores the resulting color
     *           response.
-    * @param wOutgoing
-    *           A normalized vector toward the material intersection point from the point where the
-    *           transmitted/reflected spectrum is being sampled.
-    * @param wIncoming
-    *           A normalized vector toward the incident light source from the material intersection point.
+    * @param wo
+    *           A normalized vector away from the material intersection point.
+    * @param wi
+    *           A normalized vector away from the material intersection point.
     * @param parameters
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     **/
-   public void evaluateBRDF(Color colorInOut, Vec3 wOutgoing, Vec3 wIncoming, IntersectionInfo parameters);
+   public void evaluateBRDF(Color colorInOut, Vec3 wo, Vec3 wi, IntersectionInfo parameters);
 
    /**
     * Computes and returns the emissive color given the specified sample direction, surface normal and material

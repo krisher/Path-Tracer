@@ -34,7 +34,7 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void evaluateBRDF(final Color colorOut, final Vec3 sampleDirection, final Vec3 incidentLightDirection,
+   public void evaluateBRDF(final Color colorOut, final Vec3 wo, final Vec3 wi,
          final IntersectionInfo parameters) {
       /*
        * Like Phong specular, do not compute direct illumination, this will be

@@ -317,17 +317,17 @@ public final class PathTracer implements SceneIntegrator {
        * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
        * vector to avoid self-intersecting the same point due to round-off error.
        */
-      final Ray lightSourceExitantRadianceRay = new Ray(woRay.getPointOnRay(woRay.intersection.t).scaleAdd(woRay.intersection.surfaceNormal, Constants.EPSILON_D), new Vec3());
+      final Ray illuminationRay = new Ray(woRay.getPointOnRay(woRay.intersection.t).scaleAdd(woRay.intersection.surfaceNormal, Constants.EPSILON_D), new Vec3());
 
       for (final EmissiveGeometry light : lights) {
          /*
           * Generate a random sample direction that hits the light
           */
-         final double lightDist = light.sampleEmissiveRadiance(lightSourceExitantRadianceRay, lightEnergy, rng);
+         final double lightDist = light.sampleEmissiveRadiance(illuminationRay, lightEnergy, rng);
          /*
           * Cosine of the angle between the geometry surface normal and the shadow ray direction
           */
-         final double cosWi = lightSourceExitantRadianceRay.direction.dot(woRay.intersection.surfaceNormal);
+         final double cosWi = illuminationRay.direction.dot(woRay.intersection.surfaceNormal);
          if (cosWi > 0) {
             /*
              * Determine whether the light source is visible from the irradiated point
@@ -336,7 +336,7 @@ public final class PathTracer implements SceneIntegrator {
             isect.t = lightDist;
             for (final Geometry geom : geometry) {
                if (geom != light) {
-                  if (geom.intersects(lightSourceExitantRadianceRay, isect))
+                  if (geom.intersects(illuminationRay, isect))
                      break;
                }
             }
@@ -345,10 +345,8 @@ public final class PathTracer implements SceneIntegrator {
                 * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
                 * the response of the material...
                 */
-               woRay.intersection.material.evaluateBRDF(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, woRay.intersection);
-
-               // final double diffAngle = (cosWi) / (lightDist * lightDist);
-               irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, cosWi);
+               woRay.intersection.material.evaluateBRDF(lightEnergy, woRay.direction.inverted(), illuminationRay.direction, woRay.intersection);
+               irradianceOut.add(lightEnergy.r, lightEnergy.g, lightEnergy.b);
             }
          }
 

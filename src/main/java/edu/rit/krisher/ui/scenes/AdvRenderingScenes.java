@@ -73,7 +73,7 @@ public final class AdvRenderingScenes {
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
             createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
 
-            createSceneMultiTree("Bunny (Krylon)", new LambertBRDF(new Color(0.25)), true, new SAHPartitionStrategey(), true, bunnyFactory(ASTMBRDFParser.getKrylonBlue(), true)),
+            createSceneMultiTree("Bunny (Krylon)", new LambertBRDF(new Color(0.8)), true, new SAHPartitionStrategey(), true, bunnyFactory(ASTMBRDFParser.getKrylonBlue(), true)),
             createScene("Spheres Measured BRDFs", new LambertBRDF(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
             createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
