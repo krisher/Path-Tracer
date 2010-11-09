@@ -2,10 +2,10 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 public final class SphereLight extends Sphere implements EmissiveGeometry {
@@ -19,7 +19,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Ray wo, final Color radianceOut, final Random rng) {
+   public double sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
 
       wo.direction.set(center).subtract(wo.origin);
       final double lightDist = wo.direction.length();
@@ -54,16 +54,17 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
        */
       wo.direction.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth).scaleAdd(nv, Math.sin(randomPolar)
                                                                                                               * sinRandomAzimuth);
-
-      material.getEmissionColor(radianceOut, wo.direction, null);
-
+      
       final double isectDist = wo.intersectsSphere(center, radius);
+      wo.intersection.surfaceNormal.set(wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius));
+      wo.intersection.t = isectDist;
+      wo.intersection.hitGeometry = this;
 
-      // final Vec3 lightNormal = wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius);
+      material.getEmissionColor(wo.sampleColor, wo, null);
       /*
        * Multiply by the solid angle of the light sphere that is visible from the origin (due to self-occlusion).
        */
-      radianceOut.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
+      wo.sampleColor.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
       return isectDist;
    }
 

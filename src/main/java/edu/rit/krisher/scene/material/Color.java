@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class Color implements Material, Texture {
@@ -49,8 +50,9 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 responseDirection, final IntersectionInfo parameters) {
+   public void getEmissionColor(final Color emissionOut, final Ray responseDirection, final IntersectionInfo parameters) {
       emissionOut.set(this);
+      if (parameters != null) emissionOut.multiply(-parameters.surfaceNormal.dot(responseDirection.direction));
    }
 
    @Override

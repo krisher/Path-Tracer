@@ -4,6 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
+import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
@@ -28,12 +29,14 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Ray wo, final Color radianceOut, final Random rng) {
+   public double sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
       wo.direction.set(position).subtract(wo.origin);
-      final double dist = wo.direction.length();
-      wo.direction.multiply(1.0 / dist);
-      radianceOut.set(material);
-      return dist;
+      wo.intersection.t = wo.direction.length();
+      wo.direction.multiply(1.0 / wo.intersection.t);
+      wo.intersection.surfaceNormal.set(wo.direction).multiply(-1);
+      wo.sampleColor.set(material);
+      wo.intersection.hitGeometry = this;
+      return wo.intersection.t;
    }
 
    @Override

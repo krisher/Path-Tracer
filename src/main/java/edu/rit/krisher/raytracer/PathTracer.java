@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.rit.krisher.raytracer.image.ImageBuffer;
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
 import edu.rit.krisher.scene.EmissiveGeometry;
@@ -23,8 +22,6 @@ import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
-import edu.rit.krisher.vecmath.Ray;
-import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Non thread-safe Path Tracer.
@@ -105,6 +102,8 @@ public final class PathTracer implements SceneIntegrator {
        * Overridden to remove thread safety overhead
        */
       private final Random rng = new UnsafePRNG();
+
+      private final SampleRay illuminationRay = new SampleRay(0);
 
       /*
        * Buffer to collect rgb pixel data
@@ -240,7 +239,7 @@ public final class PathTracer implements SceneIntegrator {
                 * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
                 */
                if (ray.emissiveResponse) {
-                  ray.intersection.material.getEmissionColor(sampleColor, ray.direction, ray.intersection);
+                  ray.intersection.material.getEmissionColor(sampleColor, ray, ray.intersection);
                } else
                   sampleColor.set(0, 0, 0);
 
@@ -249,11 +248,11 @@ public final class PathTracer implements SceneIntegrator {
                 * below.
                 */
                final double rTransmission = ray.sampleColor.r
-               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
                final double gTransmission = ray.sampleColor.g
-               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
                final double bTransmission = ray.sampleColor.b
-               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -268,10 +267,10 @@ public final class PathTracer implements SceneIntegrator {
                 * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
                 */
                if (rayDepth < recursionDepth
-                     /*
-                      * Russian roulette for variance reduction.
-                      */
-                     && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
+               /*
+                * Russian roulette for variance reduction.
+                */
+               && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
                   final SampleRay bounceRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
@@ -307,51 +306,47 @@ public final class PathTracer implements SceneIntegrator {
             rayCount = outRayCount;
          }
       }
-   }
 
-   private static final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
-         final EmissiveGeometry[] lights, final SampleRay woRay, final Random rng) {
-      final Color lightEnergy = new Color(0, 0, 0);
-      final GeometryIntersection isect = new GeometryIntersection();
-      /*
-       * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
-       * vector to avoid self-intersecting the same point due to round-off error.
-       */
-      final Ray illuminationRay = new Ray(woRay.getPointOnRay(woRay.intersection.t).scaleAdd(woRay.intersection.surfaceNormal, Constants.EPSILON_D), new Vec3());
+      private final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
+            final EmissiveGeometry[] lights, final SampleRay woRay, final Random rng) {
+         /*
+          * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
+          * vector to avoid self-intersecting the same point due to round-off error.
+          */
+         illuminationRay.origin.set(woRay.getPointOnRay(woRay.intersection.t).scaleAdd(woRay.intersection.surfaceNormal, Constants.EPSILON_D));
 
-      for (final EmissiveGeometry light : lights) {
-         /*
-          * Generate a random sample direction that hits the light
-          */
-         final double lightDist = light.sampleEmissiveRadiance(illuminationRay, lightEnergy, rng);
-         /*
-          * Cosine of the angle between the geometry surface normal and the shadow ray direction
-          */
-         final double cosWi = illuminationRay.direction.dot(woRay.intersection.surfaceNormal);
-         if (cosWi > 0) {
+         for (final EmissiveGeometry light : lights) {
             /*
-             * Determine whether the light source is visible from the irradiated point
+             * Generate a random sample direction that hits the light
              */
-            isect.hitGeometry = light;
-            isect.t = lightDist;
-            for (final Geometry geom : geometry) {
-               if (geom != light) {
-                  if (geom.intersects(illuminationRay, isect))
-                     break;
+            final double lightDist = light.sampleEmissiveRadiance(illuminationRay, rng);
+            /*
+             * Cosine of the angle between the geometry surface normal and the shadow ray direction
+             */
+            final double cosWi = illuminationRay.direction.dot(woRay.intersection.surfaceNormal);
+            if (cosWi > 0) {
+               /*
+                * Determine whether the light source is visible from the irradiated point
+                */
+               for (final Geometry geom : geometry) {
+                  if (geom != light) {
+                     if (geom.intersects(illuminationRay, illuminationRay.intersection))
+                        break;
+                  }
+               }
+               if (illuminationRay.intersection.hitGeometry == light) {
+                  /*
+                   * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
+                   * the response of the material...
+                   */
+                  woRay.intersection.material.evaluateBRDF(illuminationRay.sampleColor, woRay.direction.inverted(), illuminationRay.direction, woRay.intersection);
+                  irradianceOut.add(illuminationRay.sampleColor.r, illuminationRay.sampleColor.g, illuminationRay.sampleColor.b);
                }
             }
-            if (isect.hitGeometry == light) {
-               /*
-                * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
-                * the response of the material...
-                */
-               woRay.intersection.material.evaluateBRDF(lightEnergy, woRay.direction.inverted(), illuminationRay.direction, woRay.intersection);
-               irradianceOut.add(lightEnergy.r, lightEnergy.g, lightEnergy.b);
-            }
+
          }
 
       }
-
    }
 
    /**

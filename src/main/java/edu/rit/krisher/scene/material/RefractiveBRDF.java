@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class RefractiveBRDF implements Material {
@@ -29,7 +30,7 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void getEmissionColor(final Color emissionOut, final Vec3 sampleDirection, final IntersectionInfo parameters) {
+   public void getEmissionColor(final Color emissionOut, final Ray sampleDirection, final IntersectionInfo parameters) {
       emissionOut.clear();
    }
 

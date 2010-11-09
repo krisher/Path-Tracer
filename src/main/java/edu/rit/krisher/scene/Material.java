@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.material.Color;
+import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -42,27 +43,20 @@ public interface Material {
    public void evaluateBRDF(Color colorInOut, Vec3 wo, Vec3 wi, IntersectionInfo parameters);
 
    /**
-    * Computes and returns the emissive color given the specified sample direction, surface normal and material
-    * coordinates.
-    * <p>
-    * Emissive color contribution is independent of any irradiance at the intersection point parameters. This can be
-    * used to represent light source emission, materials that don't interact with light (e.g. simple color materials),
-    * and ambient lighting terms.
+    * Computes and returns the emitted (not reflected) light toward the origin of wo, along the wo ray direction.
     * <p>
     * The returned value represents the radiant intensity of the source over the visible spectrum, in Watts/Steradian.
     * The Color components may range from 0 to positive infinity.
     * 
     * @param emissionOut
-    *           out variable (non-null) used to store the color that is emitted back toward the sample source (in the
-    *           opposite direction as the sampleDirection).
-    * @param sampleDirection
-    *           A normalized vector pointing toward the material intersection (the opposite direction as the light that
-    *           will be emitted)
+    *           out variable used to store the color that is emitted toward the illuminated point.
+    * @param wo
+    *           A ray from the illuminated point toward the intersection with the material.
     * @param parameters
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     */
-   public void getEmissionColor(Color emissionOut, Vec3 sampleDirection, IntersectionInfo parameters);
+   public void getEmissionColor(Color emissionOut, Ray wo, IntersectionInfo parameters);
 
    /**
     * Returns true if there is any chance of transmission/reflection of light that is not very close to the perfect
@@ -76,10 +70,10 @@ public interface Material {
    /**
     * Computes a direction that should be sampled.
     * 
-    * @param sampleOut
+    * @param wo
     *           Ray to store the desired sample direction, and the distribution (SPD/Color) of light that will be
     *           reflected toward the incoming sample direction.
-    * @param wIncoming
+    * @param wi
     *           Vector indicating the incident ray direction.
     * @param parameters
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
@@ -87,5 +81,5 @@ public interface Material {
     * @param rng
     *           A random number generator for monte-carlo sampling, etc.
     */
-   public void sampleBRDF(SampleRay sampleOut, Vec3 wIncoming, IntersectionInfo parameters, Random rng);
+   public void sampleBRDF(SampleRay wo, Vec3 wi, IntersectionInfo parameters, Random rng);
 }
