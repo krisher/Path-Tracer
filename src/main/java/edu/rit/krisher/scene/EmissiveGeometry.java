@@ -19,12 +19,11 @@ public interface EmissiveGeometry extends Geometry {
     * spectral power distribution emitted from the light to the ray origin via the supplied parameter.
     * 
     * @param wo
-    *           The ray whose origin indicates the illuminated point, the direction vector and spectral power
-    *           distribution will be updated by this method.
+    *           The ray whose origin indicates the illuminated point, the direction vector, spectral power
+    *           distribution and intersection info will be updated by this method.
     * @param rng
     *           A non-null random number generator that can be used for generating uniform random variables.
-    * @return The distance between the ray origin and the intersection with the emissive geometry.
     */
-   double sampleEmissiveRadiance(SampleRay wo, Random rng);
+   void sampleEmissiveRadiance(SampleRay wo, Random rng);
 
 }

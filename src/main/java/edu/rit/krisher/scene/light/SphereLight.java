@@ -19,7 +19,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
+   public void sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
 
       wo.direction.set(center).subtract(wo.origin);
       final double lightDist = wo.direction.length();
@@ -65,7 +65,6 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
        * Multiply by the solid angle of the light sphere that is visible from the origin (due to self-occlusion).
        */
       wo.sampleColor.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
-      return isectDist;
    }
 
 }

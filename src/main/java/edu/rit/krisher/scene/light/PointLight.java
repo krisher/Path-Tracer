@@ -29,14 +29,13 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
+   public void sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
       wo.direction.set(position).subtract(wo.origin);
       wo.intersection.t = wo.direction.length();
       wo.direction.multiply(1.0 / wo.intersection.t);
       wo.intersection.surfaceNormal.set(wo.direction).multiply(-1);
       wo.sampleColor.set(material);
       wo.intersection.hitGeometry = this;
-      return wo.intersection.t;
    }
 
    @Override

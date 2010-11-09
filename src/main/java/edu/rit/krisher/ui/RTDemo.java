@@ -2,7 +2,7 @@ package edu.rit.krisher.ui;
 
 import javax.swing.SwingUtilities;
 
-import edu.rit.krisher.ui.scenes.AdvRenderingScenes;
+import edu.rit.krisher.ui.scenes.CG2Scenes;
 
 public class RTDemo {
 
@@ -10,8 +10,8 @@ public class RTDemo {
    public static void main(final String[] args) {
       final RTFrame frame = new RTFrame();
 
-      frame.setScenes(AdvRenderingScenes.getScenes());
-      // frame.setScenes(CG2Scenes.getScenes());
+//      frame.setScenes(AdvRenderingScenes.getScenes());
+       frame.setScenes(CG2Scenes.getScenes());
 
       SwingUtilities.invokeLater(new Runnable() {
          @Override

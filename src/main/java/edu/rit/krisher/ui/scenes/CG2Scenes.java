@@ -3,6 +3,7 @@ package edu.rit.krisher.ui.scenes;
 import edu.rit.krisher.scene.DefaultScene;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.Scene;
+import edu.rit.krisher.scene.acceleration.KDTree;
 import edu.rit.krisher.scene.camera.DoFCamera;
 import edu.rit.krisher.scene.geometry.Box;
 import edu.rit.krisher.scene.geometry.Sphere;
@@ -249,12 +250,11 @@ public class CG2Scenes {
    private static Scene whittedScene(final double lightPower) {
       final DoFCamera cam = new DoFCamera();
       final AbstractSceneDescription scene = new AbstractSceneDescription("Whitted Scene (Light = " + lightPower + ")", cam);
-      scene.add(new Box(10, 2.5, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
-
-      scene.add(new Sphere(new Vec3(0, 2, 0), 1, mixedRefractive));
-
-      scene.add(new Sphere(new Vec3(-2, 1, -2), 1, whiteSpecular80));
-
+      
+      final KDTree tree = new KDTree(
+                                     new Sphere(new Vec3(0, 2, 0), 1, mixedRefractive),
+                                     new Sphere(new Vec3(-2, 1, -2), 1, whiteSpecular80), new Box(10, 2.5, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
+      scene.add(tree);
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), lightPower));
 
       cam.setPosition(new Vec3(0, 2, 5));

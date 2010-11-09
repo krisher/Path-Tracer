@@ -24,12 +24,12 @@ import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
 
 /**
- * Non thread-safe Path Tracer.
+ * Non thread-safe Photon Tracer.
  * 
  * @author krisher
  * 
  */
-public final class PathTracer implements SceneIntegrator {
+public final class PhotonTracer implements SceneIntegrator {
 
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
 
@@ -39,7 +39,7 @@ public final class PathTracer implements SceneIntegrator {
     * Creates a new path tracer.
     * 
     */
-   public PathTracer() {
+   public PhotonTracer() {
       super();
    }
 
@@ -60,6 +60,25 @@ public final class PathTracer implements SceneIntegrator {
    @Override
    public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate, final int recursionDepth) {
 
+      /*
+       * TODO: Compute photon map...
+       * 
+       * Sample all light sources for photon ray initialization.
+       * 
+       * Trace photons through the scene, deposit at each diffuse hit location.
+       * 
+       * Build KD-Tree from hits.
+       * 
+       * Ray Trace Scene until all rays hit a diffuse surface.
+       * 
+       * For all hits, compute direct illumination.
+       * 
+       * For all hits, generate rays that sample hemisphere.
+       * 
+       * For all sample ray hits, gather k nearest photons in photon map, weight with RBF, and contribute illumination to sample pixel.
+       */
+      
+      
       /*
        * Imaging parameters
        */
