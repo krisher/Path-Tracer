@@ -32,10 +32,11 @@ public class DoFCamera extends PinholeCamera implements Camera {
     * @see edu.rit.krisher.scene.Camera#generateRays(double, double, double)
     */
    @Override
-   public void sample(final SampleRay[] raysOut, final int imageWidth, final int imageHeight, final Random rng) {
+   public void sample(final SampleRay[] raysOut, final int imageWidth, final int imageHeight, final int xOffset,
+         final int yOffset, final Random rng) {
       for (final SampleRay rayOut : raysOut) {
-         final double x = rayOut.pixelX * 2.0 / imageWidth - 1.0;
-         final double y = rayOut.pixelY * 2.0 / imageHeight - 1.0;
+         final double x = (xOffset + rayOut.pixelX) * 2.0 / imageWidth - 1.0;
+         final double y = (yOffset + rayOut.pixelY) * 2.0 / imageHeight - 1.0;
          /*
           * X and Y sample locations will be scaled so they correspond to locations on the focal plane.
           */

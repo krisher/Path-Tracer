@@ -17,7 +17,6 @@ import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
-import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Scene;
@@ -35,7 +34,7 @@ import edu.rit.krisher.vecmath.Vec3;
  */
 public final class PathTracer implements SceneIntegrator {
 
-   protected final Timer timer = new Timer("Ray Trace (Thread Timing)");
+   private final Timer timer = new Timer("Ray Trace (Thread Timing)");
 
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
 
@@ -162,8 +161,8 @@ public final class PathTracer implements SceneIntegrator {
                }
 
                /* Generate Eye Rays */
-               IntegratorUtils.generatePixelSamples(rays, rect, pixelSampleRate, rng);
-               scene.getCamera().sample(rays, imageSize.width, imageSize.height, rng);
+               IntegratorUtils.generatePixelSamples(rays, new Rectangle(0, 0, rect.width, rect.height), pixelSampleRate, rng);
+               scene.getCamera().sample(rays, imageSize.width, imageSize.height, rect.x, rect.y, rng);
 
                /* Trace Rays */
                processRays(rect, rays, rays.length);
@@ -209,7 +208,7 @@ public final class PathTracer implements SceneIntegrator {
                   /*
                    * No intersection, process for the scene background color.
                    */
-                  final int dst = 3 * (((int) ray.pixelY - rect.y) * rect.width + (int) ray.pixelX - rect.x);
+                  final int dst = 3 * (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
                   pixels[dst] += bg.r * ray.sampleColor.r;
                   pixels[dst + 1] += bg.g * ray.sampleColor.g;
                   pixels[dst + 2] += bg.b * ray.sampleColor.b;
@@ -250,11 +249,11 @@ public final class PathTracer implements SceneIntegrator {
                 * below.
                 */
                final double rTransmission = ray.sampleColor.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
                final double gTransmission = ray.sampleColor.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
                final double bTransmission = ray.sampleColor.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -269,10 +268,10 @@ public final class PathTracer implements SceneIntegrator {
                 * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
                 */
                if (rayDepth < recursionDepth
-               /*
-                * Russian roulette for variance reduction.
-                */
-               && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
+                     /*
+                      * Russian roulette for variance reduction.
+                      */
+                     && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
                   final SampleRay bounceRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
@@ -300,7 +299,7 @@ public final class PathTracer implements SceneIntegrator {
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
-               final int dst = 3 * (((int) ray.pixelY - rect.y) * rect.width + (int) ray.pixelX - rect.x);
+               final int dst = 3 * (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
                pixels[dst] += (sampleColor.r) * rTransmission;
                pixels[dst + 1] += (sampleColor.g) * gTransmission;
                pixels[dst + 2] += (sampleColor.b) * bTransmission;
@@ -324,7 +323,7 @@ public final class PathTracer implements SceneIntegrator {
          /*
           * Generate a random sample direction that hits the light
           */
-         final double lightDist = light.sampleEmissiveRadiance(lightSourceExitantRadianceRay.direction, lightEnergy, lightSourceExitantRadianceRay.origin, rng);
+         final double lightDist = light.sampleEmissiveRadiance(lightSourceExitantRadianceRay, lightEnergy, rng);
          /*
           * Cosine of the angle between the geometry surface normal and the shadow ray direction
           */
@@ -348,8 +347,8 @@ public final class PathTracer implements SceneIntegrator {
                 */
                woRay.intersection.material.evaluateBRDF(lightEnergy, woRay.direction, lightSourceExitantRadianceRay.direction, woRay.intersection);
 
-               final double diffAngle = (cosWi) / (lightDist * lightDist);
-               irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, diffAngle);
+               // final double diffAngle = (cosWi) / (lightDist * lightDist);
+               irradianceOut.scaleAdd(lightEnergy.r, lightEnergy.g, lightEnergy.b, cosWi);
             }
          }
 
@@ -359,7 +358,7 @@ public final class PathTracer implements SceneIntegrator {
 
    /**
     * Cancels rendering for the specified ImageBuffer (that was previously passed to
-    * {@link #integrate(ImageBuffer, Camera, Scene, int, int)}).
+    * {@link #integrate(ImageBuffer, Scene, int, int)}).
     * 
     * <p>
     * Any non-started work items are removed from the work queue, but work items already being processed are allowed to

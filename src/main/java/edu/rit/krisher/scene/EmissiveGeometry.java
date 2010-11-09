@@ -3,11 +3,10 @@ package edu.rit.krisher.scene;
 import java.util.Random;
 
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.vecmath.Vec3;
+import edu.rit.krisher.vecmath.Ray;
 
 /**
- * Interface for geometric objects that emit light, and support direct
- * illumination sampling.
+ * Interface for geometric objects that emit light, and support direct illumination sampling.
  * 
  * @author krisher
  * 
@@ -15,20 +14,21 @@ import edu.rit.krisher.vecmath.Vec3;
 public interface EmissiveGeometry extends Geometry {
 
    /**
-    * Given an arbitrary origin point in world-space, compute a vector that
-    * intersects the light source geometry at a randomly sampled point.
+    * Samples the power distribution of the light emitted toward a specified point. The provided Ray's origin indicates
+    * a point that may be illuminated by this light source (barring any occlusion from other geometry). This method will
+    * update the ray's direction vector to point toward a randomly sampled location on the light surface, and return the
+    * spectral power distribution emitted from the light to the ray origin via the supplied parameter.
     * 
-    * @param directionOut
-    *           The non-null vector in which to store the (normalized) result.
-    * @param radianceOut
-    *           The light energy that is transmitted along the sample ray.
-    * @param origin
-    *           The non-null point from which the sample is taken
+    * @param wo
+    *           The ray whose origin indicates the illuminated point, the direction vector will be updated by this
+    *           method to point toward the light.
+    * @param exitantRadiance
+    *           Output variable that will contain the spectral power distribution of the light that reaches the ray
+    *           origin assuming no occlusions.
     * @param rng
-    *           A non-null random number generator that can be used for
-    *           generating uniform random variables.
-    * @return this distance to the sample point.
+    *           A non-null random number generator that can be used for generating uniform random variables.
+    * @return The distance between the ray origin and the intersection with the emissive geometry.
     */
-   double sampleEmissiveRadiance(Vec3 directionOut, Color radianceOut,  Vec3 origin, Random rng);
+   double sampleEmissiveRadiance(Ray wo, Color exitantRadiance, Random rng);
 
 }

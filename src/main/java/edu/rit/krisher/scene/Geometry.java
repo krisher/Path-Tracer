@@ -54,16 +54,16 @@ public interface Geometry {
 
    /**
     * Computes the smallest positive distance along the ray to the intersection and stores the result (intersection
-    * distance, geometry and primitiveID) in intersection.
-    * If there is no intersection with <code>0 < distance < intersection.t</code>, nothing is updated and this method
-    * returns false.
+    * distance, geometry and primitiveID) in the {@link GeometryIntersection} parameter. If there is no intersection
+    * with <code>0 < distance < intersection.t</code>, nothing is updated and this method returns false.
     * 
     * @param ray
     *           A non-null ray to test intersection with.
     * @param intersection
     *           The intersection info to populate upon successful intersection.
     * 
-    * @return the distance along the ray (from the origin) at which the intersection occurs.
+    * @return true if an intersection was found with 0 < distance < intersection.t (and intersection was subsequently
+    *         updated), false otherwise.
     */
    public boolean intersects(Ray ray, GeometryIntersection intersection);
 

@@ -10,7 +10,7 @@ import edu.rit.krisher.vecmath.Vec3;
  * 
  */
 public class IntersectionInfo extends GeometryIntersection {
-   
+
    /**
     * The material at the hit location.
     */
@@ -31,27 +31,5 @@ public class IntersectionInfo extends GeometryIntersection {
    public final Vec3 tangentVector = new Vec3();
 
 
-   /**
-    * Computes a unit-length vector that is perpendicular to the specified normal vector. The direction in the
-    * perpendicular plane is arbitrarily chosen.
-    * 
-    * @param tangentResult
-    *           A non-null vector in which to store the result.
-    * @param surfaceNormal
-    *           A non-null unit length vector that the computed result will be perpendicular to.
-    */
-   public static void computeTangentVector(final Vec3 tangentResult, final Vec3 surfaceNormal) {
-      /*
-       * Construct orthonormal basis with vectors:
-       * 
-       * surfaceNormal, directionOut, nv
-       */
-      tangentResult.set(0, 1, 0);
-      if (Math.abs(tangentResult.dot(surfaceNormal)) > 0.9) {
-         // Small angle, pick a better vector...
-         tangentResult.x = -1.0;
-         tangentResult.y = 0;
-      }
-      tangentResult.cross(surfaceNormal).normalize();
-   }
+
 }

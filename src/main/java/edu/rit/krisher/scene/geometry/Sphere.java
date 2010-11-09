@@ -42,7 +42,7 @@ public class Sphere implements Geometry {
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
       data.surfaceNormal.set(isectNormal);
-      IntersectionInfo.computeTangentVector(data.tangentVector, data.surfaceNormal);
+      Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
       data.materialCoords = null;
    }
 

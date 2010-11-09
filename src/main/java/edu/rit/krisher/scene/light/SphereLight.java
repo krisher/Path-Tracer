@@ -19,21 +19,22 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public double sampleEmissiveRadiance(final Vec3 directionOut, final Color radianceOut, final Vec3 origin,
-         final Random rng) {
+   public double sampleEmissiveRadiance(final Ray wo, final Color radianceOut, final Random rng) {
 
-      directionOut.set(center).subtract(origin);
-      final double lightDist = directionOut.length();
+      wo.direction.set(center).subtract(wo.origin);
+      final double lightDist = wo.direction.length();
       /*
-       * The maximum angle from originToCenter for a ray eminating from origin
-       * that will hit the sphere.
+       * The maximum angle from originToCenter for a ray eminating from origin that will hit the sphere.
        */
       final double sinMaxAngle = radius / lightDist;
       final double cosMaxAngle = Math.sqrt(1 - sinMaxAngle * sinMaxAngle);
 
       /*
-       * Uniform sample density over the solid angle subtended by the sphere
-       * wrt. the origin point. Taken from Shirley and Morely book.
+       * Uniform sample density over the solid angle subtended by the sphere wrt. the origin point. Taken from Shirley
+       * and Morely book.
+       * 
+       * Basically generates a random polar coordinate in a disc perpendicular to the direction from sphere center to
+       * ray origin. The coordinate is projected back onto the sphere surface to determine the ray direction.
        */
       final double cosRandomAzimuth = 1.0 + rng.nextDouble() * (cosMaxAngle - 1.0);
       final double sinRandomAzimuth = Math.sqrt(1.0 - cosRandomAzimuth * cosRandomAzimuth);
@@ -43,30 +44,26 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       /*
        * Construct an orthonormal basis around the direction vector
        */
-      directionOut.multiply(1.0 / lightDist);
-      final Vec3 nu = new Vec3(0, 1, 0);
-      final double cosAng = nu.dot(directionOut);
-      if (cosAng < -0.9 || cosAng > 0.9) {
-         nu.x = 1;
-         nu.y = 0;
-      }
-      nu.cross(directionOut).normalize();
-      final Vec3 nv = new Vec3(directionOut).cross(nu);
-
-      directionOut.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth).scaleAdd(nv, Math.sin(randomPolar)
-            * sinRandomAzimuth);
-
-      material.getEmissionColor(radianceOut, directionOut, null);
-
-      final Ray emissionSampler = new Ray(origin, directionOut);
-      final double isectDist = emissionSampler.intersectsSphere(center, radius);
+      wo.direction.multiply(1.0 / lightDist);
+      final Vec3 nu = new Vec3();
+      Vec3.computeTangentVector(nu, wo.direction);
+      final Vec3 nv = new Vec3(wo.direction).cross(nu);
 
       /*
-       * Multiply by 1/distribution of light samples.
-       * 
-       * Note that the cosine theta term (between surface normal and ray direction) is excluded because we would scale by that term anyway. 
+       * Make wo.direction point to a location on the surface of the sphere.
        */
-      radianceOut.multiply((isectDist * isectDist * (2.0 * Math.PI * (1.0 - cosMaxAngle))));
+      wo.direction.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth).scaleAdd(nv, Math.sin(randomPolar)
+                                                                                                              * sinRandomAzimuth);
+
+      material.getEmissionColor(radianceOut, wo.direction, null);
+
+      final double isectDist = wo.intersectsSphere(center, radius);
+
+      // final Vec3 lightNormal = wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius);
+      /*
+       * Multiply by the solid angle of the light sphere that is visible from the origin (due to self-occlusion).
+       */
+      radianceOut.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
       return isectDist;
    }
 

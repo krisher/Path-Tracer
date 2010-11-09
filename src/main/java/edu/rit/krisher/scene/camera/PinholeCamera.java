@@ -76,10 +76,11 @@ public class PinholeCamera implements Camera {
     * @see edu.rit.krisher.scene.Camera#generateRays(double, double, double)
     */
    @Override
-   public void sample(final SampleRay[] rayOut, final int imageWidth, final int imageHeight, final Random rng) {
+   public void sample(final SampleRay[] rayOut, final int imageWidth, final int imageHeight, final int xOffset,
+         final int yOffset, final Random rng) {
       for (final SampleRay ray : rayOut) {
-         final double x = ray.pixelX * 2.0 / imageWidth - 1.0;
-         final double y = ray.pixelY * 2.0 / imageHeight - 1.0;
+         final double x = (xOffset + ray.pixelX) * 2.0 / imageWidth - 1.0;
+         final double y = (yOffset + ray.pixelY) * 2.0 / imageHeight - 1.0;
          ray.direction.set(x, y, -rayZDist).normalize();
          orientation.transformVec(ray.direction);
          ray.origin.set(position);

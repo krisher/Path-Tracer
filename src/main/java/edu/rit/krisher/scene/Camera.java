@@ -13,7 +13,7 @@ import edu.rit.krisher.raytracer.rays.SampleRay;
 public interface Camera {
 
    /**
-    * Initializes the specified Ray's direction and origin.
+    * Initializes the specified Rays' directions and origins.
     * 
     * @param rayOut
     *           A list of non-null Rays to initialize. The pixelX and pixelY fields of the SampleRays indicate the
@@ -26,6 +26,7 @@ public interface Camera {
     * @param rng
     *           A non-null random number generator that can be used for sampling of the camera aperture.
     */
-   public void sample(SampleRay[] rayOut, int imageWidth, int imageHeight, Random rng);
+   public void sample(SampleRay[] rayOut, int imageWidth, int imageHeight, int pixelOffsetX, int pixelOffsetY,
+         Random rng);
 
 }
