@@ -26,4 +26,5 @@ public interface EmissiveGeometry extends Geometry {
     */
    void sampleEmissiveRadiance(SampleRay wo, Random rng);
 
+//   SampleRay[] multisampleEmissiveRadiance(int sampleCount, Random rng);
 }

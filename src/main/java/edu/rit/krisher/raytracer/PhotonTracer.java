@@ -63,7 +63,7 @@ public final class PhotonTracer implements SceneIntegrator {
       /*
        * TODO: Compute photon map...
        * 
-       * Sample all light sources for photon ray initialization.
+       * Sample all light sources for photon ray initialization.  Generate sample rays in every direction, with energy and count proportional to the total power of the light source.
        * 
        * Trace photons through the scene, deposit at each diffuse hit location.
        * 

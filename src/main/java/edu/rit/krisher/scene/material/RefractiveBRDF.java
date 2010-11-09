@@ -63,45 +63,48 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+   public void sampleBRDF(final SampleRay wo, final Vec3 wi, final IntersectionInfo parameters,
          final Random rng) {
-      final Vec3 sNormal = new Vec3(parameters.surfaceNormal);
-      double cosSampleAndNormal = wIncoming.dot(sNormal);
+      Vec3 sNormal = parameters.surfaceNormal;
+      double cosThetaI = wi.dot(sNormal);
 
       final double rIdxRatio;
       final boolean exiting;
-      if (cosSampleAndNormal <= 0) {
+      if (cosThetaI <= 0) {
          /*
           * Sample ray from outside the enclosed volume
           */
          rIdxRatio = inRef / refractiveIndex;
-         cosSampleAndNormal = -cosSampleAndNormal;
+         cosThetaI = -cosThetaI;
          exiting = false;
       } else {
          /*
           * Sample ray from inside going out
           */
          rIdxRatio = refractiveIndex / inRef;
-         sNormal.multiply(-1);
+         sNormal = new Vec3(-sNormal.x, -sNormal.y, -sNormal.z);
          exiting = true;
       }
-      final double snellRoot = 1.0 - (rIdxRatio * rIdxRatio * (1.0 - cosSampleAndNormal * cosSampleAndNormal));
+      final double snellRoot = 1.0 - (rIdxRatio * rIdxRatio * (1.0 - cosThetaI * cosThetaI));
       if (snellRoot < 0) {
          /*
           * Total internal reflection
           */
-         sampleOut.direction.set(wIncoming).reflect(sNormal);
+         wo.direction.set(wi).reflect(sNormal);
          /*
           * TODO: adjust the transmission spectrum...
           */
-         sampleOut.sampleColor.set(1, 1, 1);
+         wo.sampleColor.set(1, 1, 1);
       } else {
          /*
           * Refraction
           */
-         sampleOut.direction.set(wIncoming).multiply(rIdxRatio);
-         sampleOut.direction.scaleAdd(sNormal, (rIdxRatio * cosSampleAndNormal - Math.sqrt(snellRoot)));
+         wo.direction.set(wi).multiply(rIdxRatio);
+         wo.direction.scaleAdd(sNormal, (rIdxRatio * cosThetaI - Math.sqrt(snellRoot)));
 
+         /*
+          * Blurry refraction...
+          */
          if (exp < 100000) {
             /*
              * Idential to phong, except we substitude the refraction direction
@@ -126,29 +129,29 @@ public class RefractiveBRDF implements Material {
              * from a uniform random variable.
              */
             final Vec3 u = new Vec3(0, 1.0, 0);
-            final double cosAng = sampleOut.direction.dot(u);
+            final double cosAng = wo.direction.dot(u);
             if (cosAng > 0.9 || cosAng < -0.9) {
                // Small angle, pick a better vector...
                u.x = -1.0;
                u.y = 0;
             }
-            u.cross(sampleOut.direction).normalize();
-            final Vec3 v = new Vec3(u).cross(sampleOut.direction);
+            u.cross(wo.direction).normalize();
+            final Vec3 v = new Vec3(u).cross(wo.direction);
 
-            sampleOut.direction.multiply(cosA).scaleAdd(u, xb).scaleAdd(v, yb);
-            if (sampleOut.direction.dot(parameters.surfaceNormal) < 0) {
-               sampleOut.direction.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
+            wo.direction.multiply(cosA).scaleAdd(u, xb).scaleAdd(v, yb);
+            if (wo.direction.dot(parameters.surfaceNormal) < 0) {
+               wo.direction.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
             }
          }
 
-         sampleOut.sampleColor.set(1, 1, 1);
+         wo.sampleColor.set(1, 1, 1);
          if (!exiting)
-            sampleOut.extinction.set(transmissionFilter);
+            wo.extinction.set(transmissionFilter);
          else
-            sampleOut.extinction.clear();
+            wo.extinction.clear();
       }
 
-      sampleOut.emissiveResponse = true;
+      wo.emissiveResponse = true;
    }
 
 }

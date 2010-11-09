@@ -71,10 +71,10 @@ public interface Material {
     * Computes a direction that should be sampled.
     * 
     * @param wo
-    *           Ray to store the desired sample direction, and the distribution (SPD/Color) of light that will be
-    *           reflected toward the incoming sample direction.
+    *           Ray to store the desired outgoing sample direction, and the distribution (SPD/Color) of light that will be
+    *           reflected toward the incoming sample direction (this is the ratio of incoming light to outgoing light).
     * @param wi
-    *           Vector indicating the incident ray direction.
+    *           Vector indicating the incident ray direction (pointing toward the intersection).
     * @param parameters
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
@@ -82,4 +82,6 @@ public interface Material {
     *           A random number generator for monte-carlo sampling, etc.
     */
    public void sampleBRDF(SampleRay wo, Vec3 wi, IntersectionInfo parameters, Random rng);
+   
+   //public SampleRay[] multisampleBRDF(int sampleCount, Vec3 wi, IntersectionInfo parameters, Random rng);
 }

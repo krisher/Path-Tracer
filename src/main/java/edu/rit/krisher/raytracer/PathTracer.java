@@ -264,7 +264,7 @@ public final class PathTracer implements SceneIntegrator {
                }
 
                /*
-                * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
+                * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the next path segment.
                 */
                if (rayDepth < recursionDepth
                /*
