@@ -6,6 +6,7 @@ import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.geometry.utils.ShadingUtils;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
@@ -23,8 +24,7 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void evaluateBRDF(final Color radiance, final Vec3 wo, final Vec3 wi,
-         final IntersectionInfo parameters) {
+   public void evaluateBRDF(final Color radiance, final Vec3 wo, final Vec3 wi, final IntersectionInfo parameters) {
       /*
        * BRDF = 1/pi * diffuse
        */
@@ -34,21 +34,13 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay wo, final Vec3 wi, final IntersectionInfo parameters,
-         final Random rng) {
+   public void sampleBRDF(final SampleRay wo, final Vec3 wi, final IntersectionInfo parameters, final Random rng) {
       Vec3 surfaceNormal = parameters.surfaceNormal;
       if (wi.dot(surfaceNormal) > 0) {
          surfaceNormal = surfaceNormal.inverted();
       }
-
-      final Vec3 nv = new Vec3(surfaceNormal).cross(parameters.tangentVector);
-      final Vec3 directionOut = wo.direction;
-      SamplingUtils.cosWeightedHemisphere(directionOut, rng);
-
-      directionOut.set(directionOut.x * parameters.tangentVector.x + directionOut.y * nv.x + directionOut.z
-                       * surfaceNormal.x, directionOut.x * parameters.tangentVector.y + directionOut.y * nv.y + directionOut.z
-                       * surfaceNormal.y, directionOut.x * parameters.tangentVector.z + directionOut.y * nv.z + directionOut.z
-                       * surfaceNormal.z);
+      SamplingUtils.cosSampleHemisphere(wo.direction, rng);
+      ShadingUtils.shadingCoordsToWorld(wo.direction, surfaceNormal, parameters.tangentVector);
       /*
        * Lo = (brdf(Ki, Ko) * Li * cos(theta)) / pdf
        * 

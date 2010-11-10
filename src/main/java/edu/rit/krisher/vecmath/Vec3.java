@@ -233,11 +233,6 @@ public final class Vec3 implements Transform {
     *           A non-null unit length vector that the computed result will be perpendicular to.
     */
    public static void computeTangentVector(final Vec3 tangentResult, final Vec3 surfaceNormal) {
-      /*
-       * Construct orthonormal basis with vectors:
-       * 
-       * surfaceNormal, directionOut, nv
-       */
       tangentResult.set(0, 1, 0);
       if (Math.abs(tangentResult.dot(surfaceNormal)) > 0.9) {
          // Small angle, pick a better vector...

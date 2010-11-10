@@ -41,7 +41,7 @@ public final class AdvRenderingScenes {
    private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply.zip";
 
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
-   static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100000);
+   static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100);
    static Material whiteLambert = new LambertBRDF(Color.white);
    static Material blueLambert = new LambertBRDF(new Color(0.75, 0.75, 1.0));
 

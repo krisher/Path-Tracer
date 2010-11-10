@@ -54,9 +54,9 @@ public class SamplingUtils {
                    * small square region of the pixel area for each sample.
                    */
                   sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / msGridSize + rng.nextFloat()
-                  / msGridSize;
+                        / msGridSize;
                   sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / msGridSize + rng.nextFloat()
-                  / msGridSize;
+                        / msGridSize;
                   ++sampleIdx;
                }
             }
@@ -65,6 +65,43 @@ public class SamplingUtils {
    }
 
    /**
+    * Generates a unit vector in a random direction with uniform probability around the entire sphere of directions.
+    * 
+    * @param result
+    *           A vector to store the result in.
+    * @param rng
+    *           A random number generator.
+    * @return The probability with which the result was generated.
+    */
+   public static final double uniformSampleSphere(final Vec3 result, final Random rng) {
+      result.z = 1.0 - 2.0 * rng.nextDouble();
+      final double r = Math.sqrt(Math.max(0., 1. - result.z * result.z));
+      final double phi = 2.0 * Math.PI * rng.nextDouble();
+      result.x = r * Math.cos(phi);
+      result.y = r * Math.sin(phi);
+      return 1.0 / (4.0 * Math.PI);
+   }
+   
+   /**
+    * Generates a unit vector in a random direction with uniform probability around the hemisphere of directions about the positive z axis.
+    * 
+    * @param result
+    *           A vector to store the result in.
+    * @param rng
+    *           A random number generator.
+    * @return The probability with which the result was generated.
+    * @see PBRT implementation.
+    */
+   public static final double uniformSampleHemisphere(final Vec3 result, final Random rng) {
+      result.z = rng.nextDouble();
+      final double r = Math.sqrt(Math.max(0., 1. - result.z * result.z));
+      final double phi = 2.0 * Math.PI * rng.nextDouble();
+      result.x = r * Math.cos(phi);
+      result.y = r * Math.sin(phi);
+      return 1.0 / (2.0 * Math.PI);
+   }
+   
+   /**
     * Generates a vector randomly sampled from the hemisphere surrounding the z axis with a cosine probability
     * distribution.
     * 
@@ -72,8 +109,10 @@ public class SamplingUtils {
     *           The resulting random sample.
     * @param rng
     *           A random number generator.
+    * @return the probability of the generated ray occuring of all possible directions around the hemisphere.
+    * @see PBRT implementation.
     */
-   public static final void cosWeightedHemisphere(final Vec3 result, final Random rng) {
+   public static final double cosSampleHemisphere(final Vec3 result, final Random rng) {
       /*
        * Cosine-weighted sampling about the surface normal:
        * 
@@ -88,6 +127,8 @@ public class SamplingUtils {
       final double yb = sinTheta * Math.sin(phi);
 
       result.set(xb, yb, cosTheta);
+
+      return cosTheta / (Math.PI);
    }
 
 }
