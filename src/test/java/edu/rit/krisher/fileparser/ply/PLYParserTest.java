@@ -1,9 +1,10 @@
 package edu.rit.krisher.fileparser.ply;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.ZipInputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,7 +14,7 @@ import edu.rit.krisher.fileparser.ply.PLYContentDescription.PLYFormat;
 
 public class PLYParserTest {
 
-   private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply.zip";
+   private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply";
 
    @Test
    public void readBunnyShouldParseKnownHeader() throws IOException {
@@ -21,9 +22,8 @@ public class PLYParserTest {
       /*
        * Assumes that the ply file is the first entry in the zip...
        */
-      final ZipInputStream zis = new ZipInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
+      final InputStream zis = new BufferedInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
       try {
-         zis.getNextEntry();
          content = PLYParser.getPLYContentDescription(zis);
       } finally {
          zis.close();
@@ -73,10 +73,8 @@ public class PLYParserTest {
       final VertexReceiver receiver = new VertexReceiver();
       final Map<String, ElementReceiver> elementReceivers = new HashMap<String, ElementReceiver>();
       elementReceivers.put("vertex", receiver);
-      final ZipInputStream zis = new ZipInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
+      final InputStream zis = new BufferedInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
       try {
-         zis.getNextEntry();
-
          PLYParser.parsePLY(zis, elementReceivers);
 
       } finally {
@@ -91,10 +89,8 @@ public class PLYParserTest {
       final TrianglesIndexBufferReceiver receiver = new TrianglesIndexBufferReceiver();
       final Map<String, ElementReceiver> elementReceivers = new HashMap<String, ElementReceiver>();
       elementReceivers.put("face", receiver);
-      final ZipInputStream zis = new ZipInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
+      final InputStream zis = new BufferedInputStream(PLYParserTest.class.getResourceAsStream(bunnyResource));
       try {
-         zis.getNextEntry();
-
          PLYParser.parsePLY(zis, elementReceivers);
 
       } finally {

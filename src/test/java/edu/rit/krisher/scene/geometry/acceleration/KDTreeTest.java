@@ -9,16 +9,17 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.util.zip.ZipInputStream;
+import java.io.InputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import edu.rit.krisher.fileparser.ply.PLYParser;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.scene.acceleration.KDNodeVisitor;
 import edu.rit.krisher.scene.acceleration.KDGeometryContainer;
+import edu.rit.krisher.scene.acceleration.KDNodeVisitor;
 import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
@@ -29,7 +30,7 @@ import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
  *
  */
 public class KDTreeTest {
-   private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply.zip";
+   private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply";
 
    @Test
    public void splitLocationsShouldBeInNodeRange() throws Exception {
@@ -69,10 +70,9 @@ public class KDTreeTest {
    }
 
    private static TriangleMesh loadBunny() {
-      ZipInputStream stream = null;
+      InputStream stream = null;
       try {
-         stream = new ZipInputStream(KDTreeTest.class.getResourceAsStream(bunnyResource));
-         stream.getNextEntry();
+         stream = new BufferedInputStream(KDTreeTest.class.getResourceAsStream(bunnyResource));
          return PLYParser.parseTriangleMesh(stream, false);
       } catch (final IOException ioe) {
          ioe.printStackTrace();

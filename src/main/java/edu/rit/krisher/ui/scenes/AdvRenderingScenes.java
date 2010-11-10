@@ -4,8 +4,9 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.FloatBuffer;
-import java.util.zip.ZipInputStream;
 
 import edu.rit.krisher.fileparser.astmbrdf.ASTMBRDFParser;
 import edu.rit.krisher.fileparser.ply.PLYParser;
@@ -13,9 +14,9 @@ import edu.rit.krisher.scene.Camera;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.Scene;
+import edu.rit.krisher.scene.acceleration.KDGeometryContainer;
 import edu.rit.krisher.scene.acceleration.KDPartitionStrategy;
 import edu.rit.krisher.scene.acceleration.KDSplitMeshGenerator;
-import edu.rit.krisher.scene.acceleration.KDGeometryContainer;
 import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.acceleration.MedianPartitionStrategy;
 import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
@@ -38,7 +39,8 @@ import edu.rit.krisher.vecmath.Transform;
 import edu.rit.krisher.vecmath.Vec3;
 
 public final class AdvRenderingScenes {
-   private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply.zip";
+   private static final String bunnyResource = "/edu/rit/krisher/fileparser/ply/bun_zipper.ply";
+   private static final URL bunnyURL = AdvRenderingScenes.class.getResource(bunnyResource);
 
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
    static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100);
@@ -62,9 +64,9 @@ public final class AdvRenderingScenes {
 
    public static Scene[] getScenes() {
       return new Scene[] {
-            createScene("Bunny (SAH KDTree)", null, false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createScene("Bunny (Median-Centroid KDTree)", null, false, new MedianPartitionStrategy(25, 2), true, bunnyFactory()),
-            createScene("Bunny (No Accel)", null, false, null, true, bunnyFactory()),
+            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, new SAHPartitionStrategey(), false, null),
+            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, new MedianPartitionStrategy(25, 2), false, null),
+            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, null, false, null),
             createScene("Bunny SAH KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
             createScene("Bunny Median KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueGreenMixedRefractive, new MedianPartitionStrategy(15, 2), bunnyFactory())),
             createSceneMultiTree("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
@@ -85,28 +87,7 @@ public final class AdvRenderingScenes {
 
    }
 
-   private static final int[] floorBuff = {0,1,2,0,2,3};
-   private static final int[] floorAndWallsBuff = {0,1,2,0,2,3,4,5,1, 4,1,0, 5,6,2, 5,2,1, 6,7,3, 6,3,2, 7,4,0, 7,0,3};
-   private static TriangleMesh groundPlane(final Material mat, final boolean walls,
-         final AxisAlignedBoundingBox sceneBounds) {
-      final double xBorder = sceneBounds.xSpan() * 4;
-      final double zBorder = sceneBounds.zSpan() * 4;
-      final double yBorder = sceneBounds.ySpan() * 2;
-
-      final AxisAlignedBoundingBox expandedAABB = new AxisAlignedBoundingBox(sceneBounds);
-      expandedAABB.xyzxyz[0] -= xBorder;
-      expandedAABB.xyzxyz[2] -= zBorder;
-      expandedAABB.xyzxyz[3] += xBorder;
-      expandedAABB.xyzxyz[5] += zBorder;
-      expandedAABB.xyzxyz[4] += yBorder;
-
-
-      final TriangleMesh mesh = new TriangleMesh(expandedAABB.toVertexArrayF(), walls?floorAndWallsBuff:floorBuff);
-      if (mat != null) {
-         mesh.setMaterial(mat);
-      }
-      return mesh;
-   }
+   
 
    public static GeometryFactory createKDVisualization(final Material material, final KDPartitionStrategy kdStrategy,
          final GeometryFactory... geomFactories) {
@@ -272,10 +253,9 @@ public final class AdvRenderingScenes {
          @Override
          public Geometry createGeometry() {
 
-            ZipInputStream stream = null;
+            InputStream stream = null;
             try {
-               stream = new ZipInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
-               stream.getNextEntry();
+               stream = new BufferedInputStream(RTDemo.class.getResourceAsStream(bunnyResource));
                final TriangleMesh mesh = PLYParser.parseTriangleMesh(stream, computeNormals);
                if (mat != null)
                   mesh.setMaterial(mat);
