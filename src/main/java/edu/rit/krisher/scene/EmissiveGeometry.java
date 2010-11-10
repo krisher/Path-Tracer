@@ -26,5 +26,18 @@ public interface EmissiveGeometry extends Geometry {
     */
    void sampleEmissiveRadiance(SampleRay wo, Random rng);
 
-//   SampleRay[] multisampleEmissiveRadiance(int sampleCount, Random rng);
+   /**
+    * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays.
+    * 
+    * @param wo
+    *           An array of SampleRays to initialize.
+    * @param woOffset
+    *           The index in wo at which to start initializing samples.
+    * @param woCount
+    *           The maximum number of samples to generate.
+    * @param rng
+    *           A Random number generator for sampling.
+    * @return the number of rays in wo that were actually initialized.
+    */
+   int multisampleEmissiveRadiance(SampleRay[] wo, int woOffset, int woCount, Random rng);
 }

@@ -2,6 +2,7 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.IntegratorUtils;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.geometry.Sphere;
@@ -54,7 +55,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
        */
       wo.direction.multiply(cosRandomAzimuth).scaleAdd(nu, Math.cos(randomPolar) * sinRandomAzimuth).scaleAdd(nv, Math.sin(randomPolar)
                                                                                                               * sinRandomAzimuth);
-      
+
       final double isectDist = wo.intersectsSphere(center, radius);
       wo.intersection.surfaceNormal.set(wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius));
       wo.intersection.t = isectDist;
@@ -67,4 +68,19 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       wo.sampleColor.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
    }
 
+   @Override
+   public int multisampleEmissiveRadiance(final SampleRay[] woSamples, final int woOffset, final int woCount,
+         final Random rng) {
+      for (int i = 0; i < woCount; ++i) {
+         final SampleRay wo = woSamples[i + woOffset];
+         wo.origin.set(center);
+         IntegratorUtils.rejectionSphereSample(wo.direction, rng); // Equal probability of sending a ray in any
+                                                                   // direction.
+         wo.origin.scaleAdd(wo.direction, radius); // Move the origin to the surface of the sphere.
+         // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
+         // hemisphere.
+         material.getEmissionColor(wo.sampleColor, wo, null);
+      }
+      return woCount;
+   }
 }

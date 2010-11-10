@@ -2,6 +2,7 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
+import edu.rit.krisher.raytracer.IntegratorUtils;
 import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
@@ -49,10 +50,8 @@ public class PointLight implements EmissiveGeometry {
       return false;
    }
 
-
    @Override
-   public double intersectsPrimitive(final Ray ray, final double maxDistance,
-         final int primitiveID) {
+   public double intersectsPrimitive(final Ray ray, final double maxDistance, final int primitiveID) {
       return -1;
    }
 
@@ -80,6 +79,18 @@ public class PointLight implements EmissiveGeometry {
    @Override
    public AxisAlignedBoundingBox getBounds(final int primIndices) {
       return new AxisAlignedBoundingBox(position, position);
+   }
+
+   @Override
+   public int multisampleEmissiveRadiance(final SampleRay[] woSamples, final int woOffset, final int woCount,
+         final Random rng) {
+      for (int i = 0; i < woCount; ++i) {
+         final SampleRay wo = woSamples[i + woOffset];
+         wo.origin.set(position);
+         IntegratorUtils.rejectionSphereSample(wo.direction, rng);
+         wo.sampleColor.set(material);
+      }
+      return woCount;
    }
 
 }

@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Geometry;
+import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Utility methods for ray tracing.
@@ -44,7 +45,7 @@ public final class IntegratorUtils  {
          for (int i = 0; i < xBlocks; i++) {
             final int blockStartX = i * blockSize;
             result[j * xBlocks + i] = new Rectangle(blockStartX, blockStartY, Math.min(blockSize, width - blockStartX), Math.min(blockSize, height
-                  - blockStartY));
+                                                                                                                                 - blockStartY));
          }
       }
       return result;
@@ -104,14 +105,31 @@ public final class IntegratorUtils  {
                    * small square region of the pixel area for each sample.
                    */
                   sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / msGridSize + rng.nextFloat()
-                        / msGridSize;
+                  / msGridSize;
                   sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / msGridSize + rng.nextFloat()
-                        / msGridSize;
+                  / msGridSize;
                   ++sampleIdx;
                }
             }
          }
       }
+   }
+
+   /**
+    * Initializes the specified vector to a randomly selected direction with equal probability for any direction.
+    * 
+    * @param vec
+    *           A non-null vector to initialize.
+    * @param rng
+    *           A random number generator.
+    */
+   public static final void rejectionSphereSample(final Vec3 vec, final Random rng) {
+      do {
+         vec.x = rng.nextFloat();
+         vec.y = rng.nextFloat();
+         vec.z = rng.nextFloat();
+      } while (vec.lengthSquared() > 1);
+      vec.normalize();
    }
 
 }
