@@ -2,10 +2,10 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
-import edu.rit.krisher.raytracer.IntegratorUtils;
 import edu.rit.krisher.raytracer.rays.GeometryIntersection;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
@@ -87,7 +87,7 @@ public class PointLight implements EmissiveGeometry {
       for (int i = 0; i < woCount; ++i) {
          final SampleRay wo = woSamples[i + woOffset];
          wo.origin.set(position);
-         IntegratorUtils.rejectionSphereSample(wo.direction, rng);
+         SamplingUtils.rejectionSphereSample(wo.direction, rng);
          wo.sampleColor.set(material);
       }
       return woCount;

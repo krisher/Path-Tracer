@@ -4,6 +4,7 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -33,35 +34,21 @@ public class LambertBRDF implements Material, Cloneable {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+   public void sampleBRDF(final SampleRay wo, final Vec3 wi, final IntersectionInfo parameters,
          final Random rng) {
       Vec3 surfaceNormal = parameters.surfaceNormal;
-      if (wIncoming.dot(surfaceNormal) > 0) {
+      if (wi.dot(surfaceNormal) > 0) {
          surfaceNormal = surfaceNormal.inverted();
       }
 
-      /*
-       * Cosine-weighted sampling about the surface normal:
-       * 
-       * Probability of direction Ko = 1/pi * cos(theta) where theta is the
-       * angle between the surface normal and Ko.
-       * 
-       * The polar angle about the normal is chosen from a uniform distribution
-       * 0..2pi
-       */
-      final double cosTheta = Math.sqrt(1.0 - rng.nextDouble());
-      final double sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
-      final double phi = 2.0 * Math.PI * rng.nextDouble();
-      final double xb = sinTheta * Math.cos(phi);
-      final double yb = sinTheta * Math.sin(phi);
+      final Vec3 nv = new Vec3(surfaceNormal).cross(parameters.tangentVector);
+      final Vec3 directionOut = wo.direction;
+      SamplingUtils.cosWeightedHemisphere(directionOut, rng);
 
-      final Vec3 directionOut = sampleOut.direction;
-      directionOut.set(parameters.tangentVector);
-      final Vec3 nv = new Vec3(surfaceNormal).cross(directionOut);
-      /*
-       * Use the x,y,z values calculated above as coordinates in the ONB...
-       */
-      directionOut.multiply(xb).scaleAdd(surfaceNormal, cosTheta).scaleAdd(nv, yb);
+      directionOut.set(directionOut.x * parameters.tangentVector.x + directionOut.y * nv.x + directionOut.z
+                       * surfaceNormal.x, directionOut.x * parameters.tangentVector.y + directionOut.y * nv.y + directionOut.z
+                       * surfaceNormal.y, directionOut.x * parameters.tangentVector.z + directionOut.y * nv.z + directionOut.z
+                       * surfaceNormal.z);
       /*
        * Lo = (brdf(Ki, Ko) * Li * cos(theta)) / pdf
        * 
@@ -75,8 +62,8 @@ public class LambertBRDF implements Material, Cloneable {
        * Here we just return the spectral response (color), Li is handled in the
        * Path-Tracer engine.
        */
-      sampleOut.sampleColor.set(diffuse.getColor(parameters.materialCoords));
-      sampleOut.emissiveResponse = false;
+      wo.sampleColor.set(diffuse.getColor(parameters.materialCoords));
+      wo.emissiveResponse = false;
 
    }
 

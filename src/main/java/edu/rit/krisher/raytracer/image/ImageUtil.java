@@ -223,6 +223,15 @@ public final class ImageUtil {
    }
 
    /**
+    * Computes the luminance of the specified RGB value.
+    * 
+    * @return the luminance.
+    */
+   public static final float luminance(final float r, final float g, final float b) {
+      return (float) (RGB2XYZ[3] * r + RGB2XYZ[4] * g + RGB2XYZ[5] * b);
+   }
+
+   /**
     * Performs Ward tone mapping on the specified array of rgb values.
     * 
     * @param rgb

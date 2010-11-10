@@ -2,8 +2,8 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
-import edu.rit.krisher.raytracer.IntegratorUtils;
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.material.Color;
@@ -74,7 +74,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       for (int i = 0; i < woCount; ++i) {
          final SampleRay wo = woSamples[i + woOffset];
          wo.origin.set(center);
-         IntegratorUtils.rejectionSphereSample(wo.direction, rng); // Equal probability of sending a ray in any
+         SamplingUtils.rejectionSphereSample(wo.direction, rng); // Equal probability of sending a ray in any
                                                                    // direction.
          wo.origin.scaleAdd(wo.direction, radius); // Move the origin to the surface of the sphere.
          // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the

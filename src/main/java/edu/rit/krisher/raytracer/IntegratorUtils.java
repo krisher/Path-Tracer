@@ -2,7 +2,6 @@ package edu.rit.krisher.raytracer;
 
 import java.awt.Rectangle;
 import java.text.NumberFormat;
-import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Utility methods for ray tracing.
@@ -74,62 +72,6 @@ public final class IntegratorUtils  {
             geom.intersects(ray, ray.intersection);
          }
       }
-   }
-
-   /**
-    * Initializes the pixelX and pixelY values of the specified SampleRays based on the specified pixel rectangle,
-    * multi-sampling rate, and random number generator for jittering the sample locations.
-    * 
-    * @param sampleRays
-    *           An array of pixelRect.width * pixelRect.height * msGridSize * msGridSize sample rays.
-    * @param pixelRect
-    *           The pixels for which to initialize rays.
-    * @param msGridSize
-    *           The multi-sample rate for each pixel. msGridSize * msGridSize rays will be initialized for each pixel
-    *           (with different locations within the pixel.
-    * @param rng
-    *           A random number generator.
-    */
-   public static final void generatePixelSamples(final SampleRay[] sampleRays, final Rectangle pixelRect,
-         final int msGridSize, final Random rng) {
-      /*
-       * Imaging ray generation.
-       */
-      int sampleIdx = 0;
-      for (int pixelY = 0; pixelY < pixelRect.height; pixelY++) {
-         for (int pixelX = 0; pixelX < pixelRect.width; pixelX++) {
-            for (int sampleX = 0; sampleX < msGridSize; ++sampleX) {
-               for (int sampleY = 0; sampleY < msGridSize; ++sampleY) {
-                  /*
-                   * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
-                   * small square region of the pixel area for each sample.
-                   */
-                  sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / msGridSize + rng.nextFloat()
-                  / msGridSize;
-                  sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / msGridSize + rng.nextFloat()
-                  / msGridSize;
-                  ++sampleIdx;
-               }
-            }
-         }
-      }
-   }
-
-   /**
-    * Initializes the specified vector to a randomly selected direction with equal probability for any direction.
-    * 
-    * @param vec
-    *           A non-null vector to initialize.
-    * @param rng
-    *           A random number generator.
-    */
-   public static final void rejectionSphereSample(final Vec3 vec, final Random rng) {
-      do {
-         vec.x = rng.nextFloat();
-         vec.y = rng.nextFloat();
-         vec.z = rng.nextFloat();
-      } while (vec.lengthSquared() > 1);
-      vec.normalize();
    }
 
 }
