@@ -12,13 +12,9 @@ import edu.rit.krisher.vecmath.Ray;
  * @author krisher
  * 
  */
-public class KDTree implements Geometry {
+public class KDGeometryContainer implements Geometry {
 
-   public static final byte X_AXIS = 0;
-   public static final byte Y_AXIS = 1;
-   public static final byte Z_AXIS = 2;
-
-   private final KDNode root;
+   private final KDGeometryNode root;
 
    private final AxisAlignedBoundingBox treeBounds;
    private final KDPartitionStrategy partitionStrategy;
@@ -33,11 +29,11 @@ public class KDTree implements Geometry {
     * @param content
     *           The geometry to store in the KD-Tree. At least one must be provided.
     */
-   public KDTree(final Geometry... content) {
+   public KDGeometryContainer(final Geometry... content) {
       this(new SAHPartitionStrategey(), content);
    }
 
-   public KDTree(final KDPartitionStrategy strategy, final Geometry... content) {
+   public KDGeometryContainer(final KDPartitionStrategy strategy, final Geometry... content) {
       this.partitionStrategy = strategy;
       this.content = content;
       if (content == null || content.length == 0) {
@@ -96,8 +92,11 @@ public class KDTree implements Geometry {
    }
 
    @Override
-   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
-      KDTree.this.content[primitiveID & geomMask].getHitData(data, primitiveID >> geomBits, ray, distance);
+   public void getHitData(final Ray ray, final IntersectionInfo data) {
+      final int compoundPrimID = data.primitiveID;
+      data.primitiveID = compoundPrimID >> geomBits;
+      KDGeometryContainer.this.content[compoundPrimID & geomMask].getHitData(ray, data);
+      data.primitiveID = compoundPrimID;
    }
 
    @Override
@@ -114,15 +113,8 @@ public class KDTree implements Geometry {
 
 
    @Override
-   public final double intersectsPrimitive(final Ray ray,
-         final double maxDistance, final int primitiveID) {
-      // As long is getPrimitiveCount() returns 1, the primitiveID is meaningless...
-      final GeometryIntersection isect = new GeometryIntersection();
-      isect.t = maxDistance;
-      if (intersects(ray, isect)) {
-         return isect.t;
-      }
-      return 0;
+   public final boolean intersectsPrimitive(final Ray ray,final GeometryIntersection isect) {
+      return intersects(ray, isect);
    }
 
 
@@ -137,7 +129,7 @@ public class KDTree implements Geometry {
       }
    }
 
-   private final KDNode partition(final int memberCount, final PrimitiveAABB[] bounds,
+   private final KDGeometryNode partition(final int memberCount, final PrimitiveAABB[] bounds,
          final int depth, final AxisAlignedBoundingBox nodeBounds) {
       if (memberCount == 0) {
          return new KDLeafNode(new int[0]);
@@ -204,7 +196,7 @@ public class KDTree implements Geometry {
       return startIdx;
    }
 
-   private static interface KDNode {
+   private static interface KDGeometryNode {
 
       public void intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD);
@@ -212,9 +204,9 @@ public class KDTree implements Geometry {
       public void visit(int depth, AxisAlignedBoundingBox nodeBounds, KDNodeVisitor vistor) throws Exception;
    }
 
-   private static final class KDInteriorNode implements KDNode {
-      private KDNode lessChild;
-      private KDNode greaterChild;
+   private static final class KDInteriorNode implements KDGeometryNode {
+      private KDGeometryNode lessChild;
+      private KDGeometryNode greaterChild;
       private final double splitLocation;
       private final int axis;
 
@@ -275,7 +267,7 @@ public class KDTree implements Geometry {
       }
    }
 
-   private final class KDLeafNode implements KDNode {
+   private final class KDLeafNode implements KDGeometryNode {
       private final int[] primitives;
 
       public KDLeafNode(final int[] primitives) {
@@ -285,13 +277,12 @@ public class KDTree implements Geometry {
       @Override
       public void intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
-         final int primIdx = -1;
          for (final int prim : primitives) {
-            final double dist = KDTree.this.content[prim & geomMask].intersectsPrimitive(ray, intersection.t, prim >> geomBits);
-            if (dist > 0 && (dist < intersection.t)) {
-               intersection.t = dist;
-               intersection.hitGeometry = KDTree.this;
-               intersection.primitiveID = prim;
+            final int oldPrim = intersection.primitiveID;
+            intersection.primitiveID = prim >> geomBits;
+            if (!KDGeometryContainer.this.content[prim & geomMask].intersectsPrimitive(ray, intersection)) {
+               /* No intersection, restore the primitiveID from a previous intersection */
+               intersection.primitiveID = oldPrim;
             }
          }
       }

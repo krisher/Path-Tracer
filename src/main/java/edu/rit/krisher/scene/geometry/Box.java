@@ -43,8 +43,8 @@ public class Box implements Geometry {
    }
 
    @Override
-   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
-      final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(distance));
+   public void getHitData(final Ray ray, final IntersectionInfo data) {
+      final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(data.t));
       // Figure out which face the intersection occurred on
       Vec3 isectNormal;
       final double xDist = Math.abs(Math.abs(hitPt.x) - xSize);
@@ -84,6 +84,7 @@ public class Box implements Geometry {
       data.material = material;
       data.materialCoords = new double[] { hitPt.x, hitPt.y, hitPt.z };
       data.surfaceNormal.set(isectNormal);
+      Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
    }
 
    @Override
@@ -98,8 +99,8 @@ public class Box implements Geometry {
    }
 
    @Override
-   public double intersectsPrimitive(final Ray ray, final double maxDistance, final int primitiveID) {
-      return ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
+   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
+      return intersects(ray, intersection); //We only have one primitive...
    }
 
    public Material getMaterial() {

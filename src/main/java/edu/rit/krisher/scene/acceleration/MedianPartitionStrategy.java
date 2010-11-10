@@ -41,9 +41,9 @@ public final class MedianPartitionStrategy implements KDPartitionStrategy {
       /*
        * From SAH; choose largest dimension as initial split axis.
        */
-      int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? KDTree.X_AXIS
-            : KDTree.Z_AXIS)
-            : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
+      int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? 0
+            : 2)
+            : (nodeBounds.ySpan() > nodeBounds.zSpan() ? 1 : 2);
       for (int i = 0; i < 3; ++i) {
          final float split = findSplitLocation(memberCount, bounds, splitAxis);
          // TODO: need to ensure the split actually occurs within the bounds of the kd-node!,

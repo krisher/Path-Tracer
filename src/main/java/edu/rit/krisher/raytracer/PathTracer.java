@@ -223,7 +223,7 @@ public final class PathTracer implements SceneIntegrator {
                /*
                 * Populate the intersection data...
                 */
-               ray.intersection.hitGeometry.getHitData(ray.intersection, ray.intersection.primitiveID, ray, ray.intersection.t);
+               ray.intersection.hitGeometry.getHitData(ray, ray.intersection);
 
                /*
                 * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small

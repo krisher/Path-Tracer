@@ -23,6 +23,8 @@ public interface Camera {
     *           The width (in pixels) of the image plane.
     * @param imageHeight
     *           The height (in pixels) of the image plane
+    * @param pixelOffsetX An offset value to add to each sampleRay's pixelX value to calculate the actual image pixel location.
+    * @param pixelOffsetY An offset value to add to each sampleRay's pixelY value to calculate the actual image pixel location.
     * @param rng
     *           A non-null random number generator that can be used for sampling of the camera aperture.
     */

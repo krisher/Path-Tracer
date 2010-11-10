@@ -15,7 +15,7 @@ import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.acceleration.KDPartitionStrategy;
 import edu.rit.krisher.scene.acceleration.KDSplitMeshGenerator;
-import edu.rit.krisher.scene.acceleration.KDTree;
+import edu.rit.krisher.scene.acceleration.KDGeometryContainer;
 import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.acceleration.MedianPartitionStrategy;
 import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
@@ -118,7 +118,7 @@ public final class AdvRenderingScenes {
                geometry[i] = geomFactories[i].createGeometry();
             }
             final Timer kdTimer = new Timer("KD-Tree Construction (KD Visualization)").start();
-            final KDTree accel = new KDTree(kdStrategy, geometry);
+            final KDGeometryContainer accel = new KDGeometryContainer(kdStrategy, geometry);
             kdTimer.stop().print();
             System.out.println(new KDTreeMetrics(accel));
             System.out.println("Generating KDTree visualization mesh...");
@@ -172,7 +172,7 @@ public final class AdvRenderingScenes {
             : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
-               final KDTree accel = new KDTree(kdStrategy, geometry);
+               final KDGeometryContainer accel = new KDGeometryContainer(kdStrategy, geometry);
                kdTimer.stop().print();
                System.out.println(new KDTreeMetrics(accel));
                add(accel);
@@ -208,7 +208,7 @@ public final class AdvRenderingScenes {
                geomBounds.union(geometry[i].getBounds(-1));
 
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
-               final KDTree accel = new KDTree(kdStrategy, geometry[i]);
+               final KDGeometryContainer accel = new KDGeometryContainer(kdStrategy, geometry[i]);
                kdTimer.stop().print();
                System.out.println(new KDTreeMetrics(accel));
                add(accel);

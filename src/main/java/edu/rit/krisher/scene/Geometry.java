@@ -16,7 +16,7 @@ import edu.rit.krisher.vecmath.Ray;
 public interface Geometry {
 
    /**
-    * Constant for {@link #primitiveID} indicating that all primitives should be tested for intersection (and the
+    * Constant for primitiveID indicating that all primitives should be tested for intersection (and the
     * intersection with the closest to the ray origin should be computed).
     */
    public static final int ALL_PRIMITIVES = -1;
@@ -25,17 +25,14 @@ public interface Geometry {
     * Given a previously computed intersection distance along the specified ray, compute the hit parameters of the
     * geometry at the intersection point.
     * 
-    * @param data
-    *           The material, surface normal, and optional material parameters are populated by this method.
-    * @param hitPrimitive
-    *           The ID of the primitive that was hit (as indicated via the {@link GeometryIntersection} output from
-    *           {@link #intersects(Ray, GeometryIntersection, double)}).
     * @param ray
     *           A ray that has been previously determined to intersect this geometry.
-    * @param distance
-    *           The distance along the ray at which the intersection occured.
+    * @param data
+    *           An IntersectionInfo whose geometry intersection information was previously populated by a call to
+    *           {@link #intersects(Ray, GeometryIntersection)}. The material, surface normal, and optional material
+    *           parameters are populated by this method.
     */
-   public void getHitData(IntersectionInfo data, int hitPrimitive, Ray ray, double distance);
+   public void getHitData(Ray ray, IntersectionInfo data);
 
    /**
     * Computes the smallest positive distance along the ray to the intersection, or returns a value <= 0 if there is no
@@ -43,14 +40,14 @@ public interface Geometry {
     * 
     * @param ray
     *           A non-null ray to test intersection with.
-    * @param primitiveID
-    *           The primitive to check for intersection (no others should be tested) (Do not use {@link #ALL_PRIMITIVES}
-    *           here).
-    * @param maxDistance
-    *           the maximum distance along the ray from its origin to check for intersections.
-    * @return the distance along the ray (from the origin) at which the intersection occurs.
+    * @param intersection
+    *           On input, the primitiveID field indicates which primitive to test for intersection, and the t field
+    *           indicates the maximum distance along the ray to test. On output, the hitGeometry and t fields should be
+    *           updated iff an intersection was found.
+    * @return true if an intersection was found with the specified primitive and 0 < distance < intersection.t (and intersection was subsequently
+    *         updated), false otherwise.
     */
-   public double intersectsPrimitive(Ray ray, double maxDistance, int primitiveID);
+   public boolean intersectsPrimitive(Ray ray, GeometryIntersection intersection);
 
    /**
     * Computes the smallest positive distance along the ray to the intersection and stores the result (intersection

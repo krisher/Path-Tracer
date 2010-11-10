@@ -40,7 +40,7 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
+   public void getHitData(final Ray ray, final IntersectionInfo data) {
       data.material = material;
       data.surfaceNormal.set(ray.direction).multiply(-1);
    }
@@ -51,8 +51,8 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public double intersectsPrimitive(final Ray ray, final double maxDistance, final int primitiveID) {
-      return -1;
+   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
+      return false;
    }
 
    public double getIntensity() {

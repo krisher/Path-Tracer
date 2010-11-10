@@ -72,7 +72,7 @@ public class KDTreeMetrics {
     * @param tree
     *           A non-null KDTree.
     */
-   public KDTreeMetrics(final KDTree tree) {
+   public KDTreeMetrics(final KDGeometryContainer tree) {
       final KDTreeMetricVisitor visitor = new KDTreeMetricVisitor();
       try {
          tree.visitTreeNodes(visitor);

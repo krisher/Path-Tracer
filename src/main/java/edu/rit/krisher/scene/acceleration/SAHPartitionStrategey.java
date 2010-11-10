@@ -62,9 +62,9 @@ public class SAHPartitionStrategey implements KDPartitionStrategy {
       /*
        * Try to split the longest dimension of the node bounds first.
        */
-      int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? KDTree.X_AXIS
-            : KDTree.Z_AXIS)
-            : (nodeBounds.ySpan() > nodeBounds.zSpan() ? KDTree.Y_AXIS : KDTree.Z_AXIS);
+      int splitAxis = (nodeBounds.xSpan() > nodeBounds.ySpan()) ? (nodeBounds.xSpan() > nodeBounds.zSpan() ? 0
+            : 2)
+            : (nodeBounds.ySpan() > nodeBounds.zSpan() ? 1 : 2);
       final AxisAlignedBoundingBox[] maxEdges = Arrays.copyOf(bounds, memberCount);
       for (int axisAttempt = 0; axisAttempt < 3; axisAttempt++) {
          /*

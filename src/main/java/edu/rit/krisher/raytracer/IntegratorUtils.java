@@ -73,5 +73,35 @@ public final class IntegratorUtils  {
          }
       }
    }
+   
+   /**
+    * Processes intersections of each of the 'count' rays with the specified scene geometry. Upon completion,
+    * the {@link IntersectionInfo} for each ray will be updated indicating the geometry that was hit (or null if nothing
+    * was hit), the primitiveID of the hit geometry, and the parametric hit location.
+    * <p>
+    * This method differs from {@link #processIntersections(SampleRay[], int, Geometry[])} in that when an intersection is found, the 
+    * material information for each ray is computed and stored in {@link SampleRay#intersection}
+    * 
+    * @param rays
+    *           A non-null array of at least 'count' non-null SampleRays. The origin and direction of the rays must be
+    *           initialized prior to this call.
+    * @param count
+    *           The first 'count' rays in the rays array are processed for intersection.
+    * @param geometry
+    *           The non-null list of geometry to test for intersection.
+    */
+   public static void processHits(final SampleRay[] rays, final int count, final Geometry[] geometry) {
+      for (int i = 0; i < count; ++i) {
+         final SampleRay ray = rays[i];
+         ray.intersection.t = Double.POSITIVE_INFINITY;
+         ray.intersection.hitGeometry = null;
+         for (final Geometry geom : geometry) {
+            geom.intersects(ray, ray.intersection);
+         }
+         if (ray.intersection.hitGeometry != null) {
+            ray.intersection.hitGeometry.getHitData(ray, ray.intersection);
+         }
+      }
+   }
 
 }

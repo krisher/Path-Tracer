@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.rit.krisher.raytracer.image.ImageBuffer;
+import edu.rit.krisher.raytracer.image.ImageUtil;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
@@ -78,6 +79,12 @@ public final class PhotonTracer implements SceneIntegrator {
        * 
        * For all sample ray hits, gather k nearest photons in photon map, weight with RBF, and contribute illumination to sample pixel.
        */
+      final EmissiveGeometry[] lights = scene.getLightSources();
+      final int targetPhotonCount = 10000;
+      final int photonCount = 0;
+//      while (photonCount < targetPhotonCount) {
+//         //Balance based on average power of sample rays from each light source (normalized by number of photons).
+//      }
       
       
       /*
@@ -240,7 +247,7 @@ public final class PhotonTracer implements SceneIntegrator {
                /*
                 * Populate the intersection data...
                 */
-               ray.intersection.hitGeometry.getHitData(ray.intersection, ray.intersection.primitiveID, ray, ray.intersection.t);
+               ray.intersection.hitGeometry.getHitData(ray, ray.intersection);
 
                /*
                 * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
@@ -268,11 +275,11 @@ public final class PhotonTracer implements SceneIntegrator {
                 * below.
                 */
                final double rTransmission = ray.sampleColor.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
                final double gTransmission = ray.sampleColor.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
                final double bTransmission = ray.sampleColor.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -284,13 +291,11 @@ public final class PhotonTracer implements SceneIntegrator {
                }
 
                /*
-                * If we have not reached the maximum recursion depth, generate a new ray for the next path segment.
+                * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the
+                * next path segment.
                 */
                if (rayDepth < recursionDepth
-               /*
-                * Russian roulette for variance reduction.
-                */
-               && (rayDepth < 3 || rng.nextFloat() >= 1 / 6.0)) {
+                     && (rayDepth < 2 || rng.nextFloat() >= Math.min(0.2, 1.0 - ImageUtil.luminance((float) rTransmission, (float) gTransmission, (float) bTransmission)))) {
                   final SampleRay bounceRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
@@ -301,7 +306,10 @@ public final class PhotonTracer implements SceneIntegrator {
                   bounceRay.reset();
                   ray.intersection.material.sampleBRDF(bounceRay, ray.direction, ray.intersection, rng);
                   if (!bounceRay.sampleColor.isZero()) {
-                     // TODO: scale transmission by inverse probability of reaching this depth due to RR.
+
+                     // Scale transmission by inverse probability of reaching this depth due to RR.
+                     if (rayDepth >= 2)
+                        bounceRay.sampleColor.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) rTransmission, (float) gTransmission, (float) bTransmission))));
                      bounceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
 
                      bounceRay.pixelX = ray.pixelX;

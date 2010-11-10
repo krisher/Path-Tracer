@@ -2,6 +2,7 @@ package edu.rit.krisher.scene;
 
 import edu.rit.krisher.collections.CopyOnWriteArrayList;
 import edu.rit.krisher.scene.material.Color;
+import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 
 public class DefaultScene<C extends Camera> implements Scene {
 
@@ -39,6 +40,20 @@ public class DefaultScene<C extends Camera> implements Scene {
       if (geometry instanceof EmissiveGeometry) {
          lights.add((EmissiveGeometry) geometry);
       }
+   }
+   
+   
+
+   /* 
+    * @see edu.rit.krisher.scene.Scene#getBounds()
+    */
+   @Override
+   public AxisAlignedBoundingBox getBounds() {
+      final AxisAlignedBoundingBox bounds = new AxisAlignedBoundingBox();
+      for (final Geometry geom : objects) {
+         bounds.union(geom.getBounds(Geometry.ALL_PRIMITIVES));
+      }
+      return bounds;
    }
 
    /*

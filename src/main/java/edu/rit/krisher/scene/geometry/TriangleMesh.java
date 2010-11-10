@@ -94,8 +94,24 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
-      getTriangleHitData(primitiveID, data, ray);
+   public void getHitData(final Ray ray, final IntersectionInfo data) {
+      data.material = material;
+      data.materialCoords = null;
+      if (normals == null) {
+         getTriangleFaceNormal(data.surfaceNormal, data.tangentVector, data.primitiveID);
+         /*
+          * Use an arbitrary triangle edge for the tangent vector.
+          * TODO: u,v coordinates required to support anisotropic reflection models, for consistent orientation.
+          */
+
+      } else {
+         // Barycentric normal interpolation if vertex normals present...
+         final double[] baryCoords = new double[3];
+         intersectsTriangleBarycentric(baryCoords, ray, data.primitiveID);
+         interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], data.primitiveID);
+         // TODO: Tangent vector should be based on shading (texture) coords if specified.
+         Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
+      }
    }
 
    @Override
@@ -112,9 +128,14 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public final double intersectsPrimitive(final Ray ray, final double maxDistance, final int primitiveID) {
-      return intersectsTriangle(ray, primitiveID);
-
+   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
+      final double t = intersectsTriangle(ray, intersection.primitiveID);
+      if (t > 0 && t < intersection.t) {
+         intersection.t = t;
+         intersection.hitGeometry = this;
+         return true;
+      }
+      return false;
    }
 
    @Override
@@ -141,26 +162,6 @@ public class TriangleMesh implements Geometry {
    @Override
    public int getPrimitiveCount() {
       return triCount;
-   }
-
-   private final void getTriangleHitData(final int triangleIndex, final IntersectionInfo data, final Ray ray) {
-      data.material = material;
-      data.materialCoords = null;
-      if (normals == null) {
-         getTriangleFaceNormal(data.surfaceNormal, data.tangentVector, triangleIndex);
-         /*
-          * Use an arbitrary triangle edge for the tangent vector.
-          * TODO: u,v coordinates required to support anisotropic reflection models, for consistent orientation.
-          */
-
-      } else {
-         //Barycentric normal interpolation if vertex normals present... 
-         final double[] baryCoords = new double[3];
-         intersectsTriangleBarycentric(baryCoords, ray, triangleIndex);
-         interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], triangleIndex);
-         //TODO: Tangent vector should be based on shading (texture) coords if specified.
-         Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
-      }
    }
 
    /**

@@ -10,7 +10,7 @@ public class KDSplitMeshGenerator {
    private static final int[] boxVertIndices = { 0, 1, 2, 0, 2, 3, 5, 4, 1, 4, 0, 1, 5, 2, 6, 5, 1, 2, 3, 7, 6, 3, 6, 2, 0, 4,
          7, 0, 7, 3, 4, 5, 6, 4, 6, 7 };
 
-   public static TriangleMesh generateLeafNodeMesh(final KDTree tree) {
+   public static TriangleMesh generateLeafNodeMesh(final KDGeometryContainer tree) {
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);
       final FloatBuffer vertices = FloatBuffer.wrap(new float[metrics.leafNodes * 8]);
       final int[] ib = new int[metrics.leafNodes * 36];

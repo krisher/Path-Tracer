@@ -37,8 +37,8 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public void getHitData(final IntersectionInfo data, final int primitiveID, final Ray ray, final double distance) {
-      final Vec3 isectNormal = ray.getPointOnRay(distance);
+   public void getHitData(final Ray ray, final IntersectionInfo data) {
+      final Vec3 isectNormal = ray.getPointOnRay(data.t);
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
       data.surfaceNormal.set(isectNormal);
@@ -62,8 +62,8 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public double intersectsPrimitive(final Ray ray, final double maxDistance, final int primitiveID) {
-      return ray.intersectsSphere(center, radius);
+   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
+      return intersects(ray, intersection); // We only have one primitive...
    }
 
    public void setMaterial(final Material material) {
@@ -81,7 +81,7 @@ public class Sphere implements Geometry {
    @Override
    public AxisAlignedBoundingBox getBounds(final int primIndices) {
       return new AxisAlignedBoundingBox(center.x - radius, center.y - radius, center.z - radius, center.x + radius, center.y
-                                        + radius, center.z + radius);
+            + radius, center.z + radius);
    }
 
    @Override

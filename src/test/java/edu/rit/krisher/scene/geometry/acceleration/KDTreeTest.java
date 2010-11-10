@@ -18,7 +18,7 @@ import org.junit.Test;
 import edu.rit.krisher.fileparser.ply.PLYParser;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.acceleration.KDNodeVisitor;
-import edu.rit.krisher.scene.acceleration.KDTree;
+import edu.rit.krisher.scene.acceleration.KDGeometryContainer;
 import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
 import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
@@ -34,7 +34,7 @@ public class KDTreeTest {
    @Test
    public void splitLocationsShouldBeInNodeRange() throws Exception {
       final Geometry geometry = createOpenBoxGeometry();
-      final KDTree tree = new KDTree(geometry);
+      final KDGeometryContainer tree = new KDGeometryContainer(geometry);
       final KDNodeVisitor visitor = new KDNodeVisitor() {
 
          @Override
@@ -54,7 +54,7 @@ public class KDTreeTest {
       final TriangleMesh bunnyGeom = loadBunny();
       final Timer timer = new Timer("KD Construction Time (Bunny)");
       timer.start();
-      final KDTree tree = new KDTree(new SAHPartitionStrategey(), bunnyGeom);
+      final KDGeometryContainer tree = new KDGeometryContainer(new SAHPartitionStrategey(), bunnyGeom);
       timer.stop();
       timer.print();
       final KDTreeMetrics metrics = new KDTreeMetrics(tree);
