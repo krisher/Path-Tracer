@@ -79,11 +79,12 @@ public class CompositeBRDF implements Material, Cloneable {
       for (int i = 0; i < mats.length; i++) {
          cumP += P[i];
          if (sampleType < cumP) {
+            //Sample selected, evaluate BRDF
             return mats[i].sampleBRDF(sampleOut, wIncoming, parameters, rng);
          }
       }
       sampleOut.throughput.clear();
-      return 1;
+      return 1.0 - cumP;
    }
 
    public synchronized void addMaterial(final double prob, final Material mat) {

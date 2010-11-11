@@ -70,7 +70,7 @@ public final class AdvRenderingScenes {
             createScene("Bunny SAH KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
             createScene("Bunny Median KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueGreenMixedRefractive, new MedianPartitionStrategy(15, 2), bunnyFactory())),
 
-            new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), null, new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeBRDF(blueLambert, 0.25, whiteMirror, 0.7), null, new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Refractive)", new PinholeCamera(), bunnyURL, blueGreenMixedRefractive, null, new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new CompositeBRDF(new DiffuseMaterial(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 1000), 0.75), new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Krylon Blue)", new PinholeCamera(), bunnyURL, ASTMBRDFParser.getKrylonBlue(), null, new SAHPartitionStrategey(), true, null),
