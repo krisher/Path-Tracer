@@ -53,9 +53,9 @@ public class SamplingUtils {
                    * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
                    * small square region of the pixel area for each sample.
                    */
-                  sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / msGridSize + rng.nextFloat()
+                  sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / (float)msGridSize + rng.nextFloat()
                         / msGridSize;
-                  sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / msGridSize + rng.nextFloat()
+                  sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / (float)msGridSize + rng.nextFloat()
                         / msGridSize;
                   ++sampleIdx;
                }

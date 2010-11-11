@@ -75,6 +75,8 @@ public final class AdvRenderingScenes {
             new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new CompositeBRDF(new DiffuseMaterial(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 1000), 0.75), new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Krylon Blue)", new PinholeCamera(), bunnyURL, ASTMBRDFParser.getKrylonBlue(), null, new SAHPartitionStrategey(), true, null),
 
+            createScene("Sphere Diffuse", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new DiffuseMaterial(new Color(1)))),
+            createScene("Sphere Reflective", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new PhongSpecularBRDF(new Color(0.5,1,0.5), 100000))),
             createScene("Spheres Measured BRDFs", new DiffuseMaterial(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),

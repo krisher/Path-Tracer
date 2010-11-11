@@ -1,6 +1,7 @@
 package edu.rit.krisher.raytracer;
 
 import java.awt.Rectangle;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.text.NumberFormat;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,6 +22,16 @@ public final class IntegratorUtils  {
    public static final int threads = Runtime.getRuntime().availableProcessors();
    public static final NumberFormat formatter = NumberFormat.getNumberInstance();
    public static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+   
+   static {
+      Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+         
+         @Override
+         public void uncaughtException(final Thread t, final Throwable e) {
+            e.printStackTrace();
+         }
+      });
+   }
 
    private IntegratorUtils() {
       /*
