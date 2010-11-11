@@ -175,8 +175,8 @@ class MeasuredIsotropicMaterial implements Material {
        */
       directionOut.multiply(xb).scaleAdd(surfaceNormal, cosTheta).scaleAdd(nv, yb);
 
-      sampleOut.sampleColor.set(1);
-      evaluateBRDF(sampleOut.sampleColor, sampleOut.direction, wIncoming, parameters);
+      sampleOut.throughput.set(1);
+      evaluateBRDF(sampleOut.throughput, sampleOut.direction, wIncoming, parameters);
       sampleOut.emissiveResponse = false;
    }
 

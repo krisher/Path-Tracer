@@ -73,7 +73,7 @@ public class PhongSpecularBRDF implements Material {
       final Vec3 directionOut = sampleOut.direction;
       directionOut.set(wIncoming);
       directionOut.reflect(surfaceNormal);
-      sampleOut.sampleColor.set(specular.getColor(parameters.materialCoords));
+      sampleOut.throughput.set(specular.getColor(parameters.materialCoords));
       sampleOut.emissiveResponse = true;
 
       if (specExp < 100000) {

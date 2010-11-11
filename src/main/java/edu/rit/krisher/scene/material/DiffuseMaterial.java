@@ -10,11 +10,11 @@ import edu.rit.krisher.scene.geometry.utils.ShadingUtils;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
-public class LambertBRDF implements Material, Cloneable {
+public class DiffuseMaterial implements Material, Cloneable {
 
    private Texture diffuse;
 
-   public LambertBRDF(final Texture diffuse) {
+   public DiffuseMaterial(final Texture diffuse) {
       this.diffuse = diffuse;
    }
 
@@ -29,7 +29,7 @@ public class LambertBRDF implements Material, Cloneable {
        * BRDF = 1/pi * diffuse
        */
       final Color diffColor = this.diffuse.getColor(parameters.materialCoords);
-      final double factor = parameters.surfaceNormal.dot(wi) / Math.PI;
+      final double factor = 1.0 / Math.PI;
       radiance.multiply(diffColor.r * factor, diffColor.g * factor, diffColor.b * factor);
    }
 
@@ -51,7 +51,7 @@ public class LambertBRDF implements Material, Cloneable {
        * 
        * Li is handled in the Path-Tracer engine.
        */
-      wo.sampleColor.set(diffuse.getColor(parameters.materialCoords));
+      wo.throughput.set(diffuse.getColor(parameters.materialCoords));
       wo.emissiveResponse = false;
    }
 

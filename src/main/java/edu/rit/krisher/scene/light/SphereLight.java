@@ -61,11 +61,11 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       wo.intersection.t = isectDist;
       wo.intersection.hitGeometry = this;
 
-      material.getEmissionColor(wo.sampleColor, wo, null);
+      material.getEmissionColor(wo.throughput, wo, null);
       /*
        * Multiply by the solid angle of the light sphere that is visible from the origin (due to self-occlusion).
        */
-      wo.sampleColor.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
+      wo.throughput.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
    }
 
    @Override
@@ -79,7 +79,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
          wo.origin.scaleAdd(wo.direction, radius); // Move the origin to the surface of the sphere.
          // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
          // hemisphere.
-         material.getEmissionColor(wo.sampleColor, wo, null);
+         material.getEmissionColor(wo.throughput, wo, null);
       }
       return woCount;
    }

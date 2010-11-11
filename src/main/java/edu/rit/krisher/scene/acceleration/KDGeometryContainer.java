@@ -53,7 +53,6 @@ public class KDGeometryContainer implements Geometry {
          gMask |= 1 << i;
       geomMask = gMask;
 
-
       int globalPrimIdx = 0;
       for (int geomIdx = 0; geomIdx < content.length; ++geomIdx) {
          final Geometry geom = content[geomIdx];
@@ -81,7 +80,6 @@ public class KDGeometryContainer implements Geometry {
       return count;
    }
 
-
    /**
     * Accessor for the KDTree partition strategy used to subdivide the tree nodes.
     * 
@@ -104,19 +102,16 @@ public class KDGeometryContainer implements Geometry {
       if (root != null) {
          final double[] params = new double[2];
          if (treeBounds.rayIntersectsParametric(ray, params)) {
-            root.intersects(intersection, ray, params[0], params[1], ray.origin.get(), ray.direction.get());
-            if (intersection.hitGeometry == this) return true;
+            return root.intersects(intersection, ray, params[0], params[1], ray.origin.get(), ray.direction.get());
          }
       }
       return false;
    }
 
-
    @Override
-   public final boolean intersectsPrimitive(final Ray ray,final GeometryIntersection isect) {
+   public final boolean intersectsPrimitive(final Ray ray, final GeometryIntersection isect) {
       return intersects(ray, isect);
    }
-
 
    @Override
    public AxisAlignedBoundingBox getBounds(final int primIndices) {
@@ -129,8 +124,8 @@ public class KDGeometryContainer implements Geometry {
       }
    }
 
-   private final KDGeometryNode partition(final int memberCount, final PrimitiveAABB[] bounds,
-         final int depth, final AxisAlignedBoundingBox nodeBounds) {
+   private final KDGeometryNode partition(final int memberCount, final PrimitiveAABB[] bounds, final int depth,
+         final AxisAlignedBoundingBox nodeBounds) {
       if (memberCount == 0) {
          return new KDLeafNode(new int[0]);
       }
@@ -166,8 +161,8 @@ public class KDGeometryContainer implements Geometry {
       return primIdx;
    }
 
-   private static final int partitionPrimitives(final int memberCount,
-         final AxisAlignedBoundingBox[] bounds, final int splitAxis, final double split, final boolean less) {
+   private static final int partitionPrimitives(final int memberCount, final AxisAlignedBoundingBox[] bounds,
+         final int splitAxis, final double split, final boolean less) {
       int startIdx = 0;
       int endIdx = memberCount - 1;
       if (less) {
@@ -198,7 +193,7 @@ public class KDGeometryContainer implements Geometry {
 
    private static interface KDGeometryNode {
 
-      public void intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
+      public boolean intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD);
 
       public void visit(int depth, AxisAlignedBoundingBox nodeBounds, KDNodeVisitor vistor) throws Exception;
@@ -216,40 +211,49 @@ public class KDGeometryContainer implements Geometry {
       }
 
       @Override
-      public final void intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
+      public final boolean intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
          assert tmin <= tmax : "Bad intersection parameterization.";
          if (tmin > intersection.t)
-            return;
+            return false;
          final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
          final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
 
          if (cEntry <= splitLocation) { /* node entry point on less side of split */
             if (cExit < splitLocation) { /* exit point on less side of split, only need to check lessChild */
-               if (lessChild != null) lessChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
+               if (lessChild != null)
+                  return lessChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { /* Traverses from less child to greater child */
+               boolean hit = false;
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                /* first hit child; use tmin, tsplit */
-               if (lessChild != null) lessChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
+               if (lessChild != null)
+                  hit = lessChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if (greaterChild != null && intersection.t >= tsplit)
-                  greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);               
+                  hit |= greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               return hit;
             }
          } else { /* Entry on greater side. */
             if (cExit > splitLocation) { // exit on greater/eq side of split, only check greater.
-               if (greaterChild != null) greaterChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
+               if (greaterChild != null)
+                  return greaterChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { // exit on less side, check both
+               boolean hit = false;
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                // greater-child: use tmin, tsplit
-               if (greaterChild != null) greaterChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
+               if (greaterChild != null)
+                  hit = greaterChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if (lessChild != null && intersection.t >= tsplit)
-                  lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+                  hit |= lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               return hit;
             }
          }
+         return false;
       }
 
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-      throws Exception {
+            throws Exception {
          if (lessChild != null) {
             final double maxBound = nodeBounds.xyzxyz[axis + 3];
             nodeBounds.xyzxyz[axis + 3] = splitLocation;
@@ -275,16 +279,19 @@ public class KDGeometryContainer implements Geometry {
       }
 
       @Override
-      public void intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
+      public boolean intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
             final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
+         boolean hit = false;
          for (final int prim : primitives) {
             final int oldPrim = intersection.primitiveID;
             intersection.primitiveID = prim >> geomBits;
-            if (!KDGeometryContainer.this.content[prim & geomMask].intersectsPrimitive(ray, intersection)) {
-               /* No intersection, restore the primitiveID from a previous intersection */
+            if (KDGeometryContainer.this.content[prim & geomMask].intersectsPrimitive(ray, intersection))
+               hit = true;
+            else
+//            /* No intersection, restore the primitiveID from a previous intersection */
                intersection.primitiveID = oldPrim;
-            }
          }
+         return hit;
       }
 
       /*
@@ -293,7 +300,7 @@ public class KDGeometryContainer implements Geometry {
        */
       @Override
       public void visit(final int depth, final AxisAlignedBoundingBox nodeBounds, final KDNodeVisitor visitor)
-      throws Exception {
+            throws Exception {
          visitor.visitNode(depth, nodeBounds, true, primitives.length, 0, -1);
       }
 

@@ -29,9 +29,9 @@ public interface Material {
     * The returned value represents the percentage of the incoming radiant intensity (W/sr) that is transmitted, so
     * Color component values must range from 0 to 1.<br>
     * 
-    * @param colorInOut
+    * @param throughput
     *           On input, this is the color of the light incident on the material, on output, stores the resulting color
-    *           response.
+    *           response. Note that this method should not take the incident light angle into account (i.e. the cos(theta_i)), this will be handled externally.
     * @param wo
     *           A normalized vector away from the material intersection point.
     * @param wi
@@ -40,7 +40,7 @@ public interface Material {
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     **/
-   public void evaluateBRDF(Color colorInOut, Vec3 wo, Vec3 wi, IntersectionInfo parameters);
+   public void evaluateBRDF(Color throughput, Vec3 wo, Vec3 wi, IntersectionInfo parameters);
 
    /**
     * Computes and returns the emitted (not reflected) light toward the origin of wo, along the wo ray direction.
@@ -71,8 +71,9 @@ public interface Material {
     * Computes a direction that should be sampled.
     * 
     * @param wo
-    *           Ray to store the desired outgoing sample direction, and the distribution (SPD/Color) of light that will be
-    *           reflected toward the incoming sample direction (this is the ratio of incoming light to outgoing light).
+    *           Ray to store the desired outgoing sample direction, and the distribution (SPD/Color) of light that will
+    *           be reflected toward the incoming sample direction (this is the ratio of incoming light to outgoing light).
+    *           Note that this method will take the incident light angle into account (i.e. the cos(theta_i) term)
     * @param wi
     *           Vector indicating the incident ray direction (pointing toward the intersection).
     * @param parameters
@@ -82,6 +83,6 @@ public interface Material {
     *           A random number generator for monte-carlo sampling, etc.
     */
    public void sampleBRDF(SampleRay wo, Vec3 wi, IntersectionInfo parameters, Random rng);
-   
-   //public SampleRay[] multisampleBRDF(int sampleCount, Vec3 wi, IntersectionInfo parameters, Random rng);
+
+   // public SampleRay[] multisampleBRDF(int sampleCount, Vec3 wi, IntersectionInfo parameters, Random rng);
 }

@@ -11,7 +11,7 @@ import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.CompositeBRDF;
-import edu.rit.krisher.scene.material.LambertBRDF;
+import edu.rit.krisher.scene.material.DiffuseMaterial;
 import edu.rit.krisher.scene.material.PhongSpecularBRDF;
 import edu.rit.krisher.scene.material.RefractiveBRDF;
 import edu.rit.krisher.scene.material.RingsPattern;
@@ -29,10 +29,10 @@ public class CG2Scenes {
 
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
 
-   static Material whiteLambert = new LambertBRDF(Color.white);
-   static Material blueLambert = new LambertBRDF(blue);
-   static Material greenLambert = new LambertBRDF(green);
-   static Material redLambert = new LambertBRDF(new Color(1, 0.45, 0.5));
+   static Material whiteLambert = new DiffuseMaterial(Color.white);
+   static Material blueLambert = new DiffuseMaterial(blue);
+   static Material greenLambert = new DiffuseMaterial(green);
+   static Material redLambert = new DiffuseMaterial(new Color(1, 0.45, 0.5));
 
    static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100000);
    static Material whiteShiny = new PhongSpecularBRDF(Color.white, 30);
@@ -40,7 +40,7 @@ public class CG2Scenes {
    static Material greenSpecular = new PhongSpecularBRDF(green, 100);
 
    static final CompositeBRDF mixedWhiteMat = new CompositeBRDF(whiteLambert, 0.5, whiteMirror, 0.5);
-   static final CompositeBRDF mixedOrangeMat = new CompositeBRDF(new LambertBRDF(orange), 0.6, new PhongSpecularBRDF(Color.white, 75), 0.4);
+   static final CompositeBRDF mixedOrangeMat = new CompositeBRDF(new DiffuseMaterial(orange), 0.6, new PhongSpecularBRDF(Color.white, 75), 0.4);
    static final CompositeBRDF whiteSpecular80 = new CompositeBRDF(whiteLambert, 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.80);
 
    static final RefractiveBRDF clearRefractive = new RefractiveBRDF(0.95, Color.black, 100000);
@@ -170,7 +170,7 @@ public class CG2Scenes {
       final DoFCamera cam = new DoFCamera();
       final DefaultScene scene = new DefaultScene("Three Balls", cam);
       // root.add(new Box(16, 16, 16, whiteLambert, new Vec3(0, 8, 0)));
-      scene.add(new Box(16, 2.5, 16, new LambertBRDF(yellowRedCheckerTexture), new Vec3(0, -1.25, 0), false));
+      scene.add(new Box(16, 2.5, 16, new DiffuseMaterial(yellowRedCheckerTexture), new Vec3(0, -1.25, 0), false));
       scene.add(new Sphere(new Vec3(-2, 1, 0), 1, blueLambert));
       scene.add(new Sphere(new Vec3(2, 1, 0), 1, new CompositeBRDF(greenLambert, 0.4, whiteShiny, 0.5)));
       scene.add(new Sphere(new Vec3(0, 1, 0), 1, whiteMirror));
@@ -200,7 +200,7 @@ public class CG2Scenes {
       scene.add(new Sphere(new Vec3(0, 1, -2), 1, blueLambert));
       scene.add(new Sphere(new Vec3(-2, 1, -2), 1, greenLambert));
 
-      scene.add(new Box(1.99, 1.99, 1.99, new LambertBRDF(yellowRedCheckerTexture), new Vec3(-3.5, 0.995, 2.75), false));
+      scene.add(new Box(1.99, 1.99, 1.99, new DiffuseMaterial(yellowRedCheckerTexture), new Vec3(-3.5, 0.995, 2.75), false));
 
       scene.add(new SphereLight(new Vec3(1, 6, 3), 1.0, new Color(1.0f, 1.0f, 1.0f), 2.0f));
 
@@ -253,7 +253,7 @@ public class CG2Scenes {
       
       final KDGeometryContainer tree = new KDGeometryContainer(
                                      new Sphere(new Vec3(0, 2, 0), 1, mixedRefractive),
-                                     new Sphere(new Vec3(-2, 1, -2), 1, whiteSpecular80), new Box(10, 2.5, 16, new CompositeBRDF(new LambertBRDF(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
+                                     new Sphere(new Vec3(-2, 1, -2), 1, whiteSpecular80), new Box(10, 2.5, 16, new CompositeBRDF(new DiffuseMaterial(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
       scene.add(tree);
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), lightPower));
 
@@ -309,11 +309,11 @@ public class CG2Scenes {
       protected void initScene() {
 
          add(new Box(20, 20, 20, whiteLambert, new Vec3(0, 10, 0), true));
-         add(new Box(1.99, 1.99, 1.99, new LambertBRDF(yellowRedCheckerTexture), new Vec3(4, 1, 2), false));
+         add(new Box(1.99, 1.99, 1.99, new DiffuseMaterial(yellowRedCheckerTexture), new Vec3(4, 1, 2), false));
 
          add(new Sphere(new Vec3(0, 1, 0), 1, whiteShiny));
          add(new Sphere(new Vec3(-1, 1, Math.sqrt(3)), 1, mixedOrangeMat));
-         add(new Sphere(new Vec3(1, 1, Math.sqrt(3)), 1, new LambertBRDF(new Color(0.25, 0.25, 1.0))));
+         add(new Sphere(new Vec3(1, 1, Math.sqrt(3)), 1, new DiffuseMaterial(new Color(0.25, 0.25, 1.0))));
          add(new SphereLight(new Vec3(-3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 0.55f), 3));
          add(new SphereLight(new Vec3(3, 6, 0), 1.0, new Color(0.55f, 0.55f, 1.0f), 3));
          add(new SphereLight(new Vec3(1, 7, -3.5), 0.25, new Color(1.0f, 1.0f, 1.0f), 40));

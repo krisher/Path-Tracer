@@ -28,7 +28,7 @@ import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.scene.material.CompositeBRDF;
-import edu.rit.krisher.scene.material.LambertBRDF;
+import edu.rit.krisher.scene.material.DiffuseMaterial;
 import edu.rit.krisher.scene.material.PhongSpecularBRDF;
 import edu.rit.krisher.scene.material.RefractiveBRDF;
 import edu.rit.krisher.ui.RTDemo;
@@ -44,8 +44,8 @@ public final class AdvRenderingScenes {
 
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
    static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100);
-   static Material whiteLambert = new LambertBRDF(Color.white);
-   static Material blueLambert = new LambertBRDF(new Color(0.75, 0.75, 1.0));
+   static Material whiteLambert = new DiffuseMaterial(Color.white);
+   static Material blueLambert = new DiffuseMaterial(new Color(0.75, 0.75, 1.0));
 
    static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.75, 1.0), 100000);
    static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
@@ -72,10 +72,10 @@ public final class AdvRenderingScenes {
 
             new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), null, new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Refractive)", new PinholeCamera(), bunnyURL, blueGreenMixedRefractive, null, new SAHPartitionStrategey(), true, null),
-            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 1000), 0.75), new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new CompositeBRDF(new DiffuseMaterial(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 1000), 0.75), new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Krylon Blue)", new PinholeCamera(), bunnyURL, ASTMBRDFParser.getKrylonBlue(), null, new SAHPartitionStrategey(), true, null),
 
-            createScene("Spheres Measured BRDFs", new LambertBRDF(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
+            createScene("Spheres Measured BRDFs", new DiffuseMaterial(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
             createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
@@ -150,7 +150,7 @@ public final class AdvRenderingScenes {
                geometry[i] = geomFactories[i].createGeometry();
                geomBounds.union(geometry[i].getBounds(-1));
             }
-            geometry[geometry.length - 1] = groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1))
+            geometry[geometry.length - 1] = groundPlane(groundMat == null ? new DiffuseMaterial(new Color(1, 1, 1))
             : groundMat, walls, geomBounds);
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
@@ -195,7 +195,7 @@ public final class AdvRenderingScenes {
                System.out.println(new KDTreeMetrics(accel));
                add(accel);
             }
-            add(groundPlane(groundMat == null ? new LambertBRDF(new Color(1, 1, 1)) : groundMat, walls, geomBounds));
+            add(groundPlane(groundMat == null ? new DiffuseMaterial(new Color(1, 1, 1)) : groundMat, walls, geomBounds));
             ((PinholeCamera) camera).lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
             ((PinholeCamera) camera).setFOVAngle(56.14);
             if (dofCamera) {
@@ -246,7 +246,7 @@ public final class AdvRenderingScenes {
    }
 
    private static GeometryFactory bunnyFactory() {
-      return bunnyFactory(new LambertBRDF(Color.white), false);
+      return bunnyFactory(new DiffuseMaterial(Color.white), false);
    }
 
    private static final GeometryFactory bunnyFactory(final Material mat, final boolean computeNormals) {

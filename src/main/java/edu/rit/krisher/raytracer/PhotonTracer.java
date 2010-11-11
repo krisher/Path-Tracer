@@ -180,7 +180,7 @@ public final class PhotonTracer implements SceneIntegrator {
                   }
                } else {
                   for (int i = 0; i < rayCount; ++i) {
-                     rays[i].sampleColor.set(sampleWeight);
+                     rays[i].throughput.set(sampleWeight);
                      rays[i].emissiveResponse = true;
                      rays[i].extinction.clear();
                   }
@@ -235,9 +235,9 @@ public final class PhotonTracer implements SceneIntegrator {
                    * No intersection, process for the scene background color.
                    */
                   final int dst = 3 * (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
-                  pixels[dst] += bg.r * ray.sampleColor.r;
-                  pixels[dst + 1] += bg.g * ray.sampleColor.g;
-                  pixels[dst + 2] += bg.b * ray.sampleColor.b;
+                  pixels[dst] += bg.r * ray.throughput.r;
+                  pixels[dst + 1] += bg.g * ray.throughput.g;
+                  pixels[dst + 2] += bg.b * ray.throughput.b;
                   /*
                    * This path is terminated.
                    */
@@ -274,11 +274,11 @@ public final class PhotonTracer implements SceneIntegrator {
                 * Save the transmission weights, they may be overwritten if the ray is reused for the next path segment
                 * below.
                 */
-               final double rTransmission = ray.sampleColor.r
+               final double rTransmission = ray.throughput.r
                * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
-               final double gTransmission = ray.sampleColor.g
+               final double gTransmission = ray.throughput.g
                * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
-               final double bTransmission = ray.sampleColor.b
+               final double bTransmission = ray.throughput.b
                * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
@@ -305,12 +305,12 @@ public final class PhotonTracer implements SceneIntegrator {
                   bounceRay.origin.set(ray.getPointOnRay(ray.intersection.t));
                   bounceRay.reset();
                   ray.intersection.material.sampleBRDF(bounceRay, ray.direction, ray.intersection, rng);
-                  if (!bounceRay.sampleColor.isZero()) {
+                  if (!bounceRay.throughput.isZero()) {
 
                      // Scale transmission by inverse probability of reaching this depth due to RR.
                      if (rayDepth >= 2)
-                        bounceRay.sampleColor.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) rTransmission, (float) gTransmission, (float) bTransmission))));
-                     bounceRay.sampleColor.multiply(rTransmission, gTransmission, bTransmission);
+                        bounceRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) rTransmission, (float) gTransmission, (float) bTransmission))));
+                     bounceRay.throughput.multiply(rTransmission, gTransmission, bTransmission);
 
                      bounceRay.pixelX = ray.pixelX;
                      bounceRay.pixelY = ray.pixelY;
@@ -367,8 +367,8 @@ public final class PhotonTracer implements SceneIntegrator {
                    * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
                    * the response of the material...
                    */
-                  woRay.intersection.material.evaluateBRDF(illuminationRay.sampleColor, woRay.direction.inverted(), illuminationRay.direction, woRay.intersection);
-                  irradianceOut.add(illuminationRay.sampleColor.r, illuminationRay.sampleColor.g, illuminationRay.sampleColor.b);
+                  woRay.intersection.material.evaluateBRDF(illuminationRay.throughput, woRay.direction.inverted(), illuminationRay.direction, woRay.intersection);
+                  irradianceOut.add(illuminationRay.throughput.r, illuminationRay.throughput.g, illuminationRay.throughput.b);
                }
             }
 

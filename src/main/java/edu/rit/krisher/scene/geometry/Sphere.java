@@ -5,7 +5,7 @@ import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.scene.material.LambertBRDF;
+import edu.rit.krisher.scene.material.DiffuseMaterial;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -14,7 +14,7 @@ public class Sphere implements Geometry {
 
    protected final double radius;
    protected final Vec3 center;
-   protected Material material = new LambertBRDF(Color.white);
+   protected Material material = new DiffuseMaterial(Color.white);
 
    public Sphere() {
       this(Vec3.zero, 1, null);

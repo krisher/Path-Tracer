@@ -20,7 +20,7 @@ public class SampleRay extends Ray {
    /**
     * The spectral power distribution for this sample, may be used for reflectance ratios or power.
     */
-   public final Color sampleColor;
+   public final Color throughput;
 
    /**
     * The extinction value of the current material that the ray is traversing.
@@ -36,11 +36,11 @@ public class SampleRay extends Ray {
 
    public SampleRay(final double filterWeight) {
       super(new Vec3(), new Vec3());
-      sampleColor = new Color(filterWeight, filterWeight, filterWeight);
+      throughput = new Color(filterWeight, filterWeight, filterWeight);
    }
 
    public void reset() {
-      sampleColor.clear();
+      throughput.clear();
       emissiveResponse = true;
    }
 }

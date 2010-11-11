@@ -35,7 +35,7 @@ public class PointLight implements EmissiveGeometry {
       wo.intersection.t = wo.direction.length();
       wo.direction.multiply(1.0 / wo.intersection.t);
       wo.intersection.surfaceNormal.set(wo.direction).multiply(-1);
-      wo.sampleColor.set(material);
+      wo.throughput.set(material);
       wo.intersection.hitGeometry = this;
    }
 
@@ -88,7 +88,7 @@ public class PointLight implements EmissiveGeometry {
          final SampleRay wo = woSamples[i + woOffset];
          wo.origin.set(position);
          SamplingUtils.rejectionSphereSample(wo.direction, rng);
-         wo.sampleColor.set(material);
+         wo.throughput.set(material);
       }
       return woCount;
    }

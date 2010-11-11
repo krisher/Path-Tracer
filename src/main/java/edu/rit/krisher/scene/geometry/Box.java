@@ -5,7 +5,7 @@ import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.scene.material.LambertBRDF;
+import edu.rit.krisher.scene.material.DiffuseMaterial;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Transform;
@@ -24,7 +24,7 @@ public class Box implements Geometry {
    private boolean invertNormals = false;
 
    public Box(final double xSize, final double ySize, final double zSize, final boolean invertNormals) {
-      this(xSize, ySize, zSize, new LambertBRDF(Color.white), null, invertNormals);
+      this(xSize, ySize, zSize, new DiffuseMaterial(Color.white), null, invertNormals);
    }
 
    public Box(final double xSize, final double ySize, final double zSize, final Material mat,

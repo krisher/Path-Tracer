@@ -19,7 +19,7 @@ import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.scene.material.LambertBRDF;
+import edu.rit.krisher.scene.material.DiffuseMaterial;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Transform;
@@ -75,7 +75,7 @@ public class PLYScene<C extends Camera> extends AbstractSceneDescription<C> {
             add(model);
          }
 
-         add(groundPlane(boxMaterial == null ? new LambertBRDF(new Color(1, 1, 1)) : boxMaterial, true, geomBounds));
+         add(groundPlane(boxMaterial == null ? new DiffuseMaterial(new Color(1, 1, 1)) : boxMaterial, true, geomBounds));
          ((PinholeCamera) camera).lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
          ((PinholeCamera) camera).setFOVAngle(56.14);
          if (camera instanceof DoFCamera) {

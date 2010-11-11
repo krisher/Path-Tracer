@@ -6,7 +6,7 @@ import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.geometry.utils.Vec3fBufferUtils;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.scene.material.LambertBRDF;
+import edu.rit.krisher.scene.material.DiffuseMaterial;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Transform;
@@ -14,7 +14,7 @@ import edu.rit.krisher.vecmath.Vec3;
 
 public class TriangleMesh implements Geometry {
 
-   private Material material = new LambertBRDF(Color.white);
+   private Material material = new DiffuseMaterial(Color.white);
    private final float[] vertices;
    private final float[] normals;
    private final int[] triangleIndices;
