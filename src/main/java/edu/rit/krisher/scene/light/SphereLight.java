@@ -20,7 +20,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public void sampleEmissiveRadiance(final SampleRay wo, final Random rng) {
+   public void sampleIrradiance(final SampleRay wo, final Random rng) {
 
       wo.direction.set(center).subtract(wo.origin);
       final double lightDist = wo.direction.length();
@@ -69,7 +69,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public int multisampleEmissiveRadiance(final SampleRay[] woSamples, final int woOffset, final int woCount,
+   public int sampleEmission(final SampleRay[] woSamples, final int woOffset, final int woCount,
          final Random rng) {
       for (int i = 0; i < woCount; ++i) {
          final SampleRay wo = woSamples[i + woOffset];

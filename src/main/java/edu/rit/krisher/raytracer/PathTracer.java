@@ -108,9 +108,11 @@ public final class PathTracer implements SceneIntegrator {
        */
       private final Random rng = new UnsafePRNG();
 
+      private static final double gaussFalloffControl = 0.1;
+      private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.25);
+
+
       private final int pixelSampleRate;
-      private final int pixelSampleRateSq;
-      private final double sampleWeight;
       private final int recursionDepth;
       private final ImageBuffer imageBuffer;
       private final Scene scene;
@@ -124,6 +126,7 @@ public final class PathTracer implements SceneIntegrator {
        * Values will always be >= 0, but are unbounded in magnitude.
        */
       private float[] pixels;
+      private float[] pixelNormalization;
       private Rectangle rect;
 
       public PathProcessor(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
@@ -134,8 +137,6 @@ public final class PathTracer implements SceneIntegrator {
          this.doneSignal = doneSignal;
          this.workQueue = workQueue;
          this.pixelSampleRate = pixelSampleRate;
-         pixelSampleRateSq = pixelSampleRate * pixelSampleRate;
-         sampleWeight = 1.0 / (pixelSampleRateSq);
          for (int i=0; i < illuminationRays.length; ++i) {
             illuminationRays[i] = new SampleRay(1.0);
          }
@@ -151,10 +152,13 @@ public final class PathTracer implements SceneIntegrator {
          while ((rect = workQueue.poll()) != null) {
             try {
                final int pixelCount = rect.width * rect.height * 3;
-               if (pixels == null || pixels.length < pixelCount)
+               if (pixels == null || pixels.length < pixelCount) {
                   pixels = new float[pixelCount];
-               else
+                  pixelNormalization = new float[pixelCount / 3];
+               } else {
                   Arrays.fill(pixels, 0);
+                  Arrays.fill(pixelNormalization, 0);
+               }
 
                final int rayCount = pixelSampleRate * pixelSampleRate * rect.width * rect.height;
                if (rays.length < rayCount) {
@@ -181,8 +185,16 @@ public final class PathTracer implements SceneIntegrator {
                processRays(rect, rays, rays.length);
 
                /* Put results back into image buffer */
+               for (int i=0; i < pixelNormalization.length; ++i) {
+                  final int pixOffs = 3 * i;
+                  pixels[pixOffs] /= pixelNormalization[i];
+                  pixels[pixOffs+1] /= pixelNormalization[i];
+                  pixels[pixOffs+2] /= pixelNormalization[i];
+               }
                imageBuffer.setPixels(rect.x, rect.y, rect.width, rect.height, pixels);
-            } finally {
+            } catch (final Exception e) {
+               e.printStackTrace();
+            }finally {
                final int remaining = doneSignal.decrementAndGet();
                if (remaining == 0) {
                   imageBuffer.imagingDone();
@@ -195,11 +207,16 @@ public final class PathTracer implements SceneIntegrator {
          }
       }
 
-      private final void updateImage(final double x, final double y, final double r, final double g, final double b) {
+      private final void updateImage( double x,  double y, final double r, final double g, final double b) {
          final int dst = 3 * (((int) y) * rect.width + (int) x);
-         pixels[dst] += r * sampleWeight;
-         pixels[dst + 1] += g * sampleWeight;
-         pixels[dst + 2] += b * sampleWeight;
+         x = x - (int)x - 0.5;
+         y = y - (int)y - 0.5;
+         
+         final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+         pixels[dst] += r * filter;
+         pixels[dst + 1] += g * filter;
+         pixels[dst + 2] += b * filter;
+         pixelNormalization[dst/3] += filter;
       }
 
       private final void processRays(final Rectangle rect, final SampleRay[] rays, int rayCount) {
@@ -341,7 +358,7 @@ public final class PathTracer implements SceneIntegrator {
                 * 
                 * TODO: Stratified sampling...
                 */
-               light.sampleEmissiveRadiance(illuminationRays[i], rng);
+               light.sampleIrradiance(illuminationRays[i], rng);
             }
             IntegratorUtils.processHits(illuminationRays, ILLUMINATION_SAMPLES, geometry);
             for (final SampleRay illuminationRay : illuminationRays) {

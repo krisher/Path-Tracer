@@ -24,7 +24,7 @@ public interface EmissiveGeometry extends Geometry {
     * @param rng
     *           A non-null random number generator that can be used for generating uniform random variables.
     */
-   void sampleEmissiveRadiance(SampleRay wo, Random rng);
+   void sampleIrradiance(SampleRay wo, Random rng);
 
    /**
     * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays.
@@ -39,5 +39,5 @@ public interface EmissiveGeometry extends Geometry {
     *           A Random number generator for sampling.
     * @return the number of rays in wo that were actually initialized.
     */
-   int multisampleEmissiveRadiance(SampleRay[] wo, int woOffset, int woCount, Random rng);
+   int sampleEmission(SampleRay[] wo, int woOffset, int woCount, Random rng);
 }

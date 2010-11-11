@@ -347,7 +347,7 @@ public final class PhotonTracer implements SceneIntegrator {
             /*
              * Generate a random sample direction that hits the light
              */
-            light.sampleEmissiveRadiance(illuminationRay, rng);
+            light.sampleIrradiance(illuminationRay, rng);
             /*
              * Cosine of the angle between the geometry surface normal and the shadow ray direction
              */
