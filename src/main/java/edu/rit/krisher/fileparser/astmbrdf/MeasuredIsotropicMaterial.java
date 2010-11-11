@@ -7,7 +7,9 @@ import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.scene.Material;
+import edu.rit.krisher.scene.geometry.utils.ShadingUtils;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
@@ -146,38 +148,16 @@ class MeasuredIsotropicMaterial implements Material {
     * edu.rit.krisher.vecmath.Vec3, edu.rit.krisher.scene.MaterialInfo)
     */
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+   public double sampleBRDF(final SampleRay wi, final Vec3 wo, final IntersectionInfo parameters,
          final Random rng) {
-      // sampleOut.direction.set(wIncoming).reflect(parameters.surfaceNormal);
-      Vec3 surfaceNormal = parameters.surfaceNormal;
-      if (wIncoming.dot(surfaceNormal) > 0) {
-         surfaceNormal = surfaceNormal.inverted();
-      }
+      final double pdf = SamplingUtils.cosSampleHemisphere(wi.direction, rng); //Sample hemisphere surrounding z axis according to cosine dist.
+      ShadingUtils.shadingCoordsToWorld(wi.direction, parameters.surfaceNormal, parameters.tangentVector); //Transform sample direction to world coordinates.
 
-      /*
-       * Cosine-weighted sampling about the surface normal:
-       * 
-       * Probability of direction Ko = 1/pi * cos(theta) where theta is the angle between the surface normal and Ko.
-       * 
-       * The polar angle about the normal is chosen from a uniform distribution 0..2pi
-       */
-      final double cosTheta = Math.sqrt(1.0 - rng.nextDouble());
-      final double sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
-      final double phi = 2.0 * Math.PI * rng.nextDouble();
-      final double xb = sinTheta * Math.cos(phi);
-      final double yb = sinTheta * Math.sin(phi);
-
-      final Vec3 directionOut = sampleOut.direction;
-      directionOut.set(parameters.tangentVector);
-      final Vec3 nv = new Vec3(surfaceNormal).cross(directionOut);
-      /*
-       * Use the x,y,z values calculated above as coordinates in the ONB...
-       */
-      directionOut.multiply(xb).scaleAdd(surfaceNormal, cosTheta).scaleAdd(nv, yb);
-
-      sampleOut.throughput.set(1);
-      evaluateBRDF(sampleOut.throughput, sampleOut.direction, wIncoming, parameters);
-      sampleOut.emissiveResponse = false;
+      wi.throughput.set(1);
+      wi.emissiveResponse = false;
+      evaluateBRDF(wi.throughput, wi.direction, wo, parameters);
+      
+      return pdf;
    }
 
 }

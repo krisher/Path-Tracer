@@ -31,7 +31,8 @@ public interface Material {
     * 
     * @param throughput
     *           On input, this is the color of the light incident on the material, on output, stores the resulting color
-    *           response. Note that this method should not take the incident light angle into account (i.e. the cos(theta_i)), this will be handled externally.
+    *           response. Note that this method should not take the incident light angle into account (i.e. the
+    *           cos(theta_i)), this will be handled externally.
     * @param wo
     *           A normalized vector away from the material intersection point.
     * @param wi
@@ -70,19 +71,20 @@ public interface Material {
    /**
     * Computes a direction that should be sampled.
     * 
-    * @param wo
-    *           Ray to store the desired outgoing sample direction, and the distribution (SPD/Color) of light that will
-    *           be reflected toward the incoming sample direction (this is the ratio of incoming light to outgoing light).
-    *           Note that this method will take the incident light angle into account (i.e. the cos(theta_i) term)
     * @param wi
-    *           Vector indicating the incident ray direction (pointing toward the intersection).
-    * @param parameters
+    *           Ray to initialize to the sample direction. Upon exit, the ray's direction will be initialized to an
+    *           incident light direction to sample (pointing away from the BRDF origin), and the throughput will be initialized to
+    *           the reflective power throughput in the specified direction.
+    * @param wo
+    *           Vector indicating the outgoing reflection direction (pointing away from the BRDF origin).
+    * @param intersectionInfo
     *           Material parameters including surface normal of the geometry where the intersection occurred, and
     *           texture/material coordinates.
     * @param rng
-    *           A random number generator for monte-carlo sampling, etc.
+    *           A random number generator for Monte Carlo sampling.
+    * @return The probability (PDF) of the specified direction.
     */
-   public void sampleBRDF(SampleRay wo, Vec3 wi, IntersectionInfo parameters, Random rng);
+   public double sampleBRDF(SampleRay wi, Vec3 wo, IntersectionInfo intersectionInfo, Random rng);
 
    // public SampleRay[] multisampleBRDF(int sampleCount, Vec3 wi, IntersectionInfo parameters, Random rng);
 }

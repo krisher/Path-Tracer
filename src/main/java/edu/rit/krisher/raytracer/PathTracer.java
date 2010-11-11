@@ -280,28 +280,28 @@ public final class PathTracer implements SceneIntegrator {
                 */
                if (rayDepth < recursionDepth
                      && (rayDepth < 2 || rng.nextFloat() >= Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB)))) {
-                  final SampleRay bounceRay = rays[outRayCount];
+                  final SampleRay irradSampleRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
                    * interface, at which point the extinction is changed in the Material model.
                    */
-                  bounceRay.extinction.set(ray.extinction);
-                  bounceRay.origin.set(ray.getPointOnRay(ray.intersection.t));
-                  bounceRay.reset();
-                  ray.intersection.material.sampleBRDF(bounceRay, ray.direction, ray.intersection, rng);
-                  if (!bounceRay.throughput.isZero()) {
-
+                  irradSampleRay.extinction.set(ray.extinction);
+                  irradSampleRay.origin.set(ray.getPointOnRay(ray.intersection.t));
+                  irradSampleRay.reset();
+                  final double pdf = ray.intersection.material.sampleBRDF(irradSampleRay, ray.direction.inverted(), ray.intersection, rng);
+                  if (pdf > 0 && !irradSampleRay.throughput.isZero()) {
                      // Scale transmission by inverse probability of reaching this depth due to RR.
                      if (rayDepth >= 2)
-                        bounceRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
-                     bounceRay.throughput.multiply(throughputR, throughputG, throughputB);
+                        irradSampleRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
+                     irradSampleRay.throughput.multiply(throughputR, throughputG, throughputB);
+                     irradSampleRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(irradSampleRay.direction)) / pdf);
 
-                     bounceRay.pixelX = ray.pixelX;
-                     bounceRay.pixelY = ray.pixelY;
+                     irradSampleRay.pixelX = ray.pixelX;
+                     irradSampleRay.pixelY = ray.pixelY;
                      /*
                       * Avoid precision issues when processing the ray for the next intersection.
                       */
-                     bounceRay.origin.scaleAdd(bounceRay.direction, Constants.EPSILON_D);
+                     irradSampleRay.origin.scaleAdd(irradSampleRay.direction, Constants.EPSILON_D);
                      ++outRayCount;
 
                   }

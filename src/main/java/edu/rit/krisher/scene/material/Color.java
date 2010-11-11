@@ -87,9 +87,10 @@ public class Color implements Material, Texture {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+   public double sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
          final Random rng) {
       sampleOut.throughput.clear();
+      return 1;
       // No lighting response...
    }
 

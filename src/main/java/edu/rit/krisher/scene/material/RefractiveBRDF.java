@@ -63,10 +63,10 @@ public class RefractiveBRDF implements Material {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay wo, final Vec3 wi, final IntersectionInfo parameters,
+   public double sampleBRDF(final SampleRay wSample, final Vec3 wo, final IntersectionInfo parameters,
          final Random rng) {
       Vec3 sNormal = parameters.surfaceNormal;
-      double cosThetaI = wi.dot(sNormal);
+      double cosThetaI = -wo.dot(sNormal);
 
       final double rIdxRatio;
       final boolean exiting;
@@ -90,17 +90,17 @@ public class RefractiveBRDF implements Material {
          /*
           * Total internal reflection
           */
-         wo.direction.set(wi).reflect(sNormal);
+         wSample.direction.set(wo).multiply(-1).reflect(sNormal);
          /*
           * TODO: adjust the transmission spectrum...
           */
-         wo.throughput.set(1, 1, 1);
+         wSample.throughput.set(1, 1, 1);
       } else {
          /*
           * Refraction
           */
-         wo.direction.set(wi).multiply(rIdxRatio);
-         wo.direction.scaleAdd(sNormal, (rIdxRatio * cosThetaI - Math.sqrt(snellRoot)));
+         wSample.direction.set(wo).multiply(-1).multiply(rIdxRatio);
+         wSample.direction.scaleAdd(sNormal, (rIdxRatio * cosThetaI - Math.sqrt(snellRoot)));
 
          /*
           * Blurry refraction...
@@ -129,29 +129,30 @@ public class RefractiveBRDF implements Material {
              * from a uniform random variable.
              */
             final Vec3 u = new Vec3(0, 1.0, 0);
-            final double cosAng = wo.direction.dot(u);
+            final double cosAng = wSample.direction.dot(u);
             if (cosAng > 0.9 || cosAng < -0.9) {
                // Small angle, pick a better vector...
                u.x = -1.0;
                u.y = 0;
             }
-            u.cross(wo.direction).normalize();
-            final Vec3 v = new Vec3(u).cross(wo.direction);
+            u.cross(wSample.direction).normalize();
+            final Vec3 v = new Vec3(u).cross(wSample.direction);
 
-            wo.direction.multiply(cosA).scaleAdd(u, xb).scaleAdd(v, yb);
-            if (wo.direction.dot(parameters.surfaceNormal) < 0) {
-               wo.direction.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
+            wSample.direction.multiply(cosA).scaleAdd(u, xb).scaleAdd(v, yb);
+            if (wSample.direction.dot(parameters.surfaceNormal) < 0) {
+               wSample.direction.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
             }
          }
 
-         wo.throughput.set(1, 1, 1);
+         wSample.throughput.set(1, 1, 1);
          if (!exiting)
-            wo.extinction.set(transmissionFilter);
+            wSample.extinction.set(transmissionFilter);
          else
-            wo.extinction.clear();
+            wSample.extinction.clear();
       }
 
-      wo.emissiveResponse = true;
+      wSample.emissiveResponse = true;
+      return 1.0;
    }
 
 }

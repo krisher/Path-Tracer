@@ -57,24 +57,24 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay sampleOut, final Vec3 wIncoming, final IntersectionInfo parameters,
+   public double sampleBRDF(final SampleRay wi, final Vec3 wo, final IntersectionInfo parameters,
          final Random rng) {
-      Vec3 surfaceNormal = parameters.surfaceNormal;
-      if (wIncoming.dot(surfaceNormal) > 0) {
-         // TODO: reflection at both interfaces of refractive material?
-         // sampleOut.transmissionSpectrum.clear();
-         surfaceNormal = surfaceNormal.inverted();
-         // return;
-      }
+      final Vec3 surfaceNormal = parameters.surfaceNormal;
+//      if (wo.dot(surfaceNormal) < 0) {
+//         // TODO: reflection at both interfaces of refractive material?
+//         // sampleOut.transmissionSpectrum.clear();
+//         surfaceNormal = surfaceNormal.inverted();
+//         // return;
+//      }
 
       /*
        * Compute the mirror reflection vector...
        */
-      final Vec3 directionOut = sampleOut.direction;
-      directionOut.set(wIncoming);
+      final Vec3 directionOut = wi.direction;
+      directionOut.set(wo).multiply(-1);
       directionOut.reflect(surfaceNormal);
-      sampleOut.throughput.set(specular.getColor(parameters.materialCoords));
-      sampleOut.emissiveResponse = true;
+      wi.throughput.set(specular.getColor(parameters.materialCoords));
+      wi.emissiveResponse = true;
 
       if (specExp < 100000) {
          /*
@@ -113,9 +113,9 @@ public class PhongSpecularBRDF implements Material {
          if (directionOut.dot(surfaceNormal) < 0) {
             directionOut.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
          }
-         // sampleOut.sampleColor.multiply((2.0 * Math.PI) / ((specExp + 1) * Math.pow(cosA, specExp)));
+//         return (2.0 * Math.PI) / ((specExp + 1) * Math.pow(cosA, specExp));
       }
-
+      return 1.0;
    }
 
    public Texture getSpecular() {

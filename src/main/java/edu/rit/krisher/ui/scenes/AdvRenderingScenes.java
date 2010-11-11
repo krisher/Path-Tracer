@@ -43,7 +43,7 @@ public final class AdvRenderingScenes {
    private static final URL bunnyURL = AdvRenderingScenes.class.getResource(bunnyResource);
 
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
-   static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100);
+   static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100000);
    static Material whiteLambert = new DiffuseMaterial(Color.white);
    static Material blueLambert = new DiffuseMaterial(new Color(0.75, 0.75, 1.0));
 

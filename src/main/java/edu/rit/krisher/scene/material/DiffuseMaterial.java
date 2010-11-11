@@ -34,25 +34,18 @@ public class DiffuseMaterial implements Material, Cloneable {
    }
 
    @Override
-   public void sampleBRDF(final SampleRay wo, final Vec3 wi, final IntersectionInfo parameters, final Random rng) {
-      Vec3 surfaceNormal = parameters.surfaceNormal;
-      if (wi.dot(surfaceNormal) > 0) {
-         surfaceNormal = surfaceNormal.inverted();
-      }
-      SamplingUtils.cosSampleHemisphere(wo.direction, rng);
-      ShadingUtils.shadingCoordsToWorld(wo.direction, surfaceNormal, parameters.tangentVector);
+   public double sampleBRDF(final SampleRay wi, final Vec3 wo, final IntersectionInfo parameters, final Random rng) {
+      final double pdf = SamplingUtils.cosSampleHemisphere(wi.direction, rng); //Sample hemisphere surrounding z axis according to cosine dist.
+      ShadingUtils.shadingCoordsToWorld(wi.direction, parameters.surfaceNormal, parameters.tangentVector); //Transform sample direction to world coordinates.
       /*
-       * Lo = (brdf(Ki, Ko) * Li * cos(theta)) / pdf
+       * Evaluate: brdf(Ki, Ko) / pdf
        * 
-       * Using PDF (cosTheta / (Math.PI)), and BRDF == 1/pi * diffuse (perfect Lambertian diffusion), this reduces to
-       * simply
-       * 
-       * Lo = diffuse * Li.
-       * 
-       * Li is handled in the Path-Tracer engine.
+       * Where pdf = (cos(theta_i) / Pi)
+       * and BRDF = color / Pi 
        */
-      wo.throughput.set(diffuse.getColor(parameters.materialCoords));
-      wo.emissiveResponse = false;
+      wi.throughput.set(diffuse.getColor(parameters.materialCoords)).multiply(1.0 / Math.PI );
+      wi.emissiveResponse = false;
+      return pdf;
    }
 
    public boolean isTranslucent() {
