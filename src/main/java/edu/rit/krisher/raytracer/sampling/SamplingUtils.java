@@ -57,6 +57,9 @@ public class SamplingUtils {
                         / msGridSize;
                   sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / (float)msGridSize + rng.nextFloat()
                         / msGridSize;
+                  
+                  assert ((int)sampleRays[sampleIdx].pixelX) == pixelX + pixelRect.x;
+                  assert ((int)sampleRays[sampleIdx].pixelY) == pixelY + pixelRect.y;
                   ++sampleIdx;
                }
             }

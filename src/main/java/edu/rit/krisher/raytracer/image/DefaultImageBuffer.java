@@ -41,8 +41,6 @@ public class DefaultImageBuffer implements ImageBuffer {
 
    @Override
    public void imagingDone() {
-      // final float[] tr = ImageUtil.wardTR(image);
-      // ImageUtil.floatRGB2Byte(tr, bImage, 0, tr.length / 3);
       toneMapper.toneMap(image, bImage);
    }
 

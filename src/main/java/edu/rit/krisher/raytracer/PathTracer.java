@@ -192,7 +192,7 @@ public final class PathTracer implements SceneIntegrator {
                   pixels[pixOffs+2] /= pixelNormalization[i];
                }
                imageBuffer.setPixels(rect.x, rect.y, rect.width, rect.height, pixels);
-            } catch (final Exception e) {
+            } catch (final Throwable e) {
                e.printStackTrace();
             }finally {
                final int remaining = doneSignal.decrementAndGet();
@@ -212,7 +212,7 @@ public final class PathTracer implements SceneIntegrator {
          x = x - (int)x - 0.5;
          y = y - (int)y - 0.5;
          
-         final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+         final double filter = 1;//Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
          pixels[dst] += r * filter;
          pixels[dst + 1] += g * filter;
          pixels[dst + 2] += b * filter;
