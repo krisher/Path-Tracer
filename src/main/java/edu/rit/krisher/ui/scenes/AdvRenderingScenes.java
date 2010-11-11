@@ -64,20 +64,21 @@ public final class AdvRenderingScenes {
 
    public static Scene[] getScenes() {
       return new Scene[] {
-            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, new SAHPartitionStrategey(), false, null),
-            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, new MedianPartitionStrategy(25, 2), false, null),
-            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, null, false, null),
+            new PLYScene<Camera>("Bunny (SAH KDTree)", new PinholeCamera(), bunnyURL, null, null, new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Median KDTree)", new PinholeCamera(), bunnyURL, null, null, new MedianPartitionStrategy(25, 2), true, null),
+            new PLYScene<Camera>("Bunny (No KDTree)", new PinholeCamera(), bunnyURL, null, null, null, true, null),
             createScene("Bunny SAH KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
             createScene("Bunny Median KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueGreenMixedRefractive, new MedianPartitionStrategy(15, 2), bunnyFactory())),
-            createSceneMultiTree("Bunny (Reflective)", null, false, new SAHPartitionStrategey(), true, bunnyFactory(new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true)),
-            createScene("Bunny (Refractive)", null, true, new SAHPartitionStrategey(), true, bunnyFactory(blueGreenMixedRefractive, true)),
-            createScene("Bunny (Ground Reflection)", new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 100000), 0.75), false, new SAHPartitionStrategey(), true, bunnyFactory()),
-            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
-            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
 
-            createSceneMultiTree("Bunny (Krylon)", new LambertBRDF(new Color(0.8)), true, new SAHPartitionStrategey(), true, bunnyFactory(ASTMBRDFParser.getKrylonBlue(), true)),
+            new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), null, new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Refractive)", new PinholeCamera(), bunnyURL, blueGreenMixedRefractive, null, new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new CompositeBRDF(new LambertBRDF(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 1000), 0.75), new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Krylon Blue)", new PinholeCamera(), bunnyURL, ASTMBRDFParser.getKrylonBlue(), null, new SAHPartitionStrategey(), true, null),
+
             createScene("Spheres Measured BRDFs", new LambertBRDF(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
+            createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
+            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
             createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
             createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
@@ -87,7 +88,7 @@ public final class AdvRenderingScenes {
 
    }
 
-   
+
 
    public static GeometryFactory createKDVisualization(final Material material, final KDPartitionStrategy kdStrategy,
          final GeometryFactory... geomFactories) {

@@ -13,8 +13,7 @@ public class PhongSpecularBRDF implements Material {
    private Texture specular = new Color(1, 1, 1);
 
    /**
-    * Controls distribution of specular reflection rays, large values => mirror
-    * like, small values => more diffuse.
+    * Controls distribution of specular reflection rays, large values => mirror like, small values => more diffuse.
     */
    private float specExp;
 
@@ -34,16 +33,13 @@ public class PhongSpecularBRDF implements Material {
    }
 
    @Override
-   public void evaluateBRDF(final Color radiance, final Vec3 wo, final Vec3 wi,
-         final IntersectionInfo parameters) {
+   public void evaluateBRDF(final Color radiance, final Vec3 wo, final Vec3 wi, final IntersectionInfo parameters) {
 
       /*
-       * The specular model is not sampled for direct lighting because the light
-       * will almost certainly be sampled for the directions that will produce a
-       * non-zero result by the path tracer do to the high coherence of
-       * reflection direction. Also, for highly specular surfaces (specExp is
-       * large), combined with Monte Carlo sampling of area light sources, this
-       * will not produce the desired results.
+       * The specular model is not sampled for direct lighting because the light will almost certainly be sampled for
+       * the directions that will produce a non-zero result by the path tracer do to the high coherence of reflection
+       * direction. Also, for highly specular surfaces (specExp is large), combined with Monte Carlo sampling of area
+       * light sources, this will not produce the desired results.
        */
       // final double cosLightNormalAngle =
       // Math.max(incidentLightDirection.dot(surfaceNormal), 0.0);
@@ -77,33 +73,31 @@ public class PhongSpecularBRDF implements Material {
       final Vec3 directionOut = sampleOut.direction;
       directionOut.set(wIncoming);
       directionOut.reflect(surfaceNormal);
+      sampleOut.sampleColor.set(specular.getColor(parameters.materialCoords));
+      sampleOut.emissiveResponse = true;
 
       if (specExp < 100000) {
          /*
-          * Exponential cosine weighted sampling about the mirror reflection
-          * direction.
+          * Exponential cosine weighted sampling about the mirror reflection direction.
           * 
           * PDF = Modified Phong PDF = ( (n + 1) / 2pi ) * cos(a) ^ n
           * 
-          * Where a is the angle between the output direction and the mirror
-          * reflection vector.
+          * Where a is the angle between the output direction and the mirror reflection vector.
           */
          final double cosA = Math.pow(rng.nextDouble(), 1 / (specExp + 1));
 
          /*
-          * Generate another random value, uniform between 0 and 2pi, which is
-          * the angle around the mirror reflection vector
+          * Generate another random value, uniform between 0 and 2pi, which is the angle around the mirror reflection
+          * vector
           */
          final double phi = 2 * Math.PI * rng.nextDouble();
          final double sinTheta = Math.sqrt(1.0 - cosA * cosA);
          final double xb = Math.cos(phi) * sinTheta;
          final double yb = Math.sin(phi) * sinTheta;
          /*
-          * Construct an ortho-normal basis using the reflection vector as one
-          * axis, and arbitrary (perpendicular) vectors for the other two axes.
-          * The orientation of the coordinate system about the reflection vector
-          * is irrelevant since xb and yb are generated from a uniform random
-          * variable.
+          * Construct an ortho-normal basis using the reflection vector as one axis, and arbitrary (perpendicular)
+          * vectors for the other two axes. The orientation of the coordinate system about the reflection vector is
+          * irrelevant since xb and yb are generated from a uniform random variable.
           */
          final Vec3 u = new Vec3(0, 1.0, 0);
          final double cosAng = directionOut.dot(u);
@@ -119,9 +113,9 @@ public class PhongSpecularBRDF implements Material {
          if (directionOut.dot(surfaceNormal) < 0) {
             directionOut.scaleAdd(u, -2.0 * xb).scaleAdd(v, -2.0 * yb);
          }
+         // sampleOut.sampleColor.multiply((2.0 * Math.PI) / ((specExp + 1) * Math.pow(cosA, specExp)));
       }
-      sampleOut.sampleColor.set(specular.getColor(parameters.materialCoords));
-      sampleOut.emissiveResponse = true;
+
    }
 
    public Texture getSpecular() {

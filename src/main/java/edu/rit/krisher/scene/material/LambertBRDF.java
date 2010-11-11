@@ -44,19 +44,15 @@ public class LambertBRDF implements Material, Cloneable {
       /*
        * Lo = (brdf(Ki, Ko) * Li * cos(theta)) / pdf
        * 
-       * Using PDF above, and BRDF == 1/pi * diffuse (perfect Lambertian
-       * diffusion), this reduces to simply
+       * Using PDF (cosTheta / (Math.PI)), and BRDF == 1/pi * diffuse (perfect Lambertian diffusion), this reduces to
+       * simply
        * 
        * Lo = diffuse * Li.
        * 
-       * i.e. we take fewer samples in directions that are more perpendicular to the surface normal.
-       * 
-       * Here we just return the spectral response (color), Li is handled in the
-       * Path-Tracer engine.
+       * Li is handled in the Path-Tracer engine.
        */
       wo.sampleColor.set(diffuse.getColor(parameters.materialCoords));
       wo.emissiveResponse = false;
-
    }
 
    public boolean isTranslucent() {

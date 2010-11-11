@@ -28,6 +28,7 @@ import edu.rit.krisher.scene.Scene;
 /**
  * Main RayTracer UI window.
  * 
+ * TODO: Add controls to load a .ply file and specify a material...
  */
 public class RTFrame extends JFrame {
 
