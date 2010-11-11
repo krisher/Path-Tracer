@@ -73,7 +73,6 @@ public class PhongSpecularBRDF implements Material {
       final Vec3 directionOut = wi.direction;
       directionOut.set(wo).multiply(-1);
       directionOut.reflect(surfaceNormal);
-      wi.throughput.set(specular.getColor(parameters.materialCoords));
       wi.emissiveResponse = true;
 
       if (specExp < 100000) {
@@ -115,6 +114,10 @@ public class PhongSpecularBRDF implements Material {
          }
 //         return (2.0 * Math.PI) / ((specExp + 1) * Math.pow(cosA, specExp));
       }
+      // Shlick approximation for conductive Fresnel reflectance
+      wi.throughput.set(specular.getColor(parameters.materialCoords));
+      wi.throughput.multiply(-1).add(1, 1, 1).multiply(Math.pow(1 - wi.direction.dot(surfaceNormal), 5)).add(specular.getColor(parameters.materialCoords));
+      
       return 1.0;
    }
 

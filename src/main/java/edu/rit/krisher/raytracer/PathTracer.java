@@ -108,8 +108,8 @@ public final class PathTracer implements SceneIntegrator {
        */
       private final Random rng = new UnsafePRNG();
 
-      private static final double gaussFalloffControl = 0.1;
-      private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.25);
+      private static final double gaussFalloffControl = 1;
+      private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
 
 
       private final int pixelSampleRate;
@@ -177,6 +177,16 @@ public final class PathTracer implements SceneIntegrator {
                /* Generate Eye Rays */
                SamplingUtils.generatePixelSamples(rays, new Rectangle(0, 0, rect.width, rect.height), pixelSampleRate, rng);
                scene.getCamera().sample(rays, imageSize.width, imageSize.height, rect.x, rect.y, rng);
+               
+               /*
+                * Compute filter normalization constants for each pixel.
+                */
+               for (final SampleRay ray : rays) {
+                  final int dst = (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
+                  final double x = ray.pixelX - (int)ray.pixelX - 0.5;
+                  final double y = ray.pixelY - (int)ray.pixelY - 0.5;
+                  pixelNormalization[dst] += Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+               }
 
                /* Visibility pass */
                IntegratorUtils.processHits(rays, rayCount, scene.getGeometry());
@@ -211,12 +221,10 @@ public final class PathTracer implements SceneIntegrator {
          final int dst = 3 * (((int) y) * rect.width + (int) x);
          x = x - (int)x - 0.5;
          y = y - (int)y - 0.5;
-         
-         final double filter = 1;//Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+         final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
          pixels[dst] += r * filter;
          pixels[dst + 1] += g * filter;
          pixels[dst + 2] += b * filter;
-         pixelNormalization[dst/3] += filter;
       }
 
       private final void processRays(final Rectangle rect, final SampleRay[] rays, int rayCount) {

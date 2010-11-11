@@ -72,7 +72,7 @@ public final class AdvRenderingScenes {
 
             new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeBRDF(blueLambert, 0.25, whiteMirror, 0.7), null, new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Refractive)", new PinholeCamera(), bunnyURL, blueGreenMixedRefractive, null, new SAHPartitionStrategey(), true, null),
-            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new CompositeBRDF(new DiffuseMaterial(Color.white), 0.25, new PhongSpecularBRDF(Color.white, 1000), 0.75), new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new PhongSpecularBRDF(Color.white, 10000), new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Krylon Blue)", new PinholeCamera(), bunnyURL, ASTMBRDFParser.getKrylonBlue(), null, new SAHPartitionStrategey(), true, null),
 
             createScene("Sphere Diffuse", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new DiffuseMaterial(new Color(1)))),

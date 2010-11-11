@@ -53,13 +53,15 @@ public class SamplingUtils {
                    * Stratified jittered sampling, an eye ray is generated that passes through a random location in a
                    * small square region of the pixel area for each sample.
                    */
-                  sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / (float)msGridSize + rng.nextFloat()
-                        / msGridSize;
-                  sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / (float)msGridSize + rng.nextFloat()
-                        / msGridSize;
-                  
-                  assert ((int)sampleRays[sampleIdx].pixelX) == pixelX + pixelRect.x;
-                  assert ((int)sampleRays[sampleIdx].pixelY) == pixelY + pixelRect.y;
+                  sampleRays[sampleIdx].pixelX = pixelRect.x + pixelX + (sampleX) / (double) msGridSize
+                        + rng.nextFloat() / msGridSize;
+                  sampleRays[sampleIdx].pixelY = pixelRect.y + pixelY + (sampleY) / (double) msGridSize
+                        + rng.nextFloat() / msGridSize;
+
+                  assert ((int) sampleRays[sampleIdx].pixelX) == pixelX + pixelRect.x : "Sample X: "
+                        + sampleRays[sampleIdx].pixelX + " out of range for pixel " + (pixelX + pixelRect.x);
+                  assert ((int) sampleRays[sampleIdx].pixelY) == pixelY + pixelRect.y : "Sample Y: "
+                        + sampleRays[sampleIdx].pixelY + " out of range for pixel " + (pixelY + pixelRect.y);
                   ++sampleIdx;
                }
             }
@@ -84,9 +86,10 @@ public class SamplingUtils {
       result.y = r * Math.sin(phi);
       return 1.0 / (4.0 * Math.PI);
    }
-   
+
    /**
-    * Generates a unit vector in a random direction with uniform probability around the hemisphere of directions about the positive z axis.
+    * Generates a unit vector in a random direction with uniform probability around the hemisphere of directions about
+    * the positive z axis.
     * 
     * @param result
     *           A vector to store the result in.
@@ -103,7 +106,7 @@ public class SamplingUtils {
       result.y = r * Math.sin(phi);
       return 1.0 / (2.0 * Math.PI);
    }
-   
+
    /**
     * Generates a vector randomly sampled from the hemisphere surrounding the z axis with a cosine probability
     * distribution.
