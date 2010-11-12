@@ -26,7 +26,7 @@ public class ShadingUtils {
       final double yAxisZ = shadingNormal.x * shadingX.y - shadingNormal.y * shadingX.x;
 
       vec.set(vec.x * shadingX.x + vec.y * yAxisX + vec.z * shadingNormal.x, vec.x * shadingX.y + vec.y * yAxisY
-            + vec.z * shadingNormal.y, vec.x * shadingX.z + vec.y * yAxisZ + vec.z * shadingNormal.z);
+              + vec.z * shadingNormal.y, vec.x * shadingX.z + vec.y * yAxisZ + vec.z * shadingNormal.z);
    }
 
    /**
@@ -45,8 +45,8 @@ public class ShadingUtils {
        * Dot product of vec with y shading axis (normal x shadingX)
        */
       final double y = vec.x * (shadingNormal.y * shadingX.z - shadingNormal.z * shadingX.y) + vec.y
-            * (shadingNormal.z * shadingX.x - shadingNormal.x * shadingX.z) + vec.z
-            * (shadingNormal.x * shadingX.y - shadingNormal.y * shadingX.x);
+      * (shadingNormal.z * shadingX.x - shadingNormal.x * shadingX.z) + vec.z
+      * (shadingNormal.x * shadingX.y - shadingNormal.y * shadingX.x);
 
       vec.set(vec.dot(shadingX), y, vec.dot(shadingNormal));
    }

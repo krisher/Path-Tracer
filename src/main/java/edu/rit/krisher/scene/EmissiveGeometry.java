@@ -3,6 +3,7 @@ package edu.rit.krisher.scene;
 import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Interface for geometric objects that emit light, and support direct illumination sampling.
@@ -19,12 +20,13 @@ public interface EmissiveGeometry extends Geometry {
     * spectral power distribution emitted from the light to the ray origin via the supplied parameter.
     * 
     * @param wo
-    *           The ray whose origin indicates the illuminated point, the direction vector, spectral power
-    *           distribution and intersection info will be updated by this method.
+    *           The ray whose origin indicates the illuminated point, the direction vector, spectral power distribution
+    *           and intersection info will be updated by this method.
     * @param rng
     *           A non-null random number generator that can be used for generating uniform random variables.
+    * @return The number of samples generated.
     */
-   void sampleIrradiance(SampleRay wo, Random rng);
+   int sampleIrradiance(SampleRay[] wo, Vec3 point, Random rng);
 
    /**
     * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays.

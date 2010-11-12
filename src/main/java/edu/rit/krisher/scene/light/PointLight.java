@@ -30,13 +30,16 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public void sampleIrradiance(final SampleRay wo, final Random rng) {
+   public int sampleIrradiance(final SampleRay[] samples, final Vec3 point, final Random rng) {
+      final SampleRay wo = samples[0];
+      wo.origin.set(point);
       wo.direction.set(position).subtract(wo.origin);
       wo.intersection.t = wo.direction.length();
       wo.direction.multiply(1.0 / wo.intersection.t);
       wo.intersection.surfaceNormal.set(wo.direction).multiply(-1);
       wo.throughput.set(material);
       wo.intersection.hitGeometry = this;
+      return 1;
    }
 
    @Override
@@ -87,7 +90,7 @@ public class PointLight implements EmissiveGeometry {
       for (int i = 0; i < woCount; ++i) {
          final SampleRay wo = woSamples[i + woOffset];
          wo.origin.set(position);
-         SamplingUtils.rejectionSphereSample(wo.direction, rng);
+         SamplingUtils.uniformSampleSphere(wo.direction, rng);
          wo.throughput.set(material);
       }
       return woCount;

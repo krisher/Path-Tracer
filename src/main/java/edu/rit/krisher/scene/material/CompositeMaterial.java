@@ -16,15 +16,15 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public class CompositeBRDF implements Material, Cloneable {
+public class CompositeMaterial implements Material, Cloneable {
 
    private final CopyOnWriteArrayList<Material> materials = new CopyOnWriteArrayList<Material>(Material.class);
    private final CopyOnWriteArrayList<Double> probabilities = new CopyOnWriteArrayList<Double>(Double.class);
 
-   public CompositeBRDF() {
+   public CompositeMaterial() {
    }
 
-   public CompositeBRDF(final Material diffuse, final double kd, final Material spec, final double ks) {
+   public CompositeMaterial(final Material diffuse, final double kd, final Material spec, final double ks) {
       addMaterial(kd, diffuse);
       addMaterial(ks, spec);
    }

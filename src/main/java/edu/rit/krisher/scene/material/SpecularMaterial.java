@@ -8,7 +8,7 @@ import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
-public class PhongSpecularBRDF implements Material {
+public class SpecularMaterial implements Material {
 
    private Texture specular = new Color(1, 1, 1);
 
@@ -17,7 +17,7 @@ public class PhongSpecularBRDF implements Material {
     */
    private float specExp;
 
-   public PhongSpecularBRDF(final Texture spec, final float specExp) {
+   public SpecularMaterial(final Texture spec, final float specExp) {
       this.specular = spec;
       this.specExp = specExp;
    }

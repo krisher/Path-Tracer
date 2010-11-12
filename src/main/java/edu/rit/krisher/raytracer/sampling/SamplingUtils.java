@@ -9,23 +9,6 @@ import edu.rit.krisher.vecmath.Vec3;
 public class SamplingUtils {
 
    /**
-    * Initializes the specified vector to a randomly selected direction with equal probability for any direction.
-    * 
-    * @param vec
-    *           A non-null vector to initialize.
-    * @param rng
-    *           A random number generator.
-    */
-   public static final void rejectionSphereSample(final Vec3 vec, final Random rng) {
-      do {
-         vec.x = rng.nextFloat();
-         vec.y = rng.nextFloat();
-         vec.z = rng.nextFloat();
-      } while (vec.lengthSquared() > 1);
-      vec.normalize();
-   }
-
-   /**
     * Initializes the pixelX and pixelY values of the specified SampleRays based on the specified pixel rectangle,
     * multi-sampling rate, and random number generator for jittering the sample locations.
     * 

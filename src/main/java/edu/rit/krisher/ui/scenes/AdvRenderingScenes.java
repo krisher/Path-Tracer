@@ -27,10 +27,10 @@ import edu.rit.krisher.scene.geometry.TriangleMesh;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.scene.material.CompositeBRDF;
+import edu.rit.krisher.scene.material.CompositeMaterial;
 import edu.rit.krisher.scene.material.DiffuseMaterial;
-import edu.rit.krisher.scene.material.PhongSpecularBRDF;
-import edu.rit.krisher.scene.material.RefractiveBRDF;
+import edu.rit.krisher.scene.material.RefractiveMaterial;
+import edu.rit.krisher.scene.material.SpecularMaterial;
 import edu.rit.krisher.ui.RTDemo;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
@@ -43,17 +43,17 @@ public final class AdvRenderingScenes {
    private static final URL bunnyURL = AdvRenderingScenes.class.getResource(bunnyResource);
 
    static final CheckerboardPattern checkerTexture = new CheckerboardPattern(new Color(0.85, 0.35, 0.35), new Color(0.85, 0.85, 0.35));
-   static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100000);
+   static Material whiteMirror = new SpecularMaterial(Color.white, 100000);
    static Material whiteLambert = new DiffuseMaterial(Color.white);
    static Material blueLambert = new DiffuseMaterial(new Color(0.75, 0.75, 1.0));
 
-   static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.75, 1.0), 100000);
-   static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
+   static final RefractiveMaterial blueGreenRefractive = new RefractiveMaterial(1.4, new Color(0.75, 0.75, 1.0), 100000);
+   static final CompositeMaterial blueGreenMixedRefractive = new CompositeMaterial();
 
    static {
       blueGreenMixedRefractive.addMaterial(0.1, blueLambert);
       blueGreenMixedRefractive.addMaterial(0.8, blueGreenRefractive);
-      blueGreenMixedRefractive.addMaterial(0.1, new PhongSpecularBRDF(Color.white, 80));
+      blueGreenMixedRefractive.addMaterial(0.1, new SpecularMaterial(Color.white, 80));
    }
 
    private AdvRenderingScenes() {
@@ -70,20 +70,20 @@ public final class AdvRenderingScenes {
             createScene("Bunny SAH KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueLambert, new SAHPartitionStrategey(15), bunnyFactory())),
             createScene("Bunny Median KD Tree", null, true, new SAHPartitionStrategey(25), false, createKDVisualization(blueGreenMixedRefractive, new MedianPartitionStrategy(15, 2), bunnyFactory())),
 
-            new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeBRDF(blueLambert, 0.25, whiteMirror, 0.7), null, new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Reflective)", new PinholeCamera(), bunnyURL, new CompositeMaterial(blueLambert, 0.25, whiteMirror, 0.7), null, new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Refractive)", new PinholeCamera(), bunnyURL, blueGreenMixedRefractive, null, new SAHPartitionStrategey(), true, null),
-            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new PhongSpecularBRDF(Color.white, 10000), new SAHPartitionStrategey(), true, null),
+            new PLYScene<Camera>("Bunny (Ground Reflection)", new PinholeCamera(), bunnyURL, blueLambert, new SpecularMaterial(Color.white, 10000), new SAHPartitionStrategey(), true, null),
             new PLYScene<Camera>("Bunny (Krylon Blue)", new PinholeCamera(), bunnyURL, ASTMBRDFParser.getKrylonBlue(), null, new SAHPartitionStrategey(), true, null),
 
             createScene("Sphere Diffuse", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new DiffuseMaterial(new Color(1)))),
-            createScene("Sphere Reflective", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new PhongSpecularBRDF(new Color(0.5,1,0.5), 100000))),
+            createScene("Sphere Reflective", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new SpecularMaterial(new Color(0.5,1,0.5), 100000))),
             createScene("Spheres Measured BRDFs", new DiffuseMaterial(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
-            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
+            createSceneMultiTree("Female (Reflective)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/female01.ply"), new CompositeMaterial(blueLambert, 0.6, whiteMirror, 0.4), true, new Quat(new Vec3(1, 0, 0), -Math.PI / 2.0))),
             createScene("Teapot", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/teapot.ply"), null, true)),
             createScene("Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"))),
-            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeBRDF(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
+            createScene("Dragon (Normals)", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Downloads/dragon_vrip.ply"), new CompositeMaterial(blueLambert, 0.6, whiteMirror, 0.4), true, null)),
             createScene("Buddha", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/happy_vrip.ply"))),
             createScene("XYZRGB Dragon", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_dragon.ply"))),
             createScene("Thai Statue", null, false, new SAHPartitionStrategey(), true, plyFactory(new File("/home/krisher/Download/xyzrgb_statuette.ply"))) };
@@ -172,9 +172,9 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
-            // add(new PointLight(new Vec3(3, 6, 5), 1.0f, 1.0f, 1.0f, 75));
-
+                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+            // add(new PointLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
+            // + geomBounds.zSpan()), 1.0f, 1.0f, 1.0f, 75));
          }
       };
    }

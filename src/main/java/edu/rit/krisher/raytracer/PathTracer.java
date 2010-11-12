@@ -24,7 +24,6 @@ import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
-import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Non thread-safe Path Tracer.
@@ -86,7 +85,7 @@ public final class PathTracer implements SceneIntegrator {
        * Tiled work distribution...
        */
       final Rectangle[] imageChunks = IntegratorUtils.chunkRectangle(imageSize.width, imageSize.height, Math.max(2, IntegratorUtils.DEFAULT_PIXEL_BLOCK_SIZE
-            / pixelSampleRate));
+                                                                                                                 / pixelSampleRate));
       /*
        * Thread-safe spin-lock based countdown latch to monitor progress for this image. When this reaches 0, the
        * ImageBuffer is notified that the rendering is complete.
@@ -102,15 +101,13 @@ public final class PathTracer implements SceneIntegrator {
    }
 
    private static final class PathProcessor implements Runnable {
-      private static final int ILLUMINATION_SAMPLES = 2;
+      private static final int ILLUMINATION_SAMPLES = 4;
+      private static final double gaussFalloffControl = 1;
+      private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
       /**
        * Overridden to remove thread safety overhead
        */
       private final Random rng = new UnsafePRNG();
-
-      private static final double gaussFalloffControl = 1;
-      private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
-
 
       private final int pixelSampleRate;
       private final int recursionDepth;
@@ -137,7 +134,7 @@ public final class PathTracer implements SceneIntegrator {
          this.doneSignal = doneSignal;
          this.workQueue = workQueue;
          this.pixelSampleRate = pixelSampleRate;
-         for (int i=0; i < illuminationRays.length; ++i) {
+         for (int i = 0; i < illuminationRays.length; ++i) {
             illuminationRays[i] = new SampleRay(1.0);
          }
       }
@@ -177,34 +174,37 @@ public final class PathTracer implements SceneIntegrator {
                /* Generate Eye Rays */
                SamplingUtils.generatePixelSamples(rays, new Rectangle(0, 0, rect.width, rect.height), pixelSampleRate, rng);
                scene.getCamera().sample(rays, imageSize.width, imageSize.height, rect.x, rect.y, rng);
-               
+
                /*
                 * Compute filter normalization constants for each pixel.
                 */
                for (final SampleRay ray : rays) {
                   final int dst = (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
-                  final double x = ray.pixelX - (int)ray.pixelX - 0.5;
-                  final double y = ray.pixelY - (int)ray.pixelY - 0.5;
-                  pixelNormalization[dst] += Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+                  final double x = ray.pixelX - (int) ray.pixelX - 0.5;
+                  final double y = ray.pixelY - (int) ray.pixelY - 0.5;
+                  final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant)
+                  * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+                  ray.throughput.set(filter);
+                  pixelNormalization[dst] += filter;
                }
 
                /* Visibility pass */
                IntegratorUtils.processHits(rays, rayCount, scene.getGeometry());
 
                /* Trace Rays */
-               processRays(rect, rays, rays.length);
+               integrateIrradiance(rect, rays, rays.length);
 
                /* Put results back into image buffer */
-               for (int i=0; i < pixelNormalization.length; ++i) {
+               for (int i = 0; i < pixelNormalization.length; ++i) {
                   final int pixOffs = 3 * i;
                   pixels[pixOffs] /= pixelNormalization[i];
-                  pixels[pixOffs+1] /= pixelNormalization[i];
-                  pixels[pixOffs+2] /= pixelNormalization[i];
+                  pixels[pixOffs + 1] /= pixelNormalization[i];
+                  pixels[pixOffs + 2] /= pixelNormalization[i];
                }
                imageBuffer.setPixels(rect.x, rect.y, rect.width, rect.height, pixels);
             } catch (final Throwable e) {
                e.printStackTrace();
-            }finally {
+            } finally {
                final int remaining = doneSignal.decrementAndGet();
                if (remaining == 0) {
                   imageBuffer.imagingDone();
@@ -217,17 +217,14 @@ public final class PathTracer implements SceneIntegrator {
          }
       }
 
-      private final void updateImage( double x,  double y, final double r, final double g, final double b) {
-         final int dst = 3 * (((int) y) * rect.width + (int) x);
-         x = x - (int)x - 0.5;
-         y = y - (int)y - 0.5;
-         final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant) * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
-         pixels[dst] += r * filter;
-         pixels[dst + 1] += g * filter;
-         pixels[dst + 2] += b * filter;
+      private final void updateImage(final int x, final int y, final double r, final double g, final double b) {
+         final int dst = 3 * (y * rect.width + x);
+         pixels[dst] += r;
+         pixels[dst + 1] += g;
+         pixels[dst + 2] += b;
       }
 
-      private final void processRays(final Rectangle rect, final SampleRay[] rays, int rayCount) {
+      private final void integrateIrradiance(final Rectangle rect, final SampleRay[] rays, int rayCount) {
 
          final Color directIllumContribution = new Color(0, 0, 0);
 
@@ -253,8 +250,8 @@ public final class PathTracer implements SceneIntegrator {
                   /*
                    * No intersection, process for the scene background color.
                    */
-                  updateImage(ray.pixelX, ray.pixelY, bg.r * ray.throughput.r, bg.g * ray.throughput.g, bg.b
-                        * ray.throughput.b);
+                  updateImage((int) ray.pixelX, (int) ray.pixelY, bg.r * ray.throughput.r, bg.g * ray.throughput.g, bg.b
+                              * ray.throughput.b);
                   /*
                    * This path is terminated.
                    */
@@ -287,11 +284,11 @@ public final class PathTracer implements SceneIntegrator {
                 * below.
                 */
                final double throughputR = ray.throughput.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
                final double throughputG = ray.throughput.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
                final double throughputB = ray.throughput.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -299,15 +296,34 @@ public final class PathTracer implements SceneIntegrator {
                 * respond to light coming from directions that will be sampled via bounce rays.
                 */
                if (ray.intersection.material.isDiffuse()) {
-                  integrateDirectIllumination(directIllumContribution, geometry, lights, ray, rng);
+                  final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.intersection.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
+                  final float sampleNorm = 1f / samples;
+
+                  for (int i = 0; i < samples; ++i) {
+                     final SampleRay illuminationRay = illuminationRays[i];
+                     if (illuminationRay.intersection.hitGeometry == null)
+                        continue;
+                     /*
+                      * Cosine of the angle between the geometry surface normal and the shadow ray direction
+                      */
+                     final double cosWi = illuminationRay.direction.dot(ray.intersection.surfaceNormal);
+                     if (cosWi > 0) {
+                        /*
+                         * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
+                         * ray with the response of the material...
+                         */
+                        ray.intersection.material.evaluateBRDF(illuminationRay.throughput, ray.direction.inverted(), illuminationRay.direction, ray.intersection);
+                        directIllumContribution.scaleAdd(illuminationRays[i].throughput, cosWi * sampleNorm);
+                     }
+                  }
                }
 
                /*
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
-               updateImage(ray.pixelX, ray.pixelY, throughputR * directIllumContribution.r, throughputG
-                     * directIllumContribution.g, throughputB * directIllumContribution.b);
+               updateImage((int) ray.pixelX, (int) ray.pixelY, throughputR * directIllumContribution.r, throughputG
+                           * directIllumContribution.g, throughputB * directIllumContribution.b);
 
                /*
                 * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the
@@ -330,7 +346,7 @@ public final class PathTracer implements SceneIntegrator {
                         irradSampleRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
                      irradSampleRay.throughput.multiply(throughputR, throughputG, throughputB);
                      irradSampleRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(irradSampleRay.direction))
-                           / pdf);
+                                                        / pdf);
 
                      irradSampleRay.pixelX = ray.pixelX;
                      irradSampleRay.pixelY = ray.pixelY;
@@ -350,43 +366,7 @@ public final class PathTracer implements SceneIntegrator {
          }
       }
 
-      private final void integrateDirectIllumination(final Color irradianceOut, final Geometry[] geometry,
-            final EmissiveGeometry[] lights, final SampleRay sample, final Random rng) {
-         /*
-          * Set the origin of the shadow ray to the hit point, but perturb by a small distance along the surface normal
-          * vector to avoid self-intersecting the same point due to round-off error.
-          */
-         final Vec3 hitPoint = sample.getPointOnRay(sample.intersection.t).scaleAdd(sample.intersection.surfaceNormal, Constants.EPSILON_D);
 
-         for (final EmissiveGeometry light : lights) { //TODO: select a single light based on relative emission power.
-            for (int i = 0; i < illuminationRays.length; ++i) {
-               illuminationRays[i].origin.set(hitPoint);
-               /*
-                * Generate a random sample direction that hits the light.
-                * 
-                * TODO: Stratified sampling...
-                */
-               light.sampleIrradiance(illuminationRays[i], rng);
-            }
-            IntegratorUtils.processHits(illuminationRays, ILLUMINATION_SAMPLES, geometry);
-            for (final SampleRay illuminationRay : illuminationRays) {
-               /*
-                * Cosine of the angle between the geometry surface normal and the shadow ray direction
-                */
-               final double cosWi = illuminationRay.direction.dot(sample.intersection.surfaceNormal);
-               if (cosWi > 0 && illuminationRay.intersection.hitGeometry == light) {
-                  /*
-                   * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
-                   * the response of the material...
-                   */
-                  sample.intersection.material.evaluateBRDF(illuminationRay.throughput, sample.direction.inverted(), illuminationRay.direction, sample.intersection);
-                  irradianceOut.scaleAdd(illuminationRay.throughput.r, illuminationRay.throughput.g, illuminationRay.throughput.b, cosWi
-                        / illuminationRays.length);
-               }
-            }
-         }
-
-      }
    }
 
    /**

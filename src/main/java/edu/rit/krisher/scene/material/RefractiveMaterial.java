@@ -8,14 +8,14 @@ import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
-public class RefractiveBRDF implements Material {
+public class RefractiveMaterial implements Material {
 
    private static final double inRef = 1.0; // TODO: the ray should carry the index of refraction with it...
    private final double refractiveIndex;
    private final Color transmissionFilter;
    private final double exp;
 
-   public RefractiveBRDF(final double refractiveIndex, final Color opacity, final double blurExp) {
+   public RefractiveMaterial(final double refractiveIndex, final Color opacity, final double blurExp) {
       this.refractiveIndex = refractiveIndex;
       this.transmissionFilter = opacity;
       /*

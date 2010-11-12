@@ -10,10 +10,10 @@ import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.light.SphereLight;
 import edu.rit.krisher.scene.material.CheckerboardPattern;
 import edu.rit.krisher.scene.material.Color;
-import edu.rit.krisher.scene.material.CompositeBRDF;
+import edu.rit.krisher.scene.material.CompositeMaterial;
 import edu.rit.krisher.scene.material.DiffuseMaterial;
-import edu.rit.krisher.scene.material.PhongSpecularBRDF;
-import edu.rit.krisher.scene.material.RefractiveBRDF;
+import edu.rit.krisher.scene.material.SpecularMaterial;
+import edu.rit.krisher.scene.material.RefractiveMaterial;
 import edu.rit.krisher.scene.material.RingsPattern;
 import edu.rit.krisher.vecmath.Quat;
 import edu.rit.krisher.vecmath.Vec3;
@@ -34,36 +34,36 @@ public class CG2Scenes {
    static Material greenLambert = new DiffuseMaterial(green);
    static Material redLambert = new DiffuseMaterial(new Color(1, 0.45, 0.5));
 
-   static Material whiteMirror = new PhongSpecularBRDF(Color.white, 100000);
-   static Material whiteShiny = new PhongSpecularBRDF(Color.white, 30);
-   static Material blueSpecular = new PhongSpecularBRDF(blue, 100);
-   static Material greenSpecular = new PhongSpecularBRDF(green, 100);
+   static Material whiteMirror = new SpecularMaterial(Color.white, 100000);
+   static Material whiteShiny = new SpecularMaterial(Color.white, 30);
+   static Material blueSpecular = new SpecularMaterial(blue, 100);
+   static Material greenSpecular = new SpecularMaterial(green, 100);
 
-   static final CompositeBRDF mixedWhiteMat = new CompositeBRDF(whiteLambert, 0.5, whiteMirror, 0.5);
-   static final CompositeBRDF mixedOrangeMat = new CompositeBRDF(new DiffuseMaterial(orange), 0.6, new PhongSpecularBRDF(Color.white, 75), 0.4);
-   static final CompositeBRDF whiteSpecular80 = new CompositeBRDF(whiteLambert, 0.2, new PhongSpecularBRDF(Color.white, 1000), 0.80);
+   static final CompositeMaterial mixedWhiteMat = new CompositeMaterial(whiteLambert, 0.5, whiteMirror, 0.5);
+   static final CompositeMaterial mixedOrangeMat = new CompositeMaterial(new DiffuseMaterial(orange), 0.6, new SpecularMaterial(Color.white, 75), 0.4);
+   static final CompositeMaterial whiteSpecular80 = new CompositeMaterial(whiteLambert, 0.2, new SpecularMaterial(Color.white, 1000), 0.80);
 
-   static final RefractiveBRDF clearRefractive = new RefractiveBRDF(0.95, Color.black, 100000);
-   static final CompositeBRDF clearBlurRefractive = new CompositeBRDF();
-   static final RefractiveBRDF blueGreenRefractive = new RefractiveBRDF(1.4, new Color(0.75, 0.95, 0.95), 100000);
-   static final CompositeBRDF blueGreenMixedRefractive = new CompositeBRDF();
-   static final RefractiveBRDF blueRefractive = new RefractiveBRDF(1.4, new Color(0.55, 0.55, 0.75), 100000);
-   static final RefractiveBRDF redRefractive = new RefractiveBRDF(1.4, new Color(0.95, 0.65, 0.65), 100000);
-   static final CompositeBRDF mixedRefractive = new CompositeBRDF();
+   static final RefractiveMaterial clearRefractive = new RefractiveMaterial(0.95, Color.black, 100000);
+   static final CompositeMaterial clearBlurRefractive = new CompositeMaterial();
+   static final RefractiveMaterial blueGreenRefractive = new RefractiveMaterial(1.4, new Color(0.75, 0.95, 0.95), 100000);
+   static final CompositeMaterial blueGreenMixedRefractive = new CompositeMaterial();
+   static final RefractiveMaterial blueRefractive = new RefractiveMaterial(1.4, new Color(0.55, 0.55, 0.75), 100000);
+   static final RefractiveMaterial redRefractive = new RefractiveMaterial(1.4, new Color(0.95, 0.65, 0.65), 100000);
+   static final CompositeMaterial mixedRefractive = new CompositeMaterial();
    static {
       mixedRefractive.addMaterial(0.05, whiteLambert);
       mixedRefractive.addMaterial(0.8, clearRefractive);
-      mixedRefractive.addMaterial(0.01, new PhongSpecularBRDF(Color.white, 80));
+      mixedRefractive.addMaterial(0.01, new SpecularMaterial(Color.white, 80));
 
       blueGreenMixedRefractive.addMaterial(0.05, blueLambert);
       blueGreenMixedRefractive.addMaterial(0.8, blueGreenRefractive);
-      blueGreenMixedRefractive.addMaterial(0.01, new PhongSpecularBRDF(Color.white, 80));
+      blueGreenMixedRefractive.addMaterial(0.01, new SpecularMaterial(Color.white, 80));
 
-      clearBlurRefractive.addMaterial(0.8, new RefractiveBRDF(2.15, Color.black, 90));
+      clearBlurRefractive.addMaterial(0.8, new RefractiveMaterial(2.15, Color.black, 90));
       clearBlurRefractive.addMaterial(0.2, whiteLambert);
    }
 
-   static final RefractiveBRDF specularClearRefractive = new RefractiveBRDF(0.95, Color.black, 100000);
+   static final RefractiveMaterial specularClearRefractive = new RefractiveMaterial(0.95, Color.black, 100000);
 
    /*
     * Camera in a box, where walls are 50% emissive, 50% Lambert diffuse. This should produce white for every pixel, +/-
@@ -73,7 +73,7 @@ public class CG2Scenes {
 
       @Override
       protected void initScene() {
-         final CompositeBRDF boxMat = new CompositeBRDF(whiteLambert, 0.5, Color.white, 0.5);
+         final CompositeMaterial boxMat = new CompositeMaterial(whiteLambert, 0.5, Color.white, 0.5);
          add(new Box(5, 5, 5, boxMat, new Vec3(0, 0, 0), false));
          camera.setPosition(new Vec3(0, 0, 0));
          camera.setAperture(1 / 100.0);
@@ -172,7 +172,7 @@ public class CG2Scenes {
       // root.add(new Box(16, 16, 16, whiteLambert, new Vec3(0, 8, 0)));
       scene.add(new Box(16, 2.5, 16, new DiffuseMaterial(yellowRedCheckerTexture), new Vec3(0, -1.25, 0), false));
       scene.add(new Sphere(new Vec3(-2, 1, 0), 1, blueLambert));
-      scene.add(new Sphere(new Vec3(2, 1, 0), 1, new CompositeBRDF(greenLambert, 0.4, whiteShiny, 0.5)));
+      scene.add(new Sphere(new Vec3(2, 1, 0), 1, new CompositeMaterial(greenLambert, 0.4, whiteShiny, 0.5)));
       scene.add(new Sphere(new Vec3(0, 1, 0), 1, whiteMirror));
       scene.add(new SphereLight(new Vec3(1, 6, 3), 1.0, new Color(1.0f, 1.0f, 1.0f), 1.0f));
 
@@ -253,7 +253,7 @@ public class CG2Scenes {
       
       final KDGeometryContainer tree = new KDGeometryContainer(
                                      new Sphere(new Vec3(0, 2, 0), 1, mixedRefractive),
-                                     new Sphere(new Vec3(-2, 1, -2), 1, whiteSpecular80), new Box(10, 2.5, 16, new CompositeBRDF(new DiffuseMaterial(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
+                                     new Sphere(new Vec3(-2, 1, -2), 1, whiteSpecular80), new Box(10, 2.5, 16, new CompositeMaterial(new DiffuseMaterial(checkerTexture), 0.9, whiteShiny, 0.1), new Vec3(-2, -1.25, 0), false));
       scene.add(tree);
       scene.add(new SphereLight(new Vec3(3, 6, 3.5), 1.0, new Color(1.0f, 1.0f, 1.0f), lightPower));
 
