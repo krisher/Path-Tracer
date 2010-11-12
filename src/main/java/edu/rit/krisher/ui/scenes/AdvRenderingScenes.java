@@ -77,6 +77,7 @@ public final class AdvRenderingScenes {
 
             createScene("Sphere Diffuse", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new DiffuseMaterial(new Color(1)))),
             createScene("Sphere Reflective", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, new SpecularMaterial(new Color(0.5,1,0.5), 100000))),
+            createScene("Sphere Refractive", new DiffuseMaterial(new Color(1)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, blueGreenMixedRefractive)),
             createScene("Spheres Measured BRDFs", new DiffuseMaterial(new Color(0.75)), true, new SAHPartitionStrategey(), true, sphereFactory(new Vec3(0, 1, 0), 0.5, ASTMBRDFParser.getMystique()), sphereFactory(new Vec3(-1, 1, 0), 0.5, ASTMBRDFParser.getKrylonBlue())),
 
             createSceneMultiTree("Lucy", null, false, new SAHPartitionStrategey(25), true, plyFactory(new File("/home/krisher/Download/lucy.ply"), null, false, new Quat(new Vec3(0, 0, 1), Math.PI).multiply(new Quat(new Vec3(1, 0, 0), Math.PI / 2.0)))),
@@ -172,7 +173,7 @@ public final class AdvRenderingScenes {
                ((DoFCamera) camera).setAperture(1 / 1000.0);
             }
             add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-                  + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                                                                                                         + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
             // add(new PointLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
             // + geomBounds.zSpan()), 1.0f, 1.0f, 1.0f, 75));
          }

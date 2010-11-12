@@ -330,7 +330,7 @@ public final class PathTracer implements SceneIntegrator {
                 * next path segment.
                 */
                if (rayDepth < recursionDepth
-                     && (rayDepth < 2 || rng.nextFloat() >= Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB)))) {
+                     && (rayDepth < 2 || rng.nextFloat() >= Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB)))) {
                   final SampleRay irradSampleRay = rays[outRayCount];
                   /*
                    * Preserve the current extinction, this is only modified when the ray passes through a refractive
@@ -343,7 +343,7 @@ public final class PathTracer implements SceneIntegrator {
                   if (pdf > 0 && !irradSampleRay.throughput.isZero()) {
                      // Scale transmission by inverse probability of reaching this depth due to RR.
                      if (rayDepth >= 2)
-                        irradSampleRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
+                        irradSampleRay.throughput.multiply(1 / (1 - Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
                      irradSampleRay.throughput.multiply(throughputR, throughputG, throughputB);
                      irradSampleRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(irradSampleRay.direction))
                                                         / pdf);
