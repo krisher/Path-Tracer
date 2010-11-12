@@ -151,7 +151,7 @@ public class RefractiveMaterial implements Material {
             wSample.extinction.clear();
       }
 
-      wSample.emissiveResponse = true;
+      wSample.specularBounce = true;
       return 1.0;
    }
 

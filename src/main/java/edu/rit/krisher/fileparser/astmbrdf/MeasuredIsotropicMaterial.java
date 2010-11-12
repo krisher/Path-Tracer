@@ -154,7 +154,7 @@ class MeasuredIsotropicMaterial implements Material {
       ShadingUtils.shadingCoordsToWorld(wi.direction, parameters.surfaceNormal, parameters.tangentVector); //Transform sample direction to world coordinates.
 
       wi.throughput.set(1);
-      wi.emissiveResponse = false;
+      wi.specularBounce = false;
       evaluateBRDF(wi.throughput, wi.direction, wo, parameters);
       
       return pdf;

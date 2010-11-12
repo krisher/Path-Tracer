@@ -107,6 +107,10 @@ public final class Vec3 implements Transform {
    public final double dot(final Vec3 vector) {
       return x * vector.x + y * vector.y + z * vector.z;
    }
+   
+   public final double dot(final double x, final double y, final double z) {
+      return x * this.x + y * this.y + z * this.z;
+   }
 
    @Override
    public Vec3 inverted() {
@@ -192,6 +196,20 @@ public final class Vec3 implements Transform {
       this.x -= x;
       this.y -= y;
       this.z -= z;
+      return this;
+   }
+   
+   public final Vec3 componentMinimums(final double x, final double y, final double z) {
+      if (x < this.x) this.x = x;
+      if (y < this.y) this.y = y;
+      if (z < this.z) this.z = z;
+      return this;
+   }
+   
+   public final Vec3 componentMaximums(final double x, final double y, final double z) {
+      if (x > this.x) this.x = x;
+      if (y > this.y) this.y = y;
+      if (z > this.z) this.z = z;
       return this;
    }
 

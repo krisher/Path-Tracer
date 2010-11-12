@@ -44,7 +44,7 @@ public class DiffuseMaterial implements Material, Cloneable {
        * and BRDF = color / Pi 
        */
       wi.throughput.set(diffuse.getColor(parameters.materialCoords)).multiply(1.0 / Math.PI );
-      wi.emissiveResponse = false;
+      wi.specularBounce = false;
       return pdf;
    }
 

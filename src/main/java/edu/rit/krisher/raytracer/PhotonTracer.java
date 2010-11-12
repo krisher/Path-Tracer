@@ -6,9 +6,11 @@ package edu.rit.krisher.raytracer;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +26,7 @@ import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
+import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Non thread-safe Photon Tracer.
@@ -62,52 +65,16 @@ public final class PhotonTracer implements SceneIntegrator {
    @Override
    public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate, final int recursionDepth) {
 
-      /*
-       * TODO: Compute photon map...
-       * 
-       * Sample all light sources for photon ray initialization.  Generate sample rays in every direction, with energy and count proportional to the total power of the light source.
-       * 
-       * Trace photons through the scene, deposit at each diffuse hit location.
-       * 
-       * Build KD-Tree from hits.
-       * 
-       * Ray Trace Scene until all rays hit a diffuse surface.
-       * 
-       * For all hits, compute direct illumination.
-       * 
-       * For all hits, generate rays that sample hemisphere.
-       * 
-       * For all sample ray hits, gather k nearest photons in photon map, weight with RBF, and contribute illumination to sample pixel.
-       */
-      final Random rng = new UnsafePRNG();
-      final EmissiveGeometry[] lights = scene.getLightSources();
-      final Geometry[] geometry = scene.getGeometry();
-      final int targetPhotonCount = 10000;
-      int photonCount = 0;
-      final SampleRay[] photonPaths = new SampleRay[1000];
-      for (int i = 0; i < photonPaths.length; ++i) {
-         photonPaths[i] = new SampleRay(1.0);
-      }
-      while (photonCount < targetPhotonCount) {
-         for (final EmissiveGeometry light : lights) {
-            final int sampleCount = light.sampleEmission(photonPaths, 0, photonPaths.length, rng);
-            IntegratorUtils.processHits(photonPaths, sampleCount, geometry);
-            photonCount += sampleCount;
-         }
-      }
+      final Timer photonTime = new Timer("Build Photon Map").start();
+      final PhotonMapNode photonMap = computePhotonMap(scene, recursionDepth);
+      photonTime.stop();
+      photonTime.print();
 
       /*
        * Imaging parameters
        */
       final Dimension imageSize = image.getResolution();
-      /*
-       * Estimate for the upper bound of the number of rays that will be generated, including one ray for each ray path
-       * component, and shadow rays. The actual number of rays traced will likely be lower than this, some rays will be
-       * absorbed before tracing to the maximum path length, some rays might not hit anything (for open scenes), etc.
-       */
-      final double rayCount = ((double) imageSize.width * imageSize.height * pixelSampleRate * pixelSampleRate
-            * recursionDepth * (1.0 + scene.getLightSources().length));
-      System.out.println("Max Samples: " + IntegratorUtils.formatter.format(rayCount));
+
       /*
        * WorkItems may begin processing as soon as they are queued, so notify the ImageBuffer that pixels are on their
        * way...
@@ -118,7 +85,8 @@ public final class PhotonTracer implements SceneIntegrator {
       /*
        * Tiled work distribution...
        */
-      final Rectangle[] imageChunks = IntegratorUtils.chunkRectangle(imageSize.width, imageSize.height, Math.max(2, IntegratorUtils.DEFAULT_PIXEL_BLOCK_SIZE / pixelSampleRate));
+      final Rectangle[] imageChunks = IntegratorUtils.chunkRectangle(imageSize.width, imageSize.height, Math.max(2, IntegratorUtils.DEFAULT_PIXEL_BLOCK_SIZE
+            / pixelSampleRate));
       /*
        * Thread-safe spin-lock based countdown latch to monitor progress for this image. When this reaches 0, the
        * ImageBuffer is notified that the rendering is complete.
@@ -130,13 +98,305 @@ public final class PhotonTracer implements SceneIntegrator {
       }
       active.put(image, doneSignal);
       for (int i = 0; i < IntegratorUtils.threads; i++)
-         IntegratorUtils.threadPool.submit(new PathProcessor(scene, image, blocks, pixelSampleRate, recursionDepth, doneSignal));
+         IntegratorUtils.threadPool.submit(new PhotonIntegrator(scene, image, blocks, photonMap, pixelSampleRate, recursionDepth, doneSignal));
    }
 
-   private static final class PathProcessor implements Runnable {
+   /**
+    * @param scene
+    * @param recursionDepth
+    */
+   private PhotonMapNode computePhotonMap(final Scene scene, final int recursionDepth) {
+      /*
+       * TODO: Compute photon map...
+       * 
+       * Build KD-Tree from hits.
+       * 
+       * Ray Trace Scene until all rays hit a diffuse surface.
+       * 
+       * For all hits, compute direct illumination.
+       * 
+       * For all hits, generate rays that sample hemisphere.
+       * 
+       * For all sample ray hits, gather k nearest photons in photon map, weight with RBF, and contribute illumination
+       * to sample pixel.
+       */
+      final Random rng = new UnsafePRNG();
+      final EmissiveGeometry[] lights = scene.getLightSources();
+      final Geometry[] geometry = scene.getGeometry();
+      final int targetPhotonCount = 1000;
+      final Photon[] photons = new Photon[targetPhotonCount];
+      int photonCount = 0;
+      final SampleRay[] photonPaths = new SampleRay[1000];
+      for (int i = 0; i < photonPaths.length; ++i) {
+         photonPaths[i] = new SampleRay(1.0);
+      }
+
+      int totalPaths = 0;
+      while (photonCount <= targetPhotonCount - photonPaths.length) {
+         for (final EmissiveGeometry light : lights) {
+            // TODO: probabalistic selection of light source based on total emitted power.
+            /*
+             * Sample the surface area and conditional emissive direction of the light. (generate at most one ray
+             */
+            int sampleCount = light.sampleEmission(photonPaths, 0, photonPaths.length, rng);
+            totalPaths += sampleCount;
+            /*
+             * Trace light rays and store a photon when it hits a diffuse surface.
+             */
+            IntegratorUtils.processHits(photonPaths, sampleCount, geometry);
+
+            for (int rayDepth = 0; rayDepth < recursionDepth && sampleCount > 0
+                  && targetPhotonCount >= sampleCount + photonCount; ++rayDepth) {
+               int outRayCount = 0;
+               for (int i = 0; i < sampleCount; ++i) {
+                  final SampleRay ray = photonPaths[i];
+                  if (ray.intersection.hitGeometry != null) {
+
+                     /*
+                      * Save the transmission weights, they may be overwritten if the ray is reused for the next path
+                      * segment below.
+                      */
+                     final double throughputR = ray.throughput.r
+                           * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+                     final double throughputG = ray.throughput.g
+                           * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+                     final double throughputB = ray.throughput.b
+                           * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+
+                     final Vec3 hitPoint = ray.getPointOnRay(ray.intersection.t);
+                     if (ray.intersection.material.isDiffuse()) {
+                        /* Store a photon when the light path hits a diffuse surface */
+                        final Photon photon = new Photon();
+                        photon.x = (float) hitPoint.x;
+                        photon.y = (float) hitPoint.y;
+                        photon.z = (float) hitPoint.z;
+                        photon.dx = (float) ray.direction.x;
+                        photon.dy = (float) ray.direction.y;
+                        photon.dz = (float) ray.direction.z;
+
+                        photon.powerR = (float) throughputR;
+                        photon.powerG = (float) throughputG;
+                        photon.powerB = (float) throughputB;
+                        photons[photonCount++] = photon;
+                     }
+
+                     /*
+                      * Compute next bounce.
+                      */
+                     /*
+                      * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for
+                      * the
+                      * next path segment.
+                      */
+                     if (rayDepth < recursionDepth
+                           && (rayDepth < 2 || rng.nextFloat() >= Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB)))) {
+                        final SampleRay bounceRay = photonPaths[outRayCount];
+                        /*
+                         * Preserve the current extinction, this is only modified when the ray passes through a
+                         * refractive
+                         * interface, at which point the extinction is changed in the Material model.
+                         */
+                        bounceRay.extinction.set(ray.extinction);
+                        bounceRay.origin.set(hitPoint);
+                        bounceRay.reset();
+                        final double pdf = ray.intersection.material.sampleBRDF(bounceRay, ray.direction.inverted(), ray.intersection, rng);
+                        if (pdf > 0 && !bounceRay.throughput.isZero()) {
+                           // Scale transmission by inverse probability of reaching this depth due to RR.
+                           if (rayDepth >= 2)
+                              bounceRay.throughput.multiply(1 / (1 - Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
+                           bounceRay.throughput.multiply(throughputR, throughputG, throughputB);
+                           bounceRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(bounceRay.direction))
+                                 / pdf);
+
+                           bounceRay.pixelX = ray.pixelX;
+                           bounceRay.pixelY = ray.pixelY;
+                           /*
+                            * Avoid precision issues when processing the ray for the next intersection.
+                            */
+                           bounceRay.origin.scaleAdd(bounceRay.direction, Constants.EPSILON_D);
+                           ++outRayCount;
+
+                        }
+                     }
+                  }
+               }
+               sampleCount = outRayCount;
+            }
+         }
+      }
+
+      /*
+       * Build KD Tree
+       */
+      for (final Photon photon : photons) {
+         if (photon == null) break;
+         photon.powerR /= photonCount;
+         photon.powerG /= photonCount;
+         photon.powerB /= photonCount;
+      }
+      return buildPhotonMap(photons, photonCount);
+   }
+
+   private static class PhotonMapNode {
+      final int splitAxis;
+      final PhotonMapNode lessChild;
+      final PhotonMapNode geChild;
+      final Photon splitPhoton;
+
+      /**
+       * @param splitAxis
+       * @param splitLocation
+       * @param leftChild
+       * @param rightChild
+       */
+      public PhotonMapNode(final int splitAxis, final Photon splitLocation, final PhotonMapNode leftChild,
+            final PhotonMapNode rightChild) {
+         super();
+         this.splitAxis = splitAxis;
+         this.splitPhoton = splitLocation;
+         this.lessChild = leftChild;
+         this.geChild = rightChild;
+      }
+
+      public double findPhotons(final PhotonHandler handler, final double[] point, double maxDistSq) {
+         final double splitLocation = splitAxis == 0 ? splitPhoton.x : (splitAxis == 1 ? splitPhoton.y : splitPhoton.z);
+         /*
+          * Distance to split plane...
+          */
+         final float distToSPSq = (float) ((point[splitAxis] - splitLocation) * (point[splitAxis] - splitLocation));
+         if (point[splitAxis] < splitLocation) {
+            if (lessChild != null)
+               maxDistSq = lessChild.findPhotons(handler, point, maxDistSq);
+            if (distToSPSq <= maxDistSq && geChild != null) /*
+                                                             * Only traverse >= child if dist from point to split plane
+                                                             * is <= maxDist
+                                                             */
+               maxDistSq = geChild.findPhotons(handler, point, maxDistSq);
+         } else {
+            if (geChild != null)
+               maxDistSq = geChild.findPhotons(handler, point, maxDistSq);
+            if (distToSPSq <= maxDistSq && lessChild != null) /*
+                                                               * Only traverse < child if dist from point to split plane
+                                                               * is <= maxDist
+                                                               */
+               maxDistSq = lessChild.findPhotons(handler, point, maxDistSq);
+         }
+
+         /*
+          * If distance to photon is less than max, invoke callback with photon.
+          */
+         final double dX = point[0] - splitPhoton.x;
+         final double dY = point[1] - splitPhoton.y;
+         final double dZ = point[2] - splitPhoton.z;
+         final double distToPhotonSq = dX * dX + dY * dY + dZ * dZ;
+         if (distToPhotonSq < maxDistSq)
+            return handler.processPhoton(splitPhoton, point, distToPhotonSq, maxDistSq);
+         return maxDistSq;
+      }
+      
+   }
+
+   private static interface PhotonHandler {
+      /**
+       * 
+       * @param photon
+       * @param samplePoint
+       * @param dist2
+       * @param maxDist2
+       * @return A replacement for maxDist2.
+       */
+      public double processPhoton(Photon photon, double[] samplePoint, double dist2, double maxDist2);
+   }
+
+   private static final PhotonMapNode buildPhotonMap(final Photon[] photons, final int count) {
+      return buildPhotonNodeRecursive(photons, 0, count);
+   }
+
+   private static final PhotonMapNode buildPhotonNodeRecursive(final Photon[] photons, final int offs, final int count) {
+      if (count < 1)
+         return null;
+      final Vec3 minValues = new Vec3(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+      final Vec3 maxValues = new Vec3(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
+      for (int i = 0; i < count; ++i) {
+         final Photon p = photons[i + offs];
+         if (p == null)
+            System.out.println("NULL!");
+         minValues.componentMinimums(p.x, p.y, p.z);
+         maxValues.componentMaximums(p.x, p.y, p.z);
+      }
+      maxValues.subtract(minValues);
+
+      int splitAxis;
+      if (maxValues.x > maxValues.y) {
+         if (maxValues.x > maxValues.z) {
+            /* Split x */
+            splitAxis = 0;
+            Arrays.sort(photons, offs, offs + count, photonXComparator);
+         } else {
+            /* Split z */
+            splitAxis = 2;
+            Arrays.sort(photons, offs, offs + count, photonZComparator);
+         }
+      } else {
+         if (maxValues.y > maxValues.z) {
+            /* Split y */
+            splitAxis = 1;
+            Arrays.sort(photons, offs, offs + count, photonYComparator);
+         } else {
+            /* Split z */
+            splitAxis = 2;
+            Arrays.sort(photons, offs, offs + count, photonZComparator);
+         }
+      }
+
+      final int mid = count / 2;
+
+      return new PhotonMapNode(splitAxis, photons[mid], buildPhotonNodeRecursive(photons, offs, mid), buildPhotonNodeRecursive(photons, offs
+            + mid + 1, count - mid - 1));
+   }
+
+   private static final Comparator photonXComparator = new Comparator<Photon>() {
+
+      @Override
+      public int compare(final Photon o1, final Photon o2) {
+         if (o1.x < o2.x)
+            return -1;
+         if (o1.x > o2.x)
+            return 1;
+         return 0;
+      }
+
+   };
+   private static final Comparator photonYComparator = new Comparator<Photon>() {
+
+      @Override
+      public int compare(final Photon o1, final Photon o2) {
+         if (o1.y < o2.y)
+            return -1;
+         if (o1.y > o2.y)
+            return 1;
+         return 0;
+      }
+
+   };
+   private static final Comparator photonZComparator = new Comparator<Photon>() {
+
+      @Override
+      public int compare(final Photon o1, final Photon o2) {
+         if (o1.z < o2.z)
+            return -1;
+         if (o1.z > o2.z)
+            return 1;
+         return 0;
+      }
+
+   };
+
+   private static final class PhotonIntegrator implements Runnable, PhotonHandler {
       private static final int ILLUMINATION_SAMPLES = 4;
       private static final double gaussFalloffControl = 1;
       private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
+      private static final int MAX_PHOTON_COLLECTION = 10;
       /**
        * Overridden to remove thread safety overhead
        */
@@ -149,6 +409,29 @@ public final class PhotonTracer implements SceneIntegrator {
       private final Queue<Rectangle> workQueue;
       private final AtomicInteger doneSignal;
       private final SampleRay[] illuminationRays = new SampleRay[ILLUMINATION_SAMPLES];
+      private final PhotonMapNode photonMap;
+
+      private static class CollectedPhoton implements Comparable<CollectedPhoton> {
+         final Photon photon;
+         final double distSq;
+
+         public CollectedPhoton(final Photon photon, final double distSq) {
+            this.photon = photon;
+            this.distSq = distSq;
+         }
+
+         @Override
+         public int compareTo(final edu.rit.krisher.raytracer.PhotonTracer.PhotonIntegrator.CollectedPhoton o) {
+            if (distSq < o.distSq)
+               return -1;
+            if (distSq > o.distSq)
+               return 1;
+            return 0;
+         }
+
+      }
+
+      private final TreeSet<CollectedPhoton> photonCollection = new TreeSet<CollectedPhoton>();
 
       /*
        * Buffer to collect rgb pixel data
@@ -159,8 +442,9 @@ public final class PhotonTracer implements SceneIntegrator {
       private float[] pixelNormalization;
       private Rectangle rect;
 
-      public PathProcessor(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
-            final int pixelSampleRate, final int recursionDepth, final AtomicInteger doneSignal) {
+      public PhotonIntegrator(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
+            final PhotonMapNode photonMap, final int pixelSampleRate, final int recursionDepth,
+            final AtomicInteger doneSignal) {
          this.recursionDepth = recursionDepth;
          this.imageBuffer = image;
          this.scene = scene;
@@ -170,6 +454,7 @@ public final class PhotonTracer implements SceneIntegrator {
          for (int i = 0; i < illuminationRays.length; ++i) {
             illuminationRays[i] = new SampleRay(1.0);
          }
+         this.photonMap = photonMap;
       }
 
       /*
@@ -199,7 +484,7 @@ public final class PhotonTracer implements SceneIntegrator {
                } else {
                   for (int i = 0; i < rayCount; ++i) {
                      rays[i].throughput.set(1);
-                     rays[i].emissiveResponse = true;
+                     rays[i].specularBounce = true;
                      rays[i].extinction.clear();
                   }
                }
@@ -216,7 +501,7 @@ public final class PhotonTracer implements SceneIntegrator {
                   final double x = ray.pixelX - (int) ray.pixelX - 0.5;
                   final double y = ray.pixelY - (int) ray.pixelY - 0.5;
                   final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant)
-                  * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+                        * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
                   ray.throughput.set(filter);
                   pixelNormalization[dst] += filter;
                }
@@ -247,6 +532,18 @@ public final class PhotonTracer implements SceneIntegrator {
                   return; // Process was canceled.
                }
             }
+         }
+      }
+
+      @Override
+      public double processPhoton(final Photon photon, final double[] samplePoint, final double dist2,
+            final double maxDist2) {
+         photonCollection.add(new CollectedPhoton(photon, dist2));
+         if (photonCollection.size() > MAX_PHOTON_COLLECTION) {
+            photonCollection.remove(photonCollection.last());
+            return photonCollection.last().distSq;
+         } else {
+            return maxDist2;
          }
       }
 
@@ -284,7 +581,7 @@ public final class PhotonTracer implements SceneIntegrator {
                    * No intersection, process for the scene background color.
                    */
                   updateImage((int) ray.pixelX, (int) ray.pixelY, bg.r * ray.throughput.r, bg.g * ray.throughput.g, bg.b
-                              * ray.throughput.b);
+                        * ray.throughput.b);
                   /*
                    * This path is terminated.
                    */
@@ -307,7 +604,7 @@ public final class PhotonTracer implements SceneIntegrator {
                 * 
                 * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
                 */
-               if (ray.emissiveResponse) {
+               if (ray.specularBounce) {
                   ray.intersection.material.getEmissionColor(directIllumContribution, ray, ray.intersection);
                } else
                   directIllumContribution.set(0, 0, 0);
@@ -317,37 +614,61 @@ public final class PhotonTracer implements SceneIntegrator {
                 * below.
                 */
                final double throughputR = ray.throughput.r
-               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
                final double throughputG = ray.throughput.g
-               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
                final double throughputB = ray.throughput.b
-               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
 
                /*
-                * Specular and refractive materials do not benefit from direct illuminant sampling, since their
-                * relfection/refraction distributions are typically constrained to a small solid angle, they only
-                * respond to light coming from directions that will be sampled via bounce rays.
+                * Sample direct illumination at diffuse intersections.
+                * 
+                * XXX Merge with PathTracer conflict
                 */
                if (ray.intersection.material.isDiffuse()) {
-                  final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.intersection.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
-                  final float sampleNorm = 1f / samples;
+                  /*
+                   * Integrate contribution from direct illumination for the first hit only.
+                   */
+                  if (rayDepth == 0) {
+                     final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.intersection.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
+                     final float sampleNorm = 1f / samples;
 
-                  for (int i = 0; i < samples; ++i) {
-                     final SampleRay illuminationRay = illuminationRays[i];
-                     if (illuminationRay.intersection.hitGeometry == null)
-                        continue;
-                     /*
-                      * Cosine of the angle between the geometry surface normal and the shadow ray direction
-                      */
-                     final double cosWi = illuminationRay.direction.dot(ray.intersection.surfaceNormal);
-                     if (cosWi > 0) {
+                     for (int i = 0; i < samples; ++i) {
+                        final SampleRay illuminationRay = illuminationRays[i];
+                        if (illuminationRay.intersection.hitGeometry == null)
+                           continue;
                         /*
-                         * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
-                         * ray with the response of the material...
+                         * Cosine of the angle between the geometry surface normal and the shadow ray direction
                          */
-                        ray.intersection.material.evaluateBRDF(illuminationRay.throughput, ray.direction.inverted(), illuminationRay.direction, ray.intersection);
-                        directIllumContribution.scaleAdd(illuminationRays[i].throughput, cosWi * sampleNorm);
+                        final double cosWi = illuminationRay.direction.dot(ray.intersection.surfaceNormal);
+                        if (cosWi > 0) {
+                           /*
+                            * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
+                            * ray with the response of the material...
+                            */
+                           ray.intersection.material.evaluateBRDF(illuminationRay.throughput, ray.direction.inverted(), illuminationRay.direction, ray.intersection);
+                           directIllumContribution.scaleAdd(illuminationRays[i].throughput, cosWi * sampleNorm);
+                        }
                      }
+                  }
+                  /*
+                   * TODO: Sample photon map for indirect lighting contribution.
+                   */
+                  photonCollection.clear();
+                  final double maxDistSq = photonMap.findPhotons(this, ray.getPointOnRay(ray.intersection.t).get(), Double.POSITIVE_INFINITY);
+                  final int nPhotons = photonCollection.size();
+                  final Color photonColor = new Color(0);
+                  for (final CollectedPhoton photon : photonCollection) {
+                     final double cosWi = ray.intersection.surfaceNormal.dot(-photon.photon.dx, -photon.photon.dy, -photon.photon.dz);
+                     if (cosWi > 0) {
+                           /*
+                            * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
+                            * ray with the response of the material...
+                            */
+                           photonColor.set(photon.photon.powerR, photon.photon.powerG, photon.photon.powerB);
+                           ray.intersection.material.evaluateBRDF(photonColor, ray.direction.inverted(), new Vec3(-photon.photon.dx, -photon.photon.dy, -photon.photon.dz), ray.intersection);
+                           directIllumContribution.scaleAdd(photonColor, cosWi / nPhotons );
+                        }
                   }
                }
 
@@ -356,13 +677,16 @@ public final class PhotonTracer implements SceneIntegrator {
                 * path.
                 */
                updateImage((int) ray.pixelX, (int) ray.pixelY, throughputR * directIllumContribution.r, throughputG
-                           * directIllumContribution.g, throughputB * directIllumContribution.b);
+                     * directIllumContribution.g, throughputB * directIllumContribution.b);
 
                /*
                 * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the
                 * next path segment.
+                * 
+                * XXX Merge with PathTracer conflict
                 */
-               if (rayDepth < recursionDepth
+               if (!ray.intersection.material.isDiffuse()
+                     && rayDepth < recursionDepth
                      && (rayDepth < 2 || rng.nextFloat() >= Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB)))) {
                   final SampleRay irradSampleRay = rays[outRayCount];
                   /*
@@ -379,7 +703,7 @@ public final class PhotonTracer implements SceneIntegrator {
                         irradSampleRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
                      irradSampleRay.throughput.multiply(throughputR, throughputG, throughputB);
                      irradSampleRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(irradSampleRay.direction))
-                                                        / pdf);
+                           / pdf);
 
                      irradSampleRay.pixelX = ray.pixelX;
                      irradSampleRay.pixelY = ray.pixelY;
@@ -398,8 +722,20 @@ public final class PhotonTracer implements SceneIntegrator {
             IntegratorUtils.processHits(rays, rayCount, geometry);
          }
       }
+   }
 
+   private static final class Photon {
+      float x;
+      float y;
+      float z;
 
+      float dx;
+      float dy;
+      float dz;
+
+      float powerR;
+      float powerG;
+      float powerB;
    }
 
    /**

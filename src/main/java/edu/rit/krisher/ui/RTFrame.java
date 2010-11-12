@@ -19,7 +19,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import net.miginfocom.swing.MigLayout;
-import edu.rit.krisher.raytracer.PathTracer;
+import edu.rit.krisher.raytracer.PhotonTracer;
 import edu.rit.krisher.raytracer.SceneIntegrator;
 import edu.rit.krisher.raytracer.image.DisplayableImageBuffer;
 import edu.rit.krisher.raytracer.image.ImageBuffer;
@@ -40,7 +40,7 @@ public class RTFrame extends JFrame {
    final JButton saveButton = new JButton("Save Image");
    final JFileChooser saveChooser = new JFileChooser(".");
 
-   private final SceneIntegrator rayTracer = new PathTracer();
+   private final SceneIntegrator rayTracer = new PhotonTracer();
 
    public RTFrame() {
       final Container contentPane = getContentPane();

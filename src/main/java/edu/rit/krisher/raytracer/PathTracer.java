@@ -97,10 +97,10 @@ public final class PathTracer implements SceneIntegrator {
       }
       active.put(image, doneSignal);
       for (int i = 0; i < IntegratorUtils.threads; i++)
-         IntegratorUtils.threadPool.submit(new PathProcessor(scene, image, blocks, pixelSampleRate, recursionDepth, doneSignal));
+         IntegratorUtils.threadPool.submit(new PathIntegrator(scene, image, blocks, pixelSampleRate, recursionDepth, doneSignal));
    }
 
-   private static final class PathProcessor implements Runnable {
+   static class PathIntegrator implements Runnable {
       private static final int ILLUMINATION_SAMPLES = 4;
       private static final double gaussFalloffControl = 1;
       private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
@@ -126,7 +126,7 @@ public final class PathTracer implements SceneIntegrator {
       private float[] pixelNormalization;
       private Rectangle rect;
 
-      public PathProcessor(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
+      public PathIntegrator(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
             final int pixelSampleRate, final int recursionDepth, final AtomicInteger doneSignal) {
          this.recursionDepth = recursionDepth;
          this.imageBuffer = image;
@@ -166,7 +166,7 @@ public final class PathTracer implements SceneIntegrator {
                } else {
                   for (int i = 0; i < rayCount; ++i) {
                      rays[i].throughput.set(1);
-                     rays[i].emissiveResponse = true;
+                     rays[i].specularBounce = true;
                      rays[i].extinction.clear();
                   }
                }
@@ -274,7 +274,7 @@ public final class PathTracer implements SceneIntegrator {
                 * 
                 * P. Shirley, R. Morley, Realistic Ray Tracing, 2nd Ed. 2003. AK Peters.
                 */
-               if (ray.emissiveResponse) {
+               if (ray.specularBounce) {
                   ray.intersection.material.getEmissionColor(directIllumContribution, ray, ray.intersection);
                } else
                   directIllumContribution.set(0, 0, 0);

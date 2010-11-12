@@ -30,7 +30,7 @@ public class SampleRay extends Ray {
    /**
     * Flag indicating whether light incident via a direct hit on an emissive object should be considered.
     **/
-   public boolean emissiveResponse = true;
+   public boolean specularBounce = true;
    
    public final IntersectionInfo intersection = new IntersectionInfo();
 
@@ -41,6 +41,6 @@ public class SampleRay extends Ray {
 
    public void reset() {
       throughput.clear();
-      emissiveResponse = true;
+      specularBounce = true;
    }
 }

@@ -73,7 +73,7 @@ public class SpecularMaterial implements Material {
       final Vec3 directionOut = wi.direction;
       directionOut.set(wo).multiply(-1);
       directionOut.reflect(surfaceNormal);
-      wi.emissiveResponse = true;
+      wi.specularBounce = true;
 
       if (specExp < 100000) {
          /*
