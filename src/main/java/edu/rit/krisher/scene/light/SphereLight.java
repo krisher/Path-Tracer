@@ -81,6 +81,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
                                                                          // sphere.
          // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
          // hemisphere.
+         SamplingUtils.uniformSampleHemisphere(wo.direction, rng);
          material.getEmissionColor(wo.throughput, wo, null);
       }
       return woCount;
