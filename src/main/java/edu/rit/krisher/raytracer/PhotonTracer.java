@@ -79,13 +79,22 @@ public final class PhotonTracer implements SceneIntegrator {
        * 
        * For all sample ray hits, gather k nearest photons in photon map, weight with RBF, and contribute illumination to sample pixel.
        */
+      final Random rng = new UnsafePRNG();
       final EmissiveGeometry[] lights = scene.getLightSources();
+      final Geometry[] geometry = scene.getGeometry();
       final int targetPhotonCount = 10000;
-      final int photonCount = 0;
-      //      while (photonCount < targetPhotonCount) {
-      //         //Balance based on average power of sample rays from each light source (normalized by number of photons).
-      //      }
-
+      int photonCount = 0;
+      final SampleRay[] photonPaths = new SampleRay[1000];
+      for (int i = 0; i < photonPaths.length; ++i) {
+         photonPaths[i] = new SampleRay(1.0);
+      }
+      while (photonCount < targetPhotonCount) {
+         for (final EmissiveGeometry light : lights) {
+            final int sampleCount = light.sampleEmission(photonPaths, 0, photonPaths.length, rng);
+            IntegratorUtils.processHits(photonPaths, sampleCount, geometry);
+            photonCount += sampleCount;
+         }
+      }
 
       /*
        * Imaging parameters
@@ -207,7 +216,7 @@ public final class PhotonTracer implements SceneIntegrator {
                   final double x = ray.pixelX - (int) ray.pixelX - 0.5;
                   final double y = ray.pixelY - (int) ray.pixelY - 0.5;
                   final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant)
-                        * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+                  * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
                   ray.throughput.set(filter);
                   pixelNormalization[dst] += filter;
                }
@@ -275,7 +284,7 @@ public final class PhotonTracer implements SceneIntegrator {
                    * No intersection, process for the scene background color.
                    */
                   updateImage((int) ray.pixelX, (int) ray.pixelY, bg.r * ray.throughput.r, bg.g * ray.throughput.g, bg.b
-                        * ray.throughput.b);
+                              * ray.throughput.b);
                   /*
                    * This path is terminated.
                    */
@@ -347,7 +356,7 @@ public final class PhotonTracer implements SceneIntegrator {
                 * path.
                 */
                updateImage((int) ray.pixelX, (int) ray.pixelY, throughputR * directIllumContribution.r, throughputG
-                     * directIllumContribution.g, throughputB * directIllumContribution.b);
+                           * directIllumContribution.g, throughputB * directIllumContribution.b);
 
                /*
                 * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the
@@ -370,7 +379,7 @@ public final class PhotonTracer implements SceneIntegrator {
                         irradSampleRay.throughput.multiply(1 / (1 - Math.min(0.2, 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
                      irradSampleRay.throughput.multiply(throughputR, throughputG, throughputB);
                      irradSampleRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(irradSampleRay.direction))
-                           / pdf);
+                                                        / pdf);
 
                      irradSampleRay.pixelX = ray.pixelX;
                      irradSampleRay.pixelY = ray.pixelY;

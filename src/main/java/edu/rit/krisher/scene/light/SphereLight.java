@@ -8,6 +8,7 @@ import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.geometry.Sphere;
 import edu.rit.krisher.scene.geometry.utils.ShadingUtils;
 import edu.rit.krisher.scene.material.Color;
+import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Vec3;
 
 public final class SphereLight extends Sphere implements EmissiveGeometry {
@@ -76,7 +77,8 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
          wo.origin.set(center);
          SamplingUtils.uniformSampleSphere(wo.direction, rng); // Equal probability of sending a ray in any
          // direction.
-         wo.origin.scaleAdd(wo.direction, radius); // Move the origin to the surface of the sphere.
+         wo.origin.scaleAdd(wo.direction, radius + Constants.EPSILON_D); // Move the origin to the surface of the
+                                                                         // sphere.
          // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
          // hemisphere.
          material.getEmissionColor(wo.throughput, wo, null);

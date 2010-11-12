@@ -3,6 +3,7 @@ package edu.rit.krisher.scene;
 import java.util.Random;
 
 import edu.rit.krisher.raytracer.rays.SampleRay;
+import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -29,7 +30,9 @@ public interface EmissiveGeometry extends Geometry {
    int sampleIrradiance(SampleRay[] wo, Vec3 point, Random rng);
 
    /**
-    * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays.
+    * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays. Note that the origin
+    * should be perturbed slightly (e.g. by {@link Constants#EPSILON_D}) along the ray direction in order to ensure that
+    * the ray does not intersect with the light at the ray's origin with distance > 0 (due to precision errors).
     * 
     * @param wo
     *           An array of SampleRays to initialize.
