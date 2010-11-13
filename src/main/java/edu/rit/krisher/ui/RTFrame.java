@@ -5,11 +5,14 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -24,6 +27,7 @@ import edu.rit.krisher.raytracer.PhotonTracer;
 import edu.rit.krisher.raytracer.SurfaceIntegrator;
 import edu.rit.krisher.raytracer.image.DisplayableImageBuffer;
 import edu.rit.krisher.raytracer.image.ImageBuffer;
+import edu.rit.krisher.raytracer.image.ImageUtil;
 import edu.rit.krisher.scene.Scene;
 
 /**
@@ -52,7 +56,20 @@ public class RTFrame extends JFrame {
       contentPane.setLayout(new MigLayout("", "[fill]u[grow]"));
       contentPane.add(rtControls, "ay top");
 
-      rtImagePanel.add(rtImage.getDisplayComponent());
+      final JComponent display = rtImage.getDisplayComponent();
+      rtImagePanel.add(display);
+      display.setToolTipText("Double-click to select white-point luminance value");
+      display.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseClicked(final MouseEvent evt) {
+            if (evt.getClickCount() == 2) {
+               final float[] rgb = new float[3];
+               rtImage.getPixel(rgb, evt.getX(), evt.getY());
+               imageControls.setReinhardWhitepoint(ImageUtil.luminance(rgb[0], rgb[1], rgb[2]));
+               rtImage.setToneMapper(imageControls.getSelectedToneMapper());
+            }
+         }
+      });
       contentPane.add(new JScrollPane(rtImagePanel), "spany 3, wrap, align 50% 50%");
 
       imageControls.setBorder(BorderFactory.createTitledBorder("Tone"));

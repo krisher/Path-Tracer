@@ -62,6 +62,13 @@ public class DefaultImageBuffer implements ImageBuffer {
       }
    }
 
+   public void getPixel(final float[] rgb, final int x, final int y) {
+      final int offs = 3 * (y * imSize.width + x);
+      rgb[0] = image[offs];
+      rgb[1] = image[offs + 1];
+      rgb[2] = image[offs + 2];
+   }
+
    public void setToneMapper(final ToneMapper tm) {
       this.toneMapper = tm;
 

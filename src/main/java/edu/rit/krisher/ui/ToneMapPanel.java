@@ -106,6 +106,14 @@ public class ToneMapPanel extends JPanel {
       midpointValue.setValue(value);
    }
 
+   public void setReinhardWhitepoint(final double value) {
+      maxLumValue.setValue(value);
+   }
+
+   public double getReinhardWhitepoint() {
+      return ((Number) maxLumValue.getValue()).doubleValue();
+   }
+
    public void addActionListener(final ActionListener listener) {
       this.actionListeners.addIfAbsent(listener);
    }
