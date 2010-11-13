@@ -20,7 +20,8 @@ import javax.swing.filechooser.FileFilter;
 
 import net.miginfocom.swing.MigLayout;
 import edu.rit.krisher.raytracer.PathTracer;
-import edu.rit.krisher.raytracer.SceneIntegrator;
+import edu.rit.krisher.raytracer.PhotonTracer;
+import edu.rit.krisher.raytracer.SurfaceIntegrator;
 import edu.rit.krisher.raytracer.image.DisplayableImageBuffer;
 import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.scene.Scene;
@@ -40,12 +41,13 @@ public class RTFrame extends JFrame {
    final JButton saveButton = new JButton("Save Image");
    final JFileChooser saveChooser = new JFileChooser(".");
 
-   private final SceneIntegrator rayTracer = new PathTracer();
+   private final SurfaceIntegrator[] integrators = new SurfaceIntegrator[] { new PathTracer(), new PhotonTracer() };
 
    public RTFrame() {
       final Container contentPane = getContentPane();
 
       rtControls.setBorder(BorderFactory.createTitledBorder("Ray Tracer"));
+      rtControls.setIntegratorChoices("Path Tracer", "Photon Tracer");
       rtControls.addActionListener(rtControlListener);
       contentPane.setLayout(new MigLayout("", "[fill]u[grow]"));
       contentPane.add(rtControls, "ay top");
@@ -102,6 +104,7 @@ public class RTFrame extends JFrame {
       @Override
       public void actionPerformed(final ActionEvent e) {
          final String cmd = e.getActionCommand();
+         final int selectedIntegrator = Math.max(0, rtControls.getSelectedIntegrator());
          if (RTControlPanel.ACTION_CMD_START == cmd) {
             /*
              * Update ray-tracer settings.
@@ -116,9 +119,9 @@ public class RTFrame extends JFrame {
             }
 
             final Scene selectedScene = rtControls.getSelectedScene();
-            rayTracer.integrate(progressBuffer, selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
+            integrators[selectedIntegrator].integrate(progressBuffer, selectedScene, rtControls.getSampleRate(), rtControls.getRecursionDepth());
          } else {
-            rayTracer.cancel(progressBuffer);
+            integrators[selectedIntegrator].cancel(progressBuffer);
          }
       }
 

@@ -7,6 +7,7 @@ import java.text.NumberFormat;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -43,6 +44,8 @@ public class RTControlPanel extends JPanel {
    private final JFormattedTextField widthField = new JFormattedTextField(NumberFormat.getIntegerInstance());
    private final JFormattedTextField heightField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 
+   private final JComboBox integratorChooser = new JComboBox();
+
    private final JFormattedTextField sampleRateField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 
    private final JFormattedTextField recursionDepthField = new JFormattedTextField(NumberFormat.getIntegerInstance());
@@ -59,7 +62,7 @@ public class RTControlPanel extends JPanel {
    private long startTime;
 
    public RTControlPanel() {
-      setLayout(new MigLayout("wrap 2", "[align right, grow]r[align left]", "[]r[]u"));
+      setLayout(new MigLayout("wrap 2", "[align right]r[align left, grow]", "[]r[]u"));
 
       widthField.setValue(512);
       heightField.setValue(512);
@@ -74,10 +77,13 @@ public class RTControlPanel extends JPanel {
       progress.setVisible(false);
       progress.setStringPainted(true);
 
+
       add(new JLabel("Width:"));
       add(widthField);
       add(new JLabel("Height:"));
       add(heightField);
+      add(new JLabel("Integrator:"));
+      add(integratorChooser);
       add(new JLabel("Sample Rate:"));
       add(sampleRateField);
       add(new JLabel("Max Recursion:"));
@@ -87,7 +93,7 @@ public class RTControlPanel extends JPanel {
       final JScrollPane sceneListScroll = new JScrollPane(sceneList);
       add(sceneListScroll, "spanx 2, grow");
 
-      add(progress);
+      add(progress, "grow");
       add(startRTButton);
 
       startRTButton.addActionListener(new ActionListener() {
@@ -101,6 +107,22 @@ public class RTControlPanel extends JPanel {
          }
 
       });
+   }
+
+   public int getSelectedIntegrator() {
+      return integratorChooser.getSelectedIndex();
+   }
+
+   public void setSelectedIntegrator(final int idx) {
+      integratorChooser.setSelectedIndex(idx);
+   }
+
+   public void setIntegratorChoices(final String... intNames) {
+      integratorChooser.removeAllItems();
+      for (final String name : intNames)
+         integratorChooser.addItem(name);
+      if (intNames.length > 0)
+         integratorChooser.setSelectedIndex(0);
    }
 
    public int getImageWidth() {

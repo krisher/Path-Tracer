@@ -10,7 +10,7 @@ import edu.rit.krisher.scene.Scene;
 /**
  * Interface for classes that estimate the lighting integral for a given scene and imaging configuration.
  */
-public interface SceneIntegrator {
+public interface SurfaceIntegrator {
 
     /**
     * Asynchronously ray traces the specified scene given the camera position

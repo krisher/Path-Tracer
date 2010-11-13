@@ -31,7 +31,7 @@ import edu.rit.krisher.vecmath.Constants;
  * @author krisher
  * 
  */
-public final class PathTracer implements SceneIntegrator {
+public final class PathTracer implements SurfaceIntegrator {
 
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
 

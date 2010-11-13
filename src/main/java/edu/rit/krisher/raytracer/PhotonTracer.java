@@ -34,7 +34,7 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public final class PhotonTracer implements SceneIntegrator {
+public final class PhotonTracer implements SurfaceIntegrator {
 
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
    private static final int MAX_PHOTON_COLLECTION = 2;

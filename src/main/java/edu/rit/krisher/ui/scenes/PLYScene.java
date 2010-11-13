@@ -75,19 +75,62 @@ public class PLYScene<C extends Camera> extends AbstractSceneDescription<C> {
             add(model);
          }
 
-         add(groundPlane(boxMaterial == null ? new DiffuseMaterial(new Color(1, 1, 1)) : boxMaterial, true, geomBounds));
-         ((PinholeCamera) camera).lookAt(geomBounds.centerPt(), 25, 225, geomBounds.diagonalLength());
+         if (boxMaterial != null)
+            add(groundPlane(boxMaterial == null ? new DiffuseMaterial(new Color(1, 1, 1)) : boxMaterial, true, geomBounds));
+         else {
+            final TriangleMesh[] boxGeom = cornellBox(geomBounds);
+            for (final TriangleMesh mesh : boxGeom) {
+               add(mesh);
+            }
+         }
+         ((PinholeCamera) camera).lookAt(geomBounds.centerPt(), 25, 180, geomBounds.diagonalLength() * 2);
          ((PinholeCamera) camera).setFOVAngle(56.14);
          if (camera instanceof DoFCamera) {
-            ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength() / 2.0);
+            ((DoFCamera) camera).setFocalDist(geomBounds.diagonalLength());
             ((DoFCamera) camera).setAperture(1 / 1000.0);
          }
          add(new SphereLight(new Vec3(0, geomBounds.xyzxyz[4] + geomBounds.ySpan(), geomBounds.xyzxyz[5]
-               + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
+                                                                                                      + geomBounds.zSpan()), geomBounds.diagonalLength() * 0.125, new Color(1.0f, 1.0f, 1.0f), 75));
       } catch (final IOException e) {
          e.printStackTrace();
 
       }
    }
 
+   private static final int[] whiteSections = { 0, 1, 2, 0, 2, 3, // -y
+
+      4, 5, 1, 4, 1, 0, // -z
+
+      // 6, 7, 3, 6, 3, 2, //+z
+
+         // 5, 6, 2, 5, 2, 1, // -x
+
+         // 7, 4, 0, 7, 0, 3, // +x
+
+      4, 7, 6, 4, 6, 5 // +y
+   };
+
+   private static final int[] redSection = { 5, 6, 2, 5, 2, 1 };
+   private static final int[] greenSection = { 7, 4, 0, 7, 0, 3 };
+
+   public static TriangleMesh[] cornellBox(final AxisAlignedBoundingBox sceneBounds) {
+      final double paddingDist = 2 * Math.max(sceneBounds.xSpan(), Math.max(sceneBounds.zSpan(), sceneBounds.ySpan()));
+      final double zBorder = paddingDist;
+      final double yBorder = paddingDist;
+
+      final AxisAlignedBoundingBox expandedAABB = new AxisAlignedBoundingBox(sceneBounds);
+      expandedAABB.xyzxyz[0] -= paddingDist;
+      expandedAABB.xyzxyz[2] -= zBorder;
+      expandedAABB.xyzxyz[3] += paddingDist;
+      expandedAABB.xyzxyz[5] += zBorder;
+      expandedAABB.xyzxyz[4] += yBorder;
+
+      final TriangleMesh[] geom = new TriangleMesh[] { new TriangleMesh(expandedAABB.toVertexArrayF(), whiteSections),
+            new TriangleMesh(expandedAABB.toVertexArrayF(), redSection),
+            new TriangleMesh(expandedAABB.toVertexArrayF(), greenSection) };
+      geom[0].setMaterial(new DiffuseMaterial(new Color(0.7)));
+      geom[1].setMaterial(new DiffuseMaterial(new Color(0.65, 0.06, 0.06)));
+      geom[2].setMaterial(new DiffuseMaterial(new Color(0.12, 0.48, 0.1)));
+      return geom;
+   }
 }
