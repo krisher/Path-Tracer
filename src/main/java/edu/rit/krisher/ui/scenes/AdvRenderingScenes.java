@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.FloatBuffer;
 
 import edu.rit.krisher.fileparser.astmbrdf.ASTMBRDFParser;
 import edu.rit.krisher.fileparser.ply.PLYParser;
@@ -114,33 +113,6 @@ public final class AdvRenderingScenes {
       };
    }
 
-   private static final int[] boxVertIndices = { 0, 1, 2, 0, 2, 3, 5, 4, 1, 4, 0, 1, 5, 2, 6, 5, 1, 2, 3, 7, 6, 3, 6,
-      2, 0, 4, 7, 0, 7, 3, 4, 5, 6, 4, 6, 7 };
-
-   public static GeometryFactory boxes(final AxisAlignedBoundingBox... aabbs) {
-      return new GeometryFactory() {
-         final FloatBuffer vertices = FloatBuffer.wrap(new float[] {8 * aabbs.length});
-         final int[] ib = new int[36 * aabbs.length];
-
-         @Override
-         public Geometry createGeometry() {
-            int idxBase = 0;
-            int iIdx = 0;
-            for (final AxisAlignedBoundingBox aabb : aabbs) {
-               vertices.put(aabb.toVertexArrayF());
-
-               for (int i = 0; i < 36; ++i) {
-                  ib[iIdx + i] = idxBase + boxVertIndices[i];
-               }
-
-               idxBase += 8;
-               iIdx += 36;
-            }
-            return new TriangleMesh(vertices.array(), ib);
-         }
-      };
-   }
-
    public static Scene createScene(final String name, final Material groundMat, final boolean walls,
          final KDPartitionStrategy kdStrategy, final boolean dofCamera, final GeometryFactory... geomFactories) {
       return new AbstractSceneDescription<Camera>(name, (dofCamera) ? new DoFCamera() : new PinholeCamera()) {
@@ -155,6 +127,7 @@ public final class AdvRenderingScenes {
             }
             geometry[geometry.length - 1] = groundPlane(groundMat == null ? new DiffuseMaterial(new Color(1, 1, 1))
             : groundMat, walls, geomBounds);
+            System.out.println("Scene bounds: " + geometry[geometry.length - 1].getBounds(-1));
             if (kdStrategy != null) {
                final Timer kdTimer = new Timer("KD-Tree Construction (" + name + ")").start();
                final KDGeometryContainer accel = new KDGeometryContainer(kdStrategy, geometry);

@@ -78,10 +78,10 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
          SamplingUtils.uniformSampleSphere(wo.direction, rng); // Equal probability of sending a ray in any
          // direction.
          wo.origin.scaleAdd(wo.direction, radius + Constants.EPSILON_D); // Move the origin to the surface of the
-                                                                         // sphere.
+         // sphere.
          // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
          // hemisphere.
-         SamplingUtils.uniformSampleHemisphere(wo.direction, rng);
+         // SamplingUtils.uniformSampleHemisphere(wo.direction, rng);
          material.getEmissionColor(wo.throughput, wo, null);
       }
       return woCount;

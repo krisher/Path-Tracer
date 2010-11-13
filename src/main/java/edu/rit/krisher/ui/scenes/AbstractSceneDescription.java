@@ -59,7 +59,9 @@ class AbstractSceneDescription<C extends Camera> extends DefaultScene<C> impleme
    }
 
    private static final int[] floorBuff = {0,1,2,0,2,3};
-   private static final int[] floorAndWallsBuff = {0,1,2,0,2,3,4,5,1, 4,1,0, 5,6,2, 5,2,1, 6,7,3, 6,3,2, 7,4,0, 7,0,3};
+   private static final int[] floorAndWallsBuff = { 0, 1, 2, 0, 2, 3, 4, 5, 1, 4, 1, 0, 5, 6, 2, 5, 2, 1, 6, 7, 3,
+      6,
+         3, 2, 7, 4, 0, 7, 0, 3 /* , 4, 7, 6, 4, 6, 5 */};
    public static TriangleMesh groundPlane(final Material mat, final boolean walls,
          final AxisAlignedBoundingBox sceneBounds) {
       final double xBorder = sceneBounds.xSpan() * 4;
