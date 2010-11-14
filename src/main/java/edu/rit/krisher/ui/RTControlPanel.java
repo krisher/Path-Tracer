@@ -62,7 +62,7 @@ public class RTControlPanel extends JPanel {
    private long startTime;
 
    public RTControlPanel() {
-      setLayout(new MigLayout("wrap 2", "[align right]r[align left, grow]", "[]r[]u"));
+      setLayout(new MigLayout("wrap 2, ax center", "[align right, sg 1]r[align left, sg 1]", "[]r[]u"));
 
       widthField.setValue(512);
       heightField.setValue(512);
@@ -93,7 +93,7 @@ public class RTControlPanel extends JPanel {
       final JScrollPane sceneListScroll = new JScrollPane(sceneList);
       add(sceneListScroll, "spanx 2, grow");
 
-      add(progress, "grow");
+      add(progress, "grow, spanx 2, split");
       add(startRTButton);
 
       startRTButton.addActionListener(new ActionListener() {

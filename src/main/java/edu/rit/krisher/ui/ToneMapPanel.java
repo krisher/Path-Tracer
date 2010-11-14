@@ -38,6 +38,7 @@ public class ToneMapPanel extends JPanel {
       final ActionListener delegatingActionListener = new ActionListener() {
          @Override
          public void actionPerformed(final ActionEvent evt) {
+            midpointValue.setEnabled(reinhardTRButton.isSelected());
             fireActionEvent();
          }
       };
@@ -45,9 +46,11 @@ public class ToneMapPanel extends JPanel {
       wardTRButton.addActionListener(delegatingActionListener);
       reinhardTRButton.addActionListener(delegatingActionListener);
 
+
       midpointValue.setColumns(4);
       midpointValue.setValue(0.18);
       midpointValue.addActionListener(delegatingActionListener);
+      midpointValue.setEnabled(reinhardTRButton.isSelected());
 
       maxLumValue.setValue(0.0);
       maxLumValue.setColumns(6);
@@ -61,15 +64,15 @@ public class ToneMapPanel extends JPanel {
       //         
       // });
 
-      setLayout(new MigLayout("wrap 2", "[align right, grow]r[align left]", "[]r[]r[]r[]r[]u[]r"));
+      setLayout(new MigLayout("wrap 2, ax center", "[align right, sg 1]r[align left, sg 1]", "[]r[]r[]r[]u[]r[]"));
 
-      add(new JLabel("Tone Mapping:"));
+      add(new JLabel("Mapping:"));
       add(noTRButton);
       add(wardTRButton, "skip 1");
       add(reinhardTRButton, "skip 1");
-      add(new JLabel("Target Lum:"), "skip 1");
-      add(midpointValue, "skip 1");
-      add(new JLabel("White Luminance: "));
+      add(new JLabel("Midpoint:"));
+      add(midpointValue);
+      add(new JLabel("White Point: "));
       add(maxLumValue);
       add(new JLabel("(0=>auto)"), "skip 1");
    }

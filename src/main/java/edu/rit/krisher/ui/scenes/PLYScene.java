@@ -88,7 +88,7 @@ public class PLYScene<C extends Camera> extends AbstractSceneDescription<C> {
          }
          final Vec3 lightPosition = geomBounds.centerPt();
          lightPosition.y = sceneBounds.xyzxyz[4] - geomBounds.diagonalLength() * 0.0625;
-         add(new SphereLight(lightPosition, geomBounds.diagonalLength() * 0.0625, new Color(18.0f, 15.0f, 8.0f)));
+         add(new SphereLight(lightPosition, geomBounds.diagonalLength() * 0.0625, new Color(18.0f, 15.0f, 8.0f).multiply(4.0 * Math.PI)));
       } catch (final IOException e) {
          e.printStackTrace();
 
