@@ -74,7 +74,7 @@ public final class PathTracer implements SurfaceIntegrator {
        * absorbed before tracing to the maximum path length, some rays might not hit anything (for open scenes), etc.
        */
       final double rayCount = ((double) imageSize.width * imageSize.height * pixelSampleRate * pixelSampleRate
-            * recursionDepth * (1.0 + scene.getLightSources().length));
+            * recursionDepth * (1.0 + ILLUMINATION_SAMPLES));
       System.out.println("Max Samples: " + IntegratorUtils.formatter.format(rayCount));
       /*
        * WorkItems may begin processing as soon as they are queued, so notify the ImageBuffer that pixels are on their
