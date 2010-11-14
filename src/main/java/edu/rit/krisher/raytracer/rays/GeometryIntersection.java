@@ -20,9 +20,5 @@ public class GeometryIntersection {
     */
    public Geometry hitGeometry;
 
-   /**
-    * The parametric hit location where the intersection occurred.
-    */
-   public double t = 0;
 
 }

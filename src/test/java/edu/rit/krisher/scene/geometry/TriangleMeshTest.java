@@ -31,9 +31,9 @@ public class TriangleMeshTest {
             final Ray zRay = new Ray(new Vec3(delta, delta2, -1), direction);
             intersectionInfo.primitiveID = Geometry.ALL_PRIMITIVES;
             intersectionInfo.hitGeometry = null;
-            intersectionInfo.t = Double.POSITIVE_INFINITY;
+            zRay.t = Double.POSITIVE_INFINITY;
             xyQuad.intersects(zRay, intersectionInfo);
-            Assert.assertEquals(1.0f, intersectionInfo.t, 0.00000001);
+            Assert.assertEquals(1.0f, zRay.t, 0.00000001);
          }
       }
    }
@@ -47,9 +47,9 @@ public class TriangleMeshTest {
             final Ray ray = new Ray(origin, new Vec3(delta, delta2, 0).subtract(origin).normalize());
             intersectionInfo.primitiveID = Geometry.ALL_PRIMITIVES;
             intersectionInfo.hitGeometry = null;
-            intersectionInfo.t = Double.POSITIVE_INFINITY;
+            ray.t = Double.POSITIVE_INFINITY;
             xyQuad.intersects(ray, intersectionInfo);
-            Assert.assertTrue("Ray: " + ray + " should intersect quad.", intersectionInfo.t >= 1.0f);
+            Assert.assertTrue("Ray: " + ray + " should intersect quad.", ray.t >= 1.0f);
          }
       }
    }

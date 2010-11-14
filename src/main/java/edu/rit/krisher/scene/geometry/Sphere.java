@@ -38,7 +38,7 @@ public class Sphere implements Geometry {
 
    @Override
    public void getHitData(final Ray ray, final IntersectionInfo data) {
-      final Vec3 isectNormal = ray.getPointOnRay(data.t);
+      final Vec3 isectNormal = ray.getPointOnRay(ray.t);
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
       data.surfaceNormal.set(isectNormal);
@@ -53,17 +53,28 @@ public class Sphere implements Geometry {
    @Override
    public boolean intersects(final Ray ray, final GeometryIntersection intersection) {
       final double dist = ray.intersectsSphere(center, radius);
-      if (dist > 0 && dist < intersection.t) {
+      if (dist > 0 && dist < ray.t) {
          intersection.hitGeometry = this;
-         intersection.t = dist;
+         ray.t = dist;
          return true;
       }
       return false;
    }
 
    @Override
-   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
-      return intersects(ray, intersection); // We only have one primitive...
+   public boolean intersects(final Ray ray) {
+      final double dist = ray.intersectsSphere(center, radius);
+      return (dist > 0 && dist < ray.t);
+   }
+
+   @Override
+   public boolean intersectsPrimitive(final Ray ray, final int primitiveID) {
+      final double dist = ray.intersectsSphere(center, radius);
+      if (dist > 0 && dist < ray.t) {
+         ray.t = dist;
+         return true;
+      }
+      return false;
    }
 
    public void setMaterial(final Material material) {
@@ -81,7 +92,7 @@ public class Sphere implements Geometry {
    @Override
    public AxisAlignedBoundingBox getBounds(final int primIndices) {
       return new AxisAlignedBoundingBox(center.x - radius, center.y - radius, center.z - radius, center.x + radius, center.y
-            + radius, center.z + radius);
+                                        + radius, center.z + radius);
    }
 
    @Override

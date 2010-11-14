@@ -13,6 +13,11 @@ public class Ray {
    public final Vec3 direction;
 
    /**
+    * The length of the ray from the origin.
+    */
+   public double t = Double.POSITIVE_INFINITY;
+
+   /**
     * Creates a new ray with references to the specified vectors for the origin
     * and direction. Note that these vectors should never be modified after
     * creating a Ray with them.

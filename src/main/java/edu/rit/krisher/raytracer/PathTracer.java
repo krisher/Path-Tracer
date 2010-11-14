@@ -284,11 +284,11 @@ public final class PathTracer implements SurfaceIntegrator {
                 * below.
                 */
                final double throughputR = ray.throughput.r
-               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.intersection.t));
+                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
                final double throughputG = ray.throughput.g
-               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.intersection.t));
+                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
                final double throughputB = ray.throughput.b
-               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.intersection.t));
+                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -296,7 +296,7 @@ public final class PathTracer implements SurfaceIntegrator {
                 * respond to light coming from directions that will be sampled via bounce rays.
                 */
                if (ray.intersection.material.isDiffuse()) {
-                  final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.intersection.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
+                  final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
                   final float sampleNorm = 1f / samples;
 
                   for (int i = 0; i < samples; ++i) {
@@ -337,7 +337,7 @@ public final class PathTracer implements SurfaceIntegrator {
                    * interface, at which point the extinction is changed in the Material model.
                    */
                   irradSampleRay.extinction.set(ray.extinction);
-                  irradSampleRay.origin.set(ray.getPointOnRay(ray.intersection.t));
+                  irradSampleRay.origin.set(ray.getPointOnRay(ray.t));
                   irradSampleRay.reset();
                   final double pdf = ray.intersection.material.sampleBRDF(irradSampleRay, ray.direction.inverted(), ray.intersection, rng);
                   if (pdf > 0 && !irradSampleRay.throughput.isZero()) {

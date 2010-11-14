@@ -75,6 +75,7 @@ public class PLYScene<C extends Camera> extends AbstractSceneDescription<C> {
          }
 
          final TriangleMesh[] boxGeom = cornellBox(geomBounds, boxMaterial, boxMaterial, boxMaterial);
+
          for (final TriangleMesh mesh : boxGeom) {
             add(mesh);
          }

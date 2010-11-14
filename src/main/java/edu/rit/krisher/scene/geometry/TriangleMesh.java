@@ -118,8 +118,8 @@ public class TriangleMesh implements Geometry {
    public final boolean intersects(final Ray ray, final GeometryIntersection intersection) {
       for (int idx = 0; idx < triCount; ++idx) {
          final double t = intersectsTriangle(ray, idx);
-         if (t > 0 && t < intersection.t) {
-            intersection.t = t;
+         if (t > 0 && t < ray.t) {
+            ray.t = t;
             intersection.primitiveID = idx;
             intersection.hitGeometry = this;
          }
@@ -128,11 +128,21 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
-      final double t = intersectsTriangle(ray, intersection.primitiveID);
-      if (t > 0 && t < intersection.t) {
-         intersection.t = t;
-         intersection.hitGeometry = this;
+   public final boolean intersects(final Ray ray) {
+      for (int idx = 0; idx < triCount; ++idx) {
+         final double t = intersectsTriangle(ray, idx);
+         if (t > 0 && t < ray.t) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   @Override
+   public boolean intersectsPrimitive(final Ray ray, final int primitiveID) {
+      final double t = intersectsTriangle(ray, primitiveID);
+      if (t > 0 && t < ray.t) {
+         ray.t = t;
          return true;
       }
       return false;
@@ -209,7 +219,7 @@ public class TriangleMesh implements Geometry {
       final float v0Y = vertices[v0Offs + 1];
       final float v0Z = vertices[v0Offs + 2];
       return ray.intersectsTriangle(v0X, v0Y, v0Z, vertices[v1Offs] - v0X, vertices[v1Offs + 1] - v0Y, vertices[v1Offs + 2]
-            - v0Z, vertices[v2Offs] - v0X, vertices[v2Offs + 1] - v0Y, vertices[v2Offs + 2] - v0Z);
+                                                                                                                - v0Z, vertices[v2Offs] - v0X, vertices[v2Offs + 1] - v0Y, vertices[v2Offs + 2] - v0Z);
    }
 
    private final boolean intersectsTriangleBarycentric(final double[] tuv, final Ray ray, final int triangleIndex) {
@@ -221,7 +231,7 @@ public class TriangleMesh implements Geometry {
       final float v0Y = vertices[v0Offs + 1];
       final float v0Z = vertices[v0Offs + 2];
       return ray.intersectsTriangleBarycentric(tuv, v0X, v0Y, v0Z, vertices[v1Offs] - v0X, vertices[v1Offs + 1] - v0Y, vertices[v1Offs + 2]
-            - v0Z, vertices[v2Offs] - v0X, vertices[v2Offs + 1] - v0Y, vertices[v2Offs + 2] - v0Z);
+                                                                                                                                - v0Z, vertices[v2Offs] - v0X, vertices[v2Offs + 1] - v0Y, vertices[v2Offs + 2] - v0Z);
    }
 
    private final void interpolatedNormal(final Vec3 normal, final double u, final double v, final int triangleIndex) {

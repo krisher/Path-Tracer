@@ -59,7 +59,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
 
          // wo.intersection.surfaceNormal.set(wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius));
          wo.origin.set(point);
-         wo.intersection.t = wo.intersectsSphere(center, radius);
+         wo.t = wo.intersectsSphere(center, radius);
          wo.intersection.hitGeometry = this;
          material.getEmissionColor(wo.throughput, wo, null);
          /*

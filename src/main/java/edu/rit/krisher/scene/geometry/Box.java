@@ -44,7 +44,7 @@ public class Box implements Geometry {
 
    @Override
    public void getHitData(final Ray ray, final IntersectionInfo data) {
-      final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(data.t));
+      final Vec3 hitPt = invTransform.transformPoint(ray.getPointOnRay(ray.t));
       // Figure out which face the intersection occurred on
       Vec3 isectNormal;
       final double xDist = Math.abs(Math.abs(hitPt.x) - xSize);
@@ -90,17 +90,28 @@ public class Box implements Geometry {
    @Override
    public boolean intersects(final Ray ray, final GeometryIntersection intersection) {
       final double dist= ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
-      if (dist > 0 && dist < intersection.t) {
+      if (dist > 0 && dist < ray.t) {
          intersection.hitGeometry = this;
-         intersection.t = dist;
+         ray.t = dist;
          return true;
       }
       return false;
    }
 
    @Override
-   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
-      return intersects(ray, intersection); //We only have one primitive...
+   public boolean intersects(final Ray ray) {
+      final double dist = ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
+      return (dist > 0 && dist < ray.t);
+   }
+
+   @Override
+   public boolean intersectsPrimitive(final Ray ray, final int primitiveID) {
+      final double dist = ray.getTransformedInstance(invTransform).intersectsBox(Vec3.zero, xSize, ySize, zSize);
+      if (dist > 0 && dist < ray.t) {
+         ray.t = dist;
+         return true;
+      }
+      return false;
    }
 
    public Material getMaterial() {

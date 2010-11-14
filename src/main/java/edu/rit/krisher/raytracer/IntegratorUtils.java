@@ -79,7 +79,7 @@ public final class IntegratorUtils {
    public static void processIntersections(final SampleRay[] rays, final int count, final Geometry[] geometry) {
       for (int i = 0; i < count; ++i) {
          final SampleRay ray = rays[i];
-         ray.intersection.t = Double.POSITIVE_INFINITY;
+         ray.t = Double.POSITIVE_INFINITY;
          ray.intersection.hitGeometry = null;
          for (final Geometry geom : geometry) {
             geom.intersects(ray, ray.intersection);
@@ -106,7 +106,7 @@ public final class IntegratorUtils {
    public static void processHits(final SampleRay[] rays, final int count, final Geometry[] geometry) {
       for (int i = 0; i < count; ++i) {
          final SampleRay ray = rays[i];
-         ray.intersection.t = Double.POSITIVE_INFINITY;
+         ray.t = Double.POSITIVE_INFINITY;
          ray.intersection.hitGeometry = null;
          for (final Geometry geom : geometry) {
             geom.intersects(ray, ray.intersection);
@@ -136,7 +136,7 @@ public final class IntegratorUtils {
          final SampleRay ray = rays[i];
          final Geometry original = ray.intersection.hitGeometry;
          for (final Geometry geom : geometry) {
-            if (geom != original && geom.intersects(ray, ray.intersection)) {
+            if (geom != original && geom.intersects(ray)) {
                ray.intersection.hitGeometry = null;
                break;
             }

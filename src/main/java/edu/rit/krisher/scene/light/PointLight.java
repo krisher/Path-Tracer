@@ -34,8 +34,8 @@ public class PointLight implements EmissiveGeometry {
       final SampleRay wo = samples[0];
       wo.origin.set(point);
       wo.direction.set(position).subtract(wo.origin);
-      wo.intersection.t = wo.direction.length();
-      wo.direction.multiply(1.0 / wo.intersection.t);
+      wo.t = wo.direction.length();
+      wo.direction.multiply(1.0 / wo.t);
       wo.intersection.surfaceNormal.set(wo.direction).multiply(-1);
       wo.throughput.set(material);
       wo.intersection.hitGeometry = this;
@@ -54,7 +54,12 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public boolean intersectsPrimitive(final Ray ray, final GeometryIntersection intersection) {
+   public boolean intersects(final Ray ray) {
+      return false;
+   }
+
+   @Override
+   public boolean intersectsPrimitive(final Ray ray, final int primitiveID) {
       return false;
    }
 
