@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.rit.krisher.raytracer.IntegratorUtils.DirectIlluminationSampler;
 import edu.rit.krisher.raytracer.image.ImageBuffer;
 import edu.rit.krisher.raytracer.image.ImageUtil;
 import edu.rit.krisher.raytracer.rays.SampleRay;
@@ -163,11 +164,11 @@ public final class PhotonTracer implements SurfaceIntegrator {
                       * segment below.
                       */
                      final double throughputR = ray.throughput.r
-                           * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
+                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
                      final double throughputG = ray.throughput.g
-                           * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
+                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
                      final double throughputB = ray.throughput.b
-                           * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
+                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
 
                      final Vec3 hitPoint = ray.getPointOnRay(ray.t);
                      if (ray.intersection.material.isDiffuse()) {
@@ -417,7 +418,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
       private final Scene scene;
       private final Queue<Rectangle> workQueue;
       private final AtomicInteger doneSignal;
-      private final SampleRay[] illuminationRays = new SampleRay[ILLUMINATION_SAMPLES];
+      private final DirectIlluminationSampler illumSampler = new DirectIlluminationSampler(ILLUMINATION_SAMPLES, rng);
       private final PhotonMapNode photonMap;
 
       private static class CollectedPhoton implements Comparable<CollectedPhoton> {
@@ -460,9 +461,6 @@ public final class PhotonTracer implements SurfaceIntegrator {
          this.doneSignal = doneSignal;
          this.workQueue = workQueue;
          this.pixelSampleRate = pixelSampleRate;
-         for (int i = 0; i < illuminationRays.length; ++i) {
-            illuminationRays[i] = new SampleRay(1.0);
-         }
          this.photonMap = photonMap;
       }
 
@@ -624,11 +622,11 @@ public final class PhotonTracer implements SurfaceIntegrator {
                 * below.
                 */
                final double throughputR = ray.throughput.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
                final double throughputG = ray.throughput.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
                final double throughputB = ray.throughput.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
 
                /*
                 * Sample direct illumination at diffuse intersections.
@@ -640,26 +638,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
                    * Integrate contribution from direct illumination for the first hit only.
                    */
                   if (false && rayDepth == 0) {
-                     final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
-                     final float sampleNorm = 1f / samples;
-
-                     for (int i = 0; i < samples; ++i) {
-                        final SampleRay illuminationRay = illuminationRays[i];
-                        if (illuminationRay.intersection.hitGeometry == null)
-                           continue;
-                        /*
-                         * Cosine of the angle between the geometry surface normal and the shadow ray direction
-                         */
-                        final double cosWi = illuminationRay.direction.dot(ray.intersection.surfaceNormal);
-                        if (cosWi > 0) {
-                           /*
-                            * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
-                            * ray with the response of the material...
-                            */
-                           ray.intersection.material.evaluateBRDF(illuminationRay.throughput, ray.direction.inverted(), illuminationRay.direction, ray.intersection);
-                           directIllumContribution.scaleAdd(illuminationRays[i].throughput, cosWi * sampleNorm);
-                        }
-                     }
+                     illumSampler.sampleDirectIllumination(ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), ray.intersection, ray.direction.inverted(), directIllumContribution, lights, geometry);
                   }
                   /*
                    * TODO: Sample photon map for indirect lighting contribution.

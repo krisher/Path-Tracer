@@ -33,6 +33,8 @@ import edu.rit.krisher.vecmath.Constants;
  */
 public final class PathTracer implements SurfaceIntegrator {
 
+   private static final int ILLUMINATION_SAMPLES = 4;
+
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
 
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
@@ -101,7 +103,7 @@ public final class PathTracer implements SurfaceIntegrator {
    }
 
    static class PathIntegrator implements Runnable {
-      private static final int ILLUMINATION_SAMPLES = 4;
+
       private static final double gaussFalloffControl = 1;
       private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
       /**
@@ -115,8 +117,7 @@ public final class PathTracer implements SurfaceIntegrator {
       private final Scene scene;
       private final Queue<Rectangle> workQueue;
       private final AtomicInteger doneSignal;
-      private final SampleRay[] illuminationRays = new SampleRay[ILLUMINATION_SAMPLES];
-
+      private final IntegratorUtils.DirectIlluminationSampler illumSampler = new IntegratorUtils.DirectIlluminationSampler(ILLUMINATION_SAMPLES, rng);
       /*
        * Buffer to collect rgb pixel data
        * 
@@ -134,9 +135,7 @@ public final class PathTracer implements SurfaceIntegrator {
          this.doneSignal = doneSignal;
          this.workQueue = workQueue;
          this.pixelSampleRate = pixelSampleRate;
-         for (int i = 0; i < illuminationRays.length; ++i) {
-            illuminationRays[i] = new SampleRay(1.0);
-         }
+
       }
 
       /*
@@ -284,11 +283,11 @@ public final class PathTracer implements SurfaceIntegrator {
                 * below.
                 */
                final double throughputR = ray.throughput.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
                final double throughputG = ray.throughput.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
                final double throughputB = ray.throughput.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -296,26 +295,7 @@ public final class PathTracer implements SurfaceIntegrator {
                 * respond to light coming from directions that will be sampled via bounce rays.
                 */
                if (ray.intersection.material.isDiffuse()) {
-                  final int samples = IntegratorUtils.sampleDirectIllumination(illuminationRays, ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), lights, geometry, rng);
-                  final float sampleNorm = 1f / samples;
-
-                  for (int i = 0; i < samples; ++i) {
-                     final SampleRay illuminationRay = illuminationRays[i];
-                     if (illuminationRay.intersection.hitGeometry == null)
-                        continue;
-                     /*
-                      * Cosine of the angle between the geometry surface normal and the shadow ray direction
-                      */
-                     final double cosWi = illuminationRay.direction.dot(ray.intersection.surfaceNormal);
-                     if (cosWi > 0) {
-                        /*
-                         * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
-                         * ray with the response of the material...
-                         */
-                        ray.intersection.material.evaluateBRDF(illuminationRay.throughput, ray.direction.inverted(), illuminationRay.direction, ray.intersection);
-                        directIllumContribution.scaleAdd(illuminationRays[i].throughput, cosWi * sampleNorm);
-                     }
-                  }
+                  illumSampler.sampleDirectIllumination(ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), ray.intersection, ray.direction.inverted(), directIllumContribution, lights, geometry);
                }
 
                /*
@@ -338,6 +318,7 @@ public final class PathTracer implements SurfaceIntegrator {
                    */
                   irradSampleRay.extinction.set(ray.extinction);
                   irradSampleRay.origin.set(ray.getPointOnRay(ray.t));
+
                   irradSampleRay.reset();
                   final double pdf = ray.intersection.material.sampleBRDF(irradSampleRay, ray.direction.inverted(), ray.intersection, rng);
                   if (pdf > 0 && !irradSampleRay.throughput.isZero()) {
@@ -365,7 +346,6 @@ public final class PathTracer implements SurfaceIntegrator {
             IntegratorUtils.processHits(rays, rayCount, geometry);
          }
       }
-
 
    }
 

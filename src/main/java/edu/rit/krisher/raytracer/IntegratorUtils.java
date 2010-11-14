@@ -12,6 +12,7 @@ import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
+import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.vecmath.Vec3;
 
 /**
@@ -21,6 +22,49 @@ import edu.rit.krisher.vecmath.Vec3;
  * 
  */
 public final class IntegratorUtils {
+   public static final class DirectIlluminationSampler {
+      private final SampleRay[] sampleRays;
+      private final Random rng;
+   
+      public DirectIlluminationSampler(final int sampleCount, final Random rng) {
+         this.rng = rng;
+         sampleRays = new SampleRay[sampleCount];
+         for (int i = 0; i < sampleRays.length; ++i) {
+            sampleRays[i] = new SampleRay(1.0);
+         }
+      }
+   
+      public final void sampleDirectIllumination(final Vec3 hitPoint, final IntersectionInfo hitInfo, final Vec3 wo,
+            final Color directIllumContribution, final EmissiveGeometry[] lights,
+            final Geometry[] geometry) {
+   
+         // TODO: select a single light based on relative emission power.
+         final EmissiveGeometry light = lights[rng.nextInt(lights.length)];
+         final int samples = light.sampleIrradiance(sampleRays, hitPoint, rng);
+         processObstructions(sampleRays, samples, geometry);
+   
+         final float sampleNorm = 1f / samples;
+   
+         for (int i = 0; i < samples; ++i) {
+            final SampleRay illuminationRay = sampleRays[i];
+            if (illuminationRay.intersection.hitGeometry == null)
+               continue;
+            /*
+             * Cosine of the angle between the geometry surface normal and the shadow ray direction
+             */
+            final double cosWi = illuminationRay.direction.dot(hitInfo.surfaceNormal);
+            if (cosWi > 0) {
+               /*
+                * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
+                * the response of the material...
+                */
+               hitInfo.material.evaluateBRDF(illuminationRay.throughput, wo, illuminationRay.direction, hitInfo);
+               directIllumContribution.scaleAdd(sampleRays[i].throughput, cosWi * sampleNorm);
+            }
+         }
+      }
+   }
+
    public static final int DEFAULT_PIXEL_BLOCK_SIZE = 8;
    public static final int threads = Runtime.getRuntime().availableProcessors();
    public static final NumberFormat formatter = NumberFormat.getNumberInstance();
