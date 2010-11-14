@@ -1,6 +1,6 @@
 package edu.rit.krisher.scene.acceleration;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
@@ -90,26 +90,15 @@ public class KDGeometryContainer implements Geometry {
    }
 
    @Override
-   public void getHitData(final Ray ray, final IntersectionInfo data) {
-      final int compoundPrimID = data.primitiveID;
-      data.primitiveID = compoundPrimID >> geomBits;
+   public void getHitData(final GeometryRay ray, final IntersectionInfo data) {
+      final int compoundPrimID = ray.primitiveID;
+      ray.primitiveID = compoundPrimID >> geomBits;
             KDGeometryContainer.this.content[compoundPrimID & geomMask].getHitData(ray, data);
-            data.primitiveID = compoundPrimID;
+            ray.primitiveID = compoundPrimID;
    }
 
    @Override
-   public final boolean intersects(final Ray ray, final GeometryIntersection intersection) {
-      if (root != null) {
-         final double[] params = new double[2];
-         if (treeBounds.rayIntersectsParametric(ray, params)) {
-            return root.intersects(intersection, ray, params[0], params[1], ray.origin.get(), ray.direction.get());
-         }
-      }
-      return false;
-   }
-
-   @Override
-   public final boolean intersects(final Ray ray) {
+   public final boolean intersects(final GeometryRay ray) {
       if (root != null) {
          final double[] params = new double[2];
          if (treeBounds.rayIntersectsParametric(ray, params)) {
@@ -120,8 +109,25 @@ public class KDGeometryContainer implements Geometry {
    }
 
    @Override
+   public final boolean intersectsP(final Ray ray) {
+      if (root != null) {
+         final double[] params = new double[2];
+         if (treeBounds.rayIntersectsParametric(ray, params)) {
+            return root.intersectsP(ray, params[0], params[1], ray.origin.get(), ray.direction.get());
+         }
+      }
+      return false;
+   }
+
+   @Override
    public final boolean intersectsPrimitive(final Ray ray, final int primitiveID) {
-      return intersects(ray, new GeometryIntersection());
+      final GeometryRay gRay = new GeometryRay(ray.origin, ray.direction);
+      gRay.t = ray.t;
+      if (intersects(gRay)) {
+         ray.t = gRay.t;
+         return true;
+      }
+      return false;
    }
 
    @Override
@@ -204,10 +210,10 @@ public class KDGeometryContainer implements Geometry {
 
    private static interface KDGeometryNode {
 
-      public boolean intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
-            final double tmax, final double[] rayOriginD, final double[] rayDirectionD);
+      public boolean intersects(final GeometryRay ray, final double tmin, final double tmax, final double[] rayOriginD,
+            final double[] rayDirectionD);
 
-      public boolean intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
+      public boolean intersectsP(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
             final double[] rayDirectionD);
 
       public void visit(int depth, AxisAlignedBoundingBox nodeBounds, KDNodeVisitor vistor) throws Exception;
@@ -225,49 +231,8 @@ public class KDGeometryContainer implements Geometry {
       }
 
       @Override
-      public final boolean intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
-            final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
-         assert tmin <= tmax : "Bad intersection parameterization.";
-         if (tmin > ray.t)
-            return false;
-         final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
-         final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
-
-         if (cEntry <= splitLocation) { /* node entry point on less side of split */
-            if (cExit < splitLocation) { /* exit point on less side of split, only need to check lessChild */
-               if (lessChild != null)
-                  return lessChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
-            } else { /* Traverses from less child to greater child */
-               boolean hit = false;
-               final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
-               /* first hit child; use tmin, tsplit */
-               if (lessChild != null)
-                  hit = lessChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
-               if (greaterChild != null && ray.t >= tsplit)
-                  hit |= greaterChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
-               return hit;
-            }
-         } else { /* Entry on greater side. */
-            if (cExit > splitLocation) { // exit on greater/eq side of split, only check greater.
-               if (greaterChild != null)
-                  return greaterChild.intersects(intersection, ray, tmin, tmax, rayOriginD, rayDirectionD);
-            } else { // exit on less side, check both
-               boolean hit = false;
-               final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
-               // greater-child: use tmin, tsplit
-               if (greaterChild != null)
-                  hit = greaterChild.intersects(intersection, ray, tmin, tsplit, rayOriginD, rayDirectionD);
-               if (lessChild != null && ray.t >= tsplit)
-                  hit |= lessChild.intersects(intersection, ray, tsplit, tmax, rayOriginD, rayDirectionD);
-               return hit;
-            }
-         }
-         return false;
-      }
-
-      @Override
-      public final boolean intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
-            final double[] rayDirectionD) {
+      public final boolean intersects(final GeometryRay ray, final double tmin, final double tmax,
+            final double[] rayOriginD, final double[] rayDirectionD) {
          assert tmin <= tmax : "Bad intersection parameterization.";
          if (tmin > ray.t)
             return false;
@@ -279,26 +244,67 @@ public class KDGeometryContainer implements Geometry {
                if (lessChild != null)
                   return lessChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { /* Traverses from less child to greater child */
+               boolean hit = false;
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                /* first hit child; use tmin, tsplit */
                if (lessChild != null)
-                  if (lessChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD))
-                     return true;
+                  hit = lessChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
                if (greaterChild != null && ray.t >= tsplit)
-                  return greaterChild.intersects(ray, tsplit, tmax, rayOriginD, rayDirectionD);
-               return false;
+                  hit |= greaterChild.intersects(ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               return hit;
             }
          } else { /* Entry on greater side. */
             if (cExit > splitLocation) { // exit on greater/eq side of split, only check greater.
                if (greaterChild != null)
                   return greaterChild.intersects(ray, tmin, tmax, rayOriginD, rayDirectionD);
             } else { // exit on less side, check both
+               boolean hit = false;
                final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
                // greater-child: use tmin, tsplit
-               if (greaterChild != null && greaterChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD))
+               if (greaterChild != null)
+                  hit = greaterChild.intersects(ray, tmin, tsplit, rayOriginD, rayDirectionD);
+               if (lessChild != null && ray.t >= tsplit)
+                  hit |= lessChild.intersects(ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               return hit;
+            }
+         }
+         return false;
+      }
+
+      @Override
+      public final boolean intersectsP(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
+            final double[] rayDirectionD) {
+         assert tmin <= tmax : "Bad intersection parameterization.";
+         if (tmin > ray.t)
+            return false;
+         final double cEntry = rayOriginD[axis] + tmin * rayDirectionD[axis];
+         final double cExit = rayOriginD[axis] + tmax * rayDirectionD[axis];
+
+         if (cEntry <= splitLocation) { /* node entry point on less side of split */
+            if (cExit < splitLocation) { /* exit point on less side of split, only need to check lessChild */
+               if (lessChild != null)
+                  return lessChild.intersectsP(ray, tmin, tmax, rayOriginD, rayDirectionD);
+            } else { /* Traverses from less child to greater child */
+               final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
+               /* first hit child; use tmin, tsplit */
+               if (lessChild != null)
+                  if (lessChild.intersectsP(ray, tmin, tsplit, rayOriginD, rayDirectionD))
+                     return true;
+               if (greaterChild != null && ray.t >= tsplit)
+                  return greaterChild.intersectsP(ray, tsplit, tmax, rayOriginD, rayDirectionD);
+               return false;
+            }
+         } else { /* Entry on greater side. */
+            if (cExit > splitLocation) { // exit on greater/eq side of split, only check greater.
+               if (greaterChild != null)
+                  return greaterChild.intersectsP(ray, tmin, tmax, rayOriginD, rayDirectionD);
+            } else { // exit on less side, check both
+               final double tsplit = (splitLocation - rayOriginD[axis]) / rayDirectionD[axis];
+               // greater-child: use tmin, tsplit
+               if (greaterChild != null && greaterChild.intersectsP(ray, tmin, tsplit, rayOriginD, rayDirectionD))
                   return true;
                if (lessChild != null && ray.t >= tsplit)
-                  return lessChild.intersects(ray, tsplit, tmax, rayOriginD, rayDirectionD);
+                  return lessChild.intersectsP(ray, tsplit, tmax, rayOriginD, rayDirectionD);
                return false;
             }
          }
@@ -333,21 +339,21 @@ public class KDGeometryContainer implements Geometry {
       }
 
       @Override
-      public boolean intersects(final GeometryIntersection intersection, final Ray ray, final double tmin,
-            final double tmax, final double[] rayOriginD, final double[] rayDirectionD) {
+      public boolean intersects(final GeometryRay ray, final double tmin, final double tmax, final double[] rayOriginD,
+            final double[] rayDirectionD) {
          boolean hit = false;
          for (final int prim : primitives) {
             if (KDGeometryContainer.this.content[prim & geomMask].intersectsPrimitive(ray, prim >> geomBits)) {
                hit = true;
-               intersection.primitiveID = prim >> geomBits;
-      intersection.hitGeometry = KDGeometryContainer.this.content[prim & geomMask];
+               ray.primitiveID = prim >> geomBits;
+      ray.hitGeometry = KDGeometryContainer.this.content[prim & geomMask];
             }
          }
          return hit;
       }
 
       @Override
-      public boolean intersects(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
+      public boolean intersectsP(final Ray ray, final double tmin, final double tmax, final double[] rayOriginD,
             final double[] rayDirectionD) {
          for (final int prim : primitives) {
             if (KDGeometryContainer.this.content[prim & geomMask].intersectsPrimitive(ray, prim >> geomBits))

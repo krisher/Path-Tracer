@@ -30,6 +30,8 @@ public class ToneMapPanel extends JPanel {
 
    public ToneMapPanel() {
 
+      final JLabel midpointLabel = new JLabel("Midpoint:");
+
       toneMappingChoice.add(noTRButton);
       toneMappingChoice.add(wardTRButton);
       toneMappingChoice.add(reinhardTRButton);
@@ -39,6 +41,7 @@ public class ToneMapPanel extends JPanel {
          @Override
          public void actionPerformed(final ActionEvent evt) {
             midpointValue.setEnabled(reinhardTRButton.isSelected());
+            midpointLabel.setEnabled(reinhardTRButton.isSelected());
             fireActionEvent();
          }
       };
@@ -51,6 +54,7 @@ public class ToneMapPanel extends JPanel {
       midpointValue.setValue(0.18);
       midpointValue.addActionListener(delegatingActionListener);
       midpointValue.setEnabled(reinhardTRButton.isSelected());
+      midpointLabel.setEnabled(reinhardTRButton.isSelected());
 
       maxLumValue.setValue(0.0);
       maxLumValue.setColumns(6);
@@ -70,7 +74,7 @@ public class ToneMapPanel extends JPanel {
       add(noTRButton);
       add(wardTRButton, "skip 1");
       add(reinhardTRButton, "skip 1");
-      add(new JLabel("Midpoint:"));
+      add(midpointLabel);
       add(midpointValue);
       add(new JLabel("White Point: "));
       add(maxLumValue);

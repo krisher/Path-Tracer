@@ -9,7 +9,7 @@ import edu.rit.krisher.vecmath.Vec3;
  * @author krisher
  * 
  */
-public class IntersectionInfo extends GeometryIntersection {
+public class IntersectionInfo {
 
    /**
     * The material at the hit location.

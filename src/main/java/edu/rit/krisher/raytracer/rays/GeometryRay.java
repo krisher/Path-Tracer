@@ -1,14 +1,10 @@
-/**
- * 
- */
 package edu.rit.krisher.raytracer.rays;
 
 import edu.rit.krisher.scene.Geometry;
+import edu.rit.krisher.vecmath.Ray;
+import edu.rit.krisher.vecmath.Vec3;
 
-/**
- * Value class to store the results of intersection testing between a ray and a geometric primitive.
- */
-public class GeometryIntersection {
+public class GeometryRay extends Ray {
 
    /**
     * Integer primitive ID within the {@link Geometry} instance indicating which primitive the intersection occurred in.
@@ -20,5 +16,8 @@ public class GeometryIntersection {
     */
    public Geometry hitGeometry;
 
+   public GeometryRay(final Vec3 origin, final Vec3 direction) {
+      super(origin, direction);
+   }
 
 }

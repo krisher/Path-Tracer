@@ -1,6 +1,6 @@
 package edu.rit.krisher.scene.geometry;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
@@ -94,11 +94,11 @@ public class TriangleMesh implements Geometry {
    }
 
    @Override
-   public void getHitData(final Ray ray, final IntersectionInfo data) {
+   public void getHitData(final GeometryRay ray, final IntersectionInfo data) {
       data.material = material;
       data.materialCoords = null;
       if (normals == null) {
-         getTriangleFaceNormal(data.surfaceNormal, data.tangentVector, data.primitiveID);
+         getTriangleFaceNormal(data.surfaceNormal, data.tangentVector, ray.primitiveID);
          /*
           * Use an arbitrary triangle edge for the tangent vector.
           * TODO: u,v coordinates required to support anisotropic reflection models, for consistent orientation.
@@ -107,28 +107,28 @@ public class TriangleMesh implements Geometry {
       } else {
          // Barycentric normal interpolation if vertex normals present...
          final double[] baryCoords = new double[3];
-         intersectsTriangleBarycentric(baryCoords, ray, data.primitiveID);
-         interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], data.primitiveID);
+         intersectsTriangleBarycentric(baryCoords, ray, ray.primitiveID);
+         interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], ray.primitiveID);
          // TODO: Tangent vector should be based on shading (texture) coords if specified.
          Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
       }
    }
 
    @Override
-   public final boolean intersects(final Ray ray, final GeometryIntersection intersection) {
+   public final boolean intersects(final GeometryRay ray) {
       for (int idx = 0; idx < triCount; ++idx) {
          final double t = intersectsTriangle(ray, idx);
          if (t > 0 && t < ray.t) {
             ray.t = t;
-            intersection.primitiveID = idx;
-            intersection.hitGeometry = this;
+            ray.primitiveID = idx;
+            ray.hitGeometry = this;
          }
       }
-      return intersection.hitGeometry == this;
+      return ray.hitGeometry == this;
    }
 
    @Override
-   public final boolean intersects(final Ray ray) {
+   public final boolean intersectsP(final Ray ray) {
       for (int idx = 0; idx < triCount; ++idx) {
          final double t = intersectsTriangle(ray, idx);
          if (t > 0 && t < ray.t) {

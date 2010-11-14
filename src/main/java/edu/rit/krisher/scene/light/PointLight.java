@@ -2,7 +2,7 @@ package edu.rit.krisher.scene.light;
 
 import java.util.Random;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.SamplingUtils;
@@ -38,23 +38,23 @@ public class PointLight implements EmissiveGeometry {
       wo.direction.multiply(1.0 / wo.t);
       wo.intersection.surfaceNormal.set(wo.direction).multiply(-1);
       wo.throughput.set(material);
-      wo.intersection.hitGeometry = this;
+      wo.hitGeometry = this;
       return 1;
    }
 
    @Override
-   public void getHitData(final Ray ray, final IntersectionInfo data) {
+   public void getHitData(final GeometryRay ray, final IntersectionInfo data) {
       data.material = material;
       data.surfaceNormal.set(ray.direction).multiply(-1);
    }
 
    @Override
-   public boolean intersects(final Ray ray, final GeometryIntersection intersection) {
+   public boolean intersects(final GeometryRay ray) {
       return false;
    }
 
    @Override
-   public boolean intersects(final Ray ray) {
+   public boolean intersectsP(final Ray ray) {
       return false;
    }
 

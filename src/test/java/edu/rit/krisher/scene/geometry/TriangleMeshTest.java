@@ -4,9 +4,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.scene.Geometry;
-import edu.rit.krisher.vecmath.Ray;
 import edu.rit.krisher.vecmath.Vec3;
 
 public class TriangleMeshTest {
@@ -25,14 +24,13 @@ public class TriangleMeshTest {
    @Test
    public void zParallelRaysShouldIntersect() {
       final Vec3 direction = new Vec3(0, 0, 1);
-      final GeometryIntersection intersectionInfo = new GeometryIntersection();
       for (float delta = -1f; delta <= 1f; delta += 0.05) {
          for (float delta2 = -1f; delta2 <= 1f; delta2 += 0.05) {
-            final Ray zRay = new Ray(new Vec3(delta, delta2, -1), direction);
-            intersectionInfo.primitiveID = Geometry.ALL_PRIMITIVES;
-            intersectionInfo.hitGeometry = null;
+            final GeometryRay zRay = new GeometryRay(new Vec3(delta, delta2, -1), direction);
+            zRay.primitiveID = Geometry.ALL_PRIMITIVES;
+            zRay.hitGeometry = null;
             zRay.t = Double.POSITIVE_INFINITY;
-            xyQuad.intersects(zRay, intersectionInfo);
+            xyQuad.intersects(zRay);
             Assert.assertEquals(1.0f, zRay.t, 0.00000001);
          }
       }
@@ -41,14 +39,13 @@ public class TriangleMeshTest {
    @Test
    public void sphereRaysShouldIntersect() {
       final Vec3 origin = new Vec3(0, 0, -1);
-      final GeometryIntersection intersectionInfo = new GeometryIntersection();
       for (float delta = -0.95f; delta <= 0.95f; delta += 0.05) {
          for (float delta2 = -0.95f; delta2 <= 0.95f; delta2 += 0.05) {
-            final Ray ray = new Ray(origin, new Vec3(delta, delta2, 0).subtract(origin).normalize());
-            intersectionInfo.primitiveID = Geometry.ALL_PRIMITIVES;
-            intersectionInfo.hitGeometry = null;
+            final GeometryRay ray = new GeometryRay(origin, new Vec3(delta, delta2, 0).subtract(origin).normalize());
+            ray.primitiveID = Geometry.ALL_PRIMITIVES;
+            ray.hitGeometry = null;
             ray.t = Double.POSITIVE_INFINITY;
-            xyQuad.intersects(ray, intersectionInfo);
+            xyQuad.intersects(ray);
             Assert.assertTrue("Ray: " + ray + " should intersect quad.", ray.t >= 1.0f);
          }
       }

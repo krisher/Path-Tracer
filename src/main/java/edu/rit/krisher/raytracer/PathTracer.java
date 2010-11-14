@@ -104,7 +104,7 @@ public final class PathTracer implements SurfaceIntegrator {
 
    static class PathIntegrator implements Runnable {
 
-      private static final double gaussFalloffControl = 1;
+      private static final double gaussFalloffControl = 4.0;
       private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
       /**
        * Overridden to remove thread safety overhead
@@ -124,7 +124,7 @@ public final class PathTracer implements SurfaceIntegrator {
        * Values will always be >= 0, but are unbounded in magnitude.
        */
       private float[] pixels;
-      private float[] pixelNormalization;
+      // private float[] pixelNormalization;
       private Rectangle rect;
 
       public PathIntegrator(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
@@ -150,10 +150,10 @@ public final class PathTracer implements SurfaceIntegrator {
                final int pixelCount = rect.width * rect.height * 3;
                if (pixels == null || pixels.length < pixelCount) {
                   pixels = new float[pixelCount];
-                  pixelNormalization = new float[pixelCount / 3];
+                  // pixelNormalization = new float[pixelCount / 3];
                } else {
                   Arrays.fill(pixels, 0);
-                  Arrays.fill(pixelNormalization, 0);
+                  // Arrays.fill(pixelNormalization, 0);
                }
 
                final int rayCount = pixelSampleRate * pixelSampleRate * rect.width * rect.height;
@@ -176,16 +176,21 @@ public final class PathTracer implements SurfaceIntegrator {
 
                /*
                 * Compute filter normalization constants for each pixel.
+                * 
+                * TODO: Gaussian filter really needs multi-pixel support, and doesn't work well without it.
+                * 
+                * TODO: This should be implemented in the Image Buffer (it should generate a sequence of multi-sample
+                * buffer chunks (with pixel sample locations) that are processed in the tracing threads)
                 */
-               for (final SampleRay ray : rays) {
-                  final int dst = (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
-                  final double x = ray.pixelX - (int) ray.pixelX - 0.5;
-                  final double y = ray.pixelY - (int) ray.pixelY - 0.5;
-                  final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant)
-                  * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
-                  ray.throughput.set(filter);
-                  pixelNormalization[dst] += filter;
-               }
+               // for (final SampleRay ray : rays) {
+               // final int dst = (((int) ray.pixelY) * rect.width + (int) ray.pixelX);
+               // final double x = ray.pixelX - (int) ray.pixelX - 0.5;
+               // final double y = ray.pixelY - (int) ray.pixelY - 0.5;
+               // final double filter = Math.max(0, Math.exp(-gaussFalloffControl * x * x) - gaussFalloffConstant)
+               // * Math.max(0, Math.exp(-gaussFalloffControl * y * y) - gaussFalloffConstant);
+               // ray.throughput.set(filter);
+               // pixelNormalization[dst] += filter;
+               // }
 
                /* Visibility pass */
                IntegratorUtils.processHits(rays, rayCount, scene.getGeometry());
@@ -194,11 +199,9 @@ public final class PathTracer implements SurfaceIntegrator {
                integrateIrradiance(rect, rays, rays.length);
 
                /* Put results back into image buffer */
-               for (int i = 0; i < pixelNormalization.length; ++i) {
-                  final int pixOffs = 3 * i;
-                  pixels[pixOffs] /= pixelNormalization[i];
-                  pixels[pixOffs + 1] /= pixelNormalization[i];
-                  pixels[pixOffs + 2] /= pixelNormalization[i];
+               final float pixelNormalization = 1.0f / (pixelSampleRate * pixelSampleRate);
+               for (int i = 0; i < pixels.length; ++i) {
+                  pixels[i] *= pixelNormalization;
                }
                imageBuffer.setPixels(rect.x, rect.y, rect.width, rect.height, pixels);
             } catch (final Throwable e) {
@@ -245,7 +248,7 @@ public final class PathTracer implements SurfaceIntegrator {
             for (int processRayIdx = 0; processRayIdx < rayCount; processRayIdx++) {
                final SampleRay ray = rays[processRayIdx];
 
-               if (ray.intersection.hitGeometry == null) {
+               if (ray.hitGeometry == null) {
                   /*
                    * No intersection, process for the scene background color.
                    */

@@ -3,30 +3,27 @@
  */
 package edu.rit.krisher.scene;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
-import edu.rit.krisher.vecmath.Ray;
 
 /**
  *
  */
 public interface GeometryContainer {
 
-
    /**
     * Computes the smallest positive distance along the ray to the intersection and stores the result (intersection
-    * distance, geometry and primitiveID) in the {@link GeometryIntersection} parameter. If there is no intersection
-    * with <code>0 < distance < intersection.t</code>, nothing is updated and this method returns false.
+    * distance, geometry and primitiveID). If there is no intersection with <code>0 < distance < intersection.t</code>,
+    * nothing is updated and this method returns false.
     * 
     * @param ray
-    *           A non-null ray to test intersection with.
-    * @param intersection
-    *           The intersection info to populate upon successful intersection.
+    *           A non-null ray to test intersection with, on output the hitGeometry, primitiveID, and t fields should be
+    *           updated to reflect a successful intersection.
     * 
-    * @return true if an intersection was found with 0 < distance < intersection.t (and intersection was subsequently
+    * @return true if an intersection was found with 0 < distance < intersection.t (and ray fields were subsequently
     *         updated), false otherwise.
     */
-   public boolean intersects(Ray ray, GeometryIntersection intersection);
+   public boolean intersects(GeometryRay ray);
 
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.

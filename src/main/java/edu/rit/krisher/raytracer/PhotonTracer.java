@@ -170,7 +170,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
                int outRayCount = 0;
                for (int i = 0; i < sampleCount; ++i) {
                   final SampleRay ray = photonPaths[i];
-                  if (ray.intersection.hitGeometry != null) {
+                  if (ray.hitGeometry != null) {
 
                      /*
                       * Save the transmission weights, they may be overwritten if the ray is reused for the next path
@@ -558,7 +558,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
             for (int processRayIdx = 0; processRayIdx < rayCount; processRayIdx++) {
                final SampleRay ray = rays[processRayIdx];
 
-               if (ray.intersection.hitGeometry == null) {
+               if (ray.hitGeometry == null) {
                   /*
                    * No intersection, process for the scene background color.
                    */

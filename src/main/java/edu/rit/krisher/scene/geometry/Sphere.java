@@ -1,6 +1,6 @@
 package edu.rit.krisher.scene.geometry;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Material;
@@ -37,7 +37,7 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public void getHitData(final Ray ray, final IntersectionInfo data) {
+   public void getHitData(final GeometryRay ray, final IntersectionInfo data) {
       final Vec3 isectNormal = ray.getPointOnRay(ray.t);
       isectNormal.subtract(center).multiply(1.0 / radius);
       data.material = material;
@@ -51,10 +51,10 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public boolean intersects(final Ray ray, final GeometryIntersection intersection) {
+   public boolean intersects(final GeometryRay ray) {
       final double dist = ray.intersectsSphere(center, radius);
       if (dist > 0 && dist < ray.t) {
-         intersection.hitGeometry = this;
+         ray.hitGeometry = this;
          ray.t = dist;
          return true;
       }
@@ -62,7 +62,7 @@ public class Sphere implements Geometry {
    }
 
    @Override
-   public boolean intersects(final Ray ray) {
+   public boolean intersectsP(final Ray ray) {
       final double dist = ray.intersectsSphere(center, radius);
       return (dist > 0 && dist < ray.t);
    }

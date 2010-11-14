@@ -25,7 +25,7 @@ public final class IntegratorUtils {
    public static final class DirectIlluminationSampler {
       private final SampleRay[] sampleRays;
       private final Random rng;
-   
+
       public DirectIlluminationSampler(final int sampleCount, final Random rng) {
          this.rng = rng;
          sampleRays = new SampleRay[sampleCount];
@@ -33,21 +33,21 @@ public final class IntegratorUtils {
             sampleRays[i] = new SampleRay(1.0);
          }
       }
-   
+
       public final void sampleDirectIllumination(final Vec3 hitPoint, final IntersectionInfo hitInfo, final Vec3 wo,
             final Color directIllumContribution, final EmissiveGeometry[] lights,
             final Geometry[] geometry) {
-   
+
          // TODO: select a single light based on relative emission power.
          final EmissiveGeometry light = lights[rng.nextInt(lights.length)];
          final int samples = light.sampleIrradiance(sampleRays, hitPoint, rng);
          processObstructions(sampleRays, samples, geometry);
-   
+
          final float sampleNorm = 1f / samples;
-   
+
          for (int i = 0; i < samples; ++i) {
             final SampleRay illuminationRay = sampleRays[i];
-            if (illuminationRay.intersection.hitGeometry == null)
+            if (illuminationRay.hitGeometry == null)
                continue;
             /*
              * Cosine of the angle between the geometry surface normal and the shadow ray direction
@@ -124,9 +124,9 @@ public final class IntegratorUtils {
       for (int i = 0; i < count; ++i) {
          final SampleRay ray = rays[i];
          ray.t = Double.POSITIVE_INFINITY;
-         ray.intersection.hitGeometry = null;
+         ray.hitGeometry = null;
          for (final Geometry geom : geometry) {
-            geom.intersects(ray, ray.intersection);
+            geom.intersects(ray);
          }
       }
    }
@@ -151,12 +151,12 @@ public final class IntegratorUtils {
       for (int i = 0; i < count; ++i) {
          final SampleRay ray = rays[i];
          ray.t = Double.POSITIVE_INFINITY;
-         ray.intersection.hitGeometry = null;
+         ray.hitGeometry = null;
          for (final Geometry geom : geometry) {
-            geom.intersects(ray, ray.intersection);
+            geom.intersects(ray);
          }
-         if (ray.intersection.hitGeometry != null) {
-            ray.intersection.hitGeometry.getHitData(ray, ray.intersection);
+         if (ray.hitGeometry != null) {
+            ray.hitGeometry.getHitData(ray, ray.intersection);
          }
       }
    }
@@ -178,10 +178,10 @@ public final class IntegratorUtils {
          final Geometry[] geometry) {
       for (int i = 0; i < count; ++i) {
          final SampleRay ray = rays[i];
-         final Geometry original = ray.intersection.hitGeometry;
+         final Geometry original = ray.hitGeometry;
          for (final Geometry geom : geometry) {
-            if (geom != original && geom.intersects(ray)) {
-               ray.intersection.hitGeometry = null;
+            if (geom != original && geom.intersectsP(ray)) {
+               ray.hitGeometry = null;
                break;
             }
          }

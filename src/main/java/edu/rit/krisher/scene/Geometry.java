@@ -1,6 +1,6 @@
 package edu.rit.krisher.scene;
 
-import edu.rit.krisher.raytracer.rays.GeometryIntersection;
+import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.vecmath.AxisAlignedBoundingBox;
 import edu.rit.krisher.vecmath.Ray;
@@ -32,7 +32,7 @@ public interface Geometry {
     *           {@link #intersects(Ray, GeometryIntersection)}. The material, surface normal, and optional material
     *           parameters are populated by this method.
     */
-   public void getHitData(Ray ray, IntersectionInfo data);
+   public void getHitData(GeometryRay ray, IntersectionInfo data);
 
    /**
     * Computes the smallest positive distance along the ray to the intersection with the specified primitive, or returns
@@ -40,13 +40,7 @@ public interface Geometry {
     * 
     * @param ray
     *           A non-null ray to test intersection with. If an intersection is found, t is updated with the new
-    *           intersection distance.
-    * @param primitiveID
-    *           On input, the primitiveID field indicates which primitive to test for intersection, and the t field
-    *           indicates the maximum distance along the ray to test. On output, the hitGeometry and t fields should be
-    *           updated iff an intersection was found.
-    * @return true if an intersection was found with the specified primitive and 0 < distance < ray.t (and ray.t was
-    *         subsequently updated), false otherwise.
+    *           intersection distance. ray.primitiveID specifies the primitive to check the intersection with.
     */
    public boolean intersectsPrimitive(Ray ray, int primitiveID);
 
@@ -63,7 +57,7 @@ public interface Geometry {
     * @return true if an intersection was found with 0 < distance < intersection.t (and intersection was subsequently
     *         updated), false otherwise.
     */
-   public boolean intersects(Ray ray, GeometryIntersection intersection);
+   public boolean intersects(GeometryRay ray);
 
    /**
     * Determines whether the specified ray intersects with this geometry at a distance > 0 and < ray.t.
@@ -72,7 +66,7 @@ public interface Geometry {
     *           The ray to check for intersection.
     * @return true if the ray intersects with distance > 0 and < ray.t, false otherwise.
     */
-   public boolean intersects(Ray ray);
+   public boolean intersectsP(Ray ray);
 
    /**
     * Accessor for a tight fitting axis-aligned bounding box around the geometry.
