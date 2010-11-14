@@ -23,11 +23,13 @@ public interface EmissiveGeometry extends Geometry {
     * @param wo
     *           The ray whose origin indicates the illuminated point, the direction vector, spectral power distribution
     *           and intersection info will be updated by this method.
-    * @param rng
-    *           A non-null random number generator that can be used for generating uniform random variables.
+    * @param r1
+    *           A random number, assumed to be from a uniform distribution.
+    * @param r2
+    *           A random number, assumed to be from a uniform distribution.
     * @return The number of samples generated.
     */
-   int sampleIrradiance(SampleRay[] wo, Vec3 point, Random rng);
+   void sampleIrradiance(SampleRay wo, Vec3 point, float r1, float r2);
 
    /**
     * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays. Note that the origin

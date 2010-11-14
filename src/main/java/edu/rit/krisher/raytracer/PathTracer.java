@@ -24,6 +24,7 @@ import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
 import edu.rit.krisher.util.Timer;
 import edu.rit.krisher.vecmath.Constants;
+import edu.rit.krisher.vecmath.Vec3;
 
 /**
  * Non thread-safe Path Tracer.
@@ -104,8 +105,8 @@ public final class PathTracer implements SurfaceIntegrator {
 
    static class PathIntegrator implements Runnable {
 
-      private static final double gaussFalloffControl = 4.0;
-      private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
+      // private static final double gaussFalloffControl = 4.0;
+      // private static final double gaussFalloffConstant = Math.exp(-gaussFalloffControl * 0.5 * 0.5);
       /**
        * Overridden to remove thread safety overhead
        */
@@ -117,7 +118,7 @@ public final class PathTracer implements SurfaceIntegrator {
       private final Scene scene;
       private final Queue<Rectangle> workQueue;
       private final AtomicInteger doneSignal;
-      private final IntegratorUtils.DirectIlluminationSampler illumSampler = new IntegratorUtils.DirectIlluminationSampler(ILLUMINATION_SAMPLES, rng);
+      private final IntegratorUtils.DirectIlluminationSampler illumSampler;
       /*
        * Buffer to collect rgb pixel data
        * 
@@ -135,7 +136,7 @@ public final class PathTracer implements SurfaceIntegrator {
          this.doneSignal = doneSignal;
          this.workQueue = workQueue;
          this.pixelSampleRate = pixelSampleRate;
-
+         illumSampler = new IntegratorUtils.DirectIlluminationSampler(rng, scene.getLightSources(), scene.getGeometry());
       }
 
       /*
@@ -298,7 +299,8 @@ public final class PathTracer implements SurfaceIntegrator {
                 * respond to light coming from directions that will be sampled via bounce rays.
                 */
                if (ray.intersection.material.isDiffuse()) {
-                  illumSampler.sampleDirectIllumination(ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), ray.intersection, ray.direction.inverted(), directIllumContribution, lights, geometry);
+                  final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D);
+                  illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(), directIllumContribution, ILLUMINATION_SAMPLES);
                }
 
                /*

@@ -392,7 +392,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
       private final Scene scene;
       private final Queue<Rectangle> workQueue;
       private final AtomicInteger doneSignal;
-      private final DirectIlluminationSampler illumSampler = new DirectIlluminationSampler(ILLUMINATION_SAMPLES, rng);
+      private final DirectIlluminationSampler illumSampler;
       private final KDNode photonMap;
 
       private static class CollectedPhoton implements Comparable<CollectedPhoton> {
@@ -436,6 +436,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
          this.workQueue = workQueue;
          this.pixelSampleRate = pixelSampleRate;
          this.photonMap = photonMap;
+         illumSampler = new IntegratorUtils.DirectIlluminationSampler(rng, scene.getLightSources(), scene.getGeometry());
       }
 
       /*
@@ -612,7 +613,8 @@ public final class PhotonTracer implements SurfaceIntegrator {
                    * Integrate contribution from direct illumination for the first hit only.
                    */
                   if (false && rayDepth == 0) {
-                     illumSampler.sampleDirectIllumination(ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D), ray.intersection, ray.direction.inverted(), directIllumContribution, lights, geometry);
+                     final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D);
+                     illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(), directIllumContribution, ILLUMINATION_SAMPLES);
                   }
                   /*
                    * TODO: Sample photon map for indirect lighting contribution.

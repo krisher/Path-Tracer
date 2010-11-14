@@ -22,7 +22,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public int sampleIrradiance(final SampleRay[] samples, final Vec3 point, final Random rng) {
+   public void sampleIrradiance(final SampleRay wo, final Vec3 point, final float r1, final float r2) {
       final Vec3 pointToCenter = new Vec3(center).subtract(point);
       final double lightDistInv = 1.0 / pointToCenter.length();
       pointToCenter.multiply(lightDistInv);
@@ -38,36 +38,34 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       final double sinMaxAngle = radius * lightDistInv;
       final double cosMaxAngle = Math.sqrt(1 - sinMaxAngle * sinMaxAngle);
 
-      for (final SampleRay wo : samples) {
-         /*
-          * Uniform sample density over the solid angle subtended by the sphere wrt. the origin point. Taken from Shirley
-          * and Morely book.
-          * 
-          * Basically generates a random polar coordinate in a disc perpendicular to the direction from sphere center to
-          * ray origin. The coordinate is projected back onto the sphere surface to determine the ray direction.
-          */
-         final double cosRandomAzimuth = 1.0 + rng.nextDouble() * (cosMaxAngle - 1.0);
-         final double sinRandomAzimuth = Math.sqrt(1.0 - cosRandomAzimuth * cosRandomAzimuth);
-         final double randomPolar = 2.0 * Math.PI * rng.nextDouble();
+      /*
+       * Uniform sample density over the solid angle subtended by the sphere wrt. the origin point. Taken from Shirley
+       * and Morely book.
+       * 
+       * Basically generates a random polar coordinate in a disc perpendicular to the direction from sphere center to
+       * ray origin. The coordinate is projected back onto the sphere surface to determine the ray direction.
+       */
+      final double cosRandomAzimuth = 1.0 + r1 * (cosMaxAngle - 1.0);
+      final double sinRandomAzimuth = Math.sqrt(1.0 - cosRandomAzimuth * cosRandomAzimuth);
+      final double randomPolar = 2.0 * Math.PI * r2;
 
 
 
-         wo.direction.x = Math.cos(randomPolar) * sinRandomAzimuth;
-         wo.direction.y = Math.sin(randomPolar) * sinRandomAzimuth;
-         wo.direction.z = cosRandomAzimuth;
-         ShadingUtils.shadingCoordsToWorld(wo.direction, pointToCenter, tangentXAxis);
+      wo.direction.x = Math.cos(randomPolar) * sinRandomAzimuth;
+      wo.direction.y = Math.sin(randomPolar) * sinRandomAzimuth;
+      wo.direction.z = cosRandomAzimuth;
+      ShadingUtils.shadingCoordsToWorld(wo.direction, pointToCenter, tangentXAxis);
 
-         // wo.intersection.surfaceNormal.set(wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius));
-         wo.origin.set(point);
-         wo.t = wo.intersectsSphere(center, radius);
-         wo.hitGeometry = this;
-         material.getEmissionColor(wo.throughput, wo, null);
-         /*
-          * Multiply by the solid angle of the light sphere that is visible from the origin (due to self-occlusion).
-          */
-         wo.throughput.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
-      }
-      return samples.length;
+      // wo.intersection.surfaceNormal.set(wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius));
+      wo.origin.set(point);
+      wo.t = wo.intersectsSphere(center, radius);
+      wo.hitGeometry = this;
+      material.getEmissionColor(wo.throughput, wo, null);
+      /*
+       * Multiply by the solid angle of the light sphere that is visible from the origin (due to self-occlusion).
+       */
+      wo.throughput.multiply(((2.0 * Math.PI * (1.0 - cosMaxAngle))));
+
    }
 
    @Override

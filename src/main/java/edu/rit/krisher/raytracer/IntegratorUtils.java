@@ -23,43 +23,45 @@ import edu.rit.krisher.vecmath.Vec3;
  */
 public final class IntegratorUtils {
    public static final class DirectIlluminationSampler {
-      private final SampleRay[] sampleRays;
+      private final SampleRay sampleRay;
       private final Random rng;
+      private final EmissiveGeometry[] lights;
+      private final Geometry[] geometry;
 
-      public DirectIlluminationSampler(final int sampleCount, final Random rng) {
+      public DirectIlluminationSampler(final Random rng, final EmissiveGeometry[] lights, final Geometry[] geometry) {
          this.rng = rng;
-         sampleRays = new SampleRay[sampleCount];
-         for (int i = 0; i < sampleRays.length; ++i) {
-            sampleRays[i] = new SampleRay(1.0);
-         }
+         sampleRay = new SampleRay(1);
+         this.geometry = geometry;
+         this.lights = lights;
       }
 
       public final void sampleDirectIllumination(final Vec3 hitPoint, final IntersectionInfo hitInfo, final Vec3 wo,
-            final Color directIllumContribution, final EmissiveGeometry[] lights,
-            final Geometry[] geometry) {
+            final Color directIllumContribution, final int sampleCount) {
 
          // TODO: select a single light based on relative emission power.
          final EmissiveGeometry light = lights[rng.nextInt(lights.length)];
-         final int samples = light.sampleIrradiance(sampleRays, hitPoint, rng);
-         processObstructions(sampleRays, samples, geometry);
-
-         final float sampleNorm = 1f / samples;
-
-         for (int i = 0; i < samples; ++i) {
-            final SampleRay illuminationRay = sampleRays[i];
-            if (illuminationRay.hitGeometry == null)
-               continue;
-            /*
-             * Cosine of the angle between the geometry surface normal and the shadow ray direction
-             */
-            final double cosWi = illuminationRay.direction.dot(hitInfo.surfaceNormal);
-            if (cosWi > 0) {
+         for (int i = 0; i < sampleCount; ++i) {
+            // TODO: stratified random sequence for sampling
+            light.sampleIrradiance(sampleRay, hitPoint, rng.nextFloat(), rng.nextFloat());
+            for (final Geometry geom : geometry) {
+               if (sampleRay.hitGeometry != geom && geom.intersectsP(sampleRay)) {
+                  sampleRay.hitGeometry = null;
+                  break;
+               }
+            }
+            if (sampleRay.hitGeometry != null) {
                /*
-                * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
-                * the response of the material...
+                * Cosine of the angle between the geometry surface normal and the shadow ray direction
                 */
-               hitInfo.material.evaluateBRDF(illuminationRay.throughput, wo, illuminationRay.direction, hitInfo);
-               directIllumContribution.scaleAdd(sampleRays[i].throughput, cosWi * sampleNorm);
+               final double cosWi = sampleRay.direction.dot(hitInfo.surfaceNormal);
+               if (cosWi > 0) {
+                  /*
+                   * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow ray with
+                   * the response of the material...
+                   */
+                  hitInfo.material.evaluateBRDF(sampleRay.throughput, wo, sampleRay.direction, hitInfo);
+                  directIllumContribution.scaleAdd(sampleRay.throughput, cosWi / sampleCount);
+               }
             }
          }
       }
@@ -174,13 +176,11 @@ public final class IntegratorUtils {
     *           The non-null list of geometry to test for intersection with any other object in the scene between the
     *           ray origin and intersection point.
     */
-   public static void processObstructions(final SampleRay[] rays, final int count,
-         final Geometry[] geometry) {
+   public static void processObstructions(final SampleRay[] rays, final int count, final Geometry[] geometry) {
       for (int i = 0; i < count; ++i) {
          final SampleRay ray = rays[i];
-         final Geometry original = ray.hitGeometry;
          for (final Geometry geom : geometry) {
-            if (geom != original && geom.intersectsP(ray)) {
+            if (ray.hitGeometry != geom && geom.intersectsP(ray)) {
                ray.hitGeometry = null;
                break;
             }
@@ -188,31 +188,4 @@ public final class IntegratorUtils {
       }
    }
 
-   /**
-    * Samples the contribution of light from emissive sources to a specified point. Upon completion, the SampleRays
-    * in the illuminationRays parameter are initialized to rays from the hit point to a sample point on an emissive
-    * geometric object. These rays are traced to determine whether the hit point is visible from each light's sample
-    * points. Where there is an obstruction, the hitGeometry of the SampleRay is null, otherwise it is the light that
-    * was sampled.
-    * 
-    * @param illuminationRays
-    *           A list of 1 or more rays to be initialized to samples of emissive geometry.
-    * @param hitPoint
-    *           The point to sample for irradiance.
-    * @param lights
-    *           The list of all emissive geometry to sample.
-    * @param geometry
-    *           The list of all geometry that may obstruct light.
-    * @param rng
-    *           A random number generator.
-    * @return The number of SampleRays actually initialized.
-    */
-   public static final int sampleDirectIllumination(final SampleRay[] illuminationRays, final Vec3 hitPoint,
-         final EmissiveGeometry[] lights, final Geometry[] geometry, final Random rng) {
-      // TODO: select a single light based on relative emission power.
-      final EmissiveGeometry light = lights[rng.nextInt(lights.length)];
-      final int sampleCount = light.sampleIrradiance(illuminationRays, hitPoint, rng);
-      processObstructions(illuminationRays, sampleCount, geometry);
-      return sampleCount;
-   }
 }

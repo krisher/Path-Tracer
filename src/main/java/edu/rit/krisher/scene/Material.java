@@ -85,6 +85,4 @@ public interface Material {
     * @return The probability (PDF) of the specified direction.
     */
    public double sampleBRDF(SampleRay wi, Vec3 wo, IntersectionInfo intersectionInfo, Random rng);
-
-   // public SampleRay[] multisampleBRDF(int sampleCount, Vec3 wi, IntersectionInfo parameters, Random rng);
 }
