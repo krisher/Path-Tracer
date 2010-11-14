@@ -32,7 +32,7 @@ class AbstractSceneDescription<C extends Camera> extends DefaultScene<C> impleme
       return super.getGeometry();
    }
 
-   private final void checkInit() {
+   private synchronized final void checkInit() {
       if (!init) {
          initScene();
          init = true;

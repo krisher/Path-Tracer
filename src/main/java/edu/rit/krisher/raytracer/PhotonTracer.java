@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
@@ -69,7 +70,19 @@ public final class PhotonTracer implements SurfaceIntegrator {
    public void integrate(final ImageBuffer image, final Scene scene, final int pixelSampleRate, final int recursionDepth) {
 
       final Timer photonTime = new Timer("Build Photon Map").start();
-      final PhotonMapNode photonMap = computePhotonMap(scene, recursionDepth);
+      final KDNode photonMap = computePhotonMap(scene, recursionDepth);
+
+      final LinkedList<KDNode> traverse = new LinkedList<KDNode>();
+      traverse.add(photonMap);
+      while (!traverse.isEmpty()) {
+         final KDNode node = traverse.removeFirst();
+         System.out.println(node.splitPhoton);
+         if (node.geChild != null)
+            traverse.addFirst(node.geChild);
+         if (node.lessChild != null)
+            traverse.addFirst(node.lessChild);
+      }
+
       photonTime.stop();
       photonTime.print();
 
@@ -108,7 +121,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
     * @param scene
     * @param recursionDepth
     */
-   private PhotonMapNode computePhotonMap(final Scene scene, final int recursionDepth) {
+   private KDNode computePhotonMap(final Scene scene, final int recursionDepth) {
       /*
        * TODO: Compute photon map...
        * 
@@ -128,7 +141,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
       final Geometry[] geometry = scene.getGeometry();
       final Photon[] photons = new Photon[MAX_PHOTONS];
       int photonCount = 0;
-      final SampleRay[] photonPaths = new SampleRay[Math.max(MAX_PHOTONS/20, 10)];
+      final SampleRay[] photonPaths = new SampleRay[Math.max(MAX_PHOTONS / 20, 10)];
       for (int i = 0; i < photonPaths.length; ++i) {
          photonPaths[i] = new SampleRay(1.0);
       }
@@ -192,16 +205,14 @@ public final class PhotonTracer implements SurfaceIntegrator {
                       */
                      /*
                       * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for
-                      * the
-                      * next path segment.
+                      * the next path segment.
                       */
                      if (rayDepth < recursionDepth
                            && (rayDepth < 2 || rng.nextFloat() >= Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB)))) {
                         final SampleRay bounceRay = photonPaths[outRayCount];
                         /*
                          * Preserve the current extinction, this is only modified when the ray passes through a
-                         * refractive
-                         * interface, at which point the extinction is changed in the Material model.
+                         * refractive interface, at which point the extinction is changed in the Material model.
                          */
                         bounceRay.extinction.set(ray.extinction);
                         bounceRay.origin.set(hitPoint);
@@ -236,7 +247,8 @@ public final class PhotonTracer implements SurfaceIntegrator {
        * Build KD Tree
        */
       for (final Photon photon : photons) {
-         if (photon == null) break;
+         if (photon == null)
+            break;
          photon.powerR /= totalPaths;
          photon.powerG /= totalPaths;
          photon.powerB /= totalPaths;
@@ -245,10 +257,10 @@ public final class PhotonTracer implements SurfaceIntegrator {
       return buildPhotonMap(photons, photonCount);
    }
 
-   private static class PhotonMapNode {
+   private static class KDNode {
       final int splitAxis;
-      final PhotonMapNode lessChild;
-      final PhotonMapNode geChild;
+      final KDNode lessChild;
+      final KDNode geChild;
       final Photon splitPhoton;
 
       /**
@@ -257,8 +269,8 @@ public final class PhotonTracer implements SurfaceIntegrator {
        * @param leftChild
        * @param rightChild
        */
-      public PhotonMapNode(final int splitAxis, final Photon splitLocation, final PhotonMapNode leftChild,
-            final PhotonMapNode rightChild) {
+      public KDNode(final int splitAxis, final Photon splitLocation, final KDNode leftChild,
+            final KDNode rightChild) {
          super();
          this.splitAxis = splitAxis;
          this.splitPhoton = splitLocation;
@@ -316,21 +328,19 @@ public final class PhotonTracer implements SurfaceIntegrator {
       public double processPhoton(Photon photon, double[] samplePoint, double dist2, double maxDist2);
    }
 
-   private static final PhotonMapNode buildPhotonMap(final Photon[] photons, final int count) {
+   private static final KDNode buildPhotonMap(final Photon[] photons, final int count) {
       return buildPhotonNodeRecursive(photons, 0, count);
    }
 
-   private static final PhotonMapNode buildPhotonNodeRecursive(final Photon[] photons, final int offs, final int count) {
+   private static final KDNode buildPhotonNodeRecursive(final Photon[] photons, final int offs, final int count) {
       if (count < 1)
          return null;
       if (count == 1)
-         return new PhotonMapNode(0, photons[offs], null, null);
+         return new KDNode(0, photons[offs], null, null);
       final Vec3 minValues = new Vec3(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
       final Vec3 maxValues = new Vec3(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
       for (int i = 0; i < count; ++i) {
          final Photon p = photons[i + offs];
-         if (p == null)
-            System.out.println("NULL!");
          minValues.componentMinimums(p.x, p.y, p.z);
          maxValues.componentMaximums(p.x, p.y, p.z);
       }
@@ -361,46 +371,10 @@ public final class PhotonTracer implements SurfaceIntegrator {
 
       final int mid = count / 2;
 
-      return new PhotonMapNode(splitAxis, photons[mid], buildPhotonNodeRecursive(photons, offs, mid), buildPhotonNodeRecursive(photons, offs
-                                                                                                                               + mid + 1, count - mid - 1));
+      return new KDNode(splitAxis, photons[mid], buildPhotonNodeRecursive(photons, offs, mid), buildPhotonNodeRecursive(photons, offs
+                                                                                                                        + mid + 1, count - mid - 1));
    }
 
-   private static final Comparator photonXComparator = new Comparator<Photon>() {
-
-      @Override
-      public int compare(final Photon o1, final Photon o2) {
-         if (o1.x < o2.x)
-            return -1;
-         if (o1.x > o2.x)
-            return 1;
-         return 0;
-      }
-
-   };
-   private static final Comparator photonYComparator = new Comparator<Photon>() {
-
-      @Override
-      public int compare(final Photon o1, final Photon o2) {
-         if (o1.y < o2.y)
-            return -1;
-         if (o1.y > o2.y)
-            return 1;
-         return 0;
-      }
-
-   };
-   private static final Comparator photonZComparator = new Comparator<Photon>() {
-
-      @Override
-      public int compare(final Photon o1, final Photon o2) {
-         if (o1.z < o2.z)
-            return -1;
-         if (o1.z > o2.z)
-            return 1;
-         return 0;
-      }
-
-   };
 
    private static final class PhotonIntegrator implements Runnable, PhotonHandler {
       private static final int ILLUMINATION_SAMPLES = 4;
@@ -419,7 +393,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
       private final Queue<Rectangle> workQueue;
       private final AtomicInteger doneSignal;
       private final DirectIlluminationSampler illumSampler = new DirectIlluminationSampler(ILLUMINATION_SAMPLES, rng);
-      private final PhotonMapNode photonMap;
+      private final KDNode photonMap;
 
       private static class CollectedPhoton implements Comparable<CollectedPhoton> {
          final Photon photon;
@@ -453,7 +427,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
       private Rectangle rect;
 
       public PhotonIntegrator(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
-            final PhotonMapNode photonMap, final int pixelSampleRate, final int recursionDepth,
+            final KDNode photonMap, final int pixelSampleRate, final int recursionDepth,
             final AtomicInteger doneSignal) {
          this.recursionDepth = recursionDepth;
          this.imageBuffer = image;
@@ -646,36 +620,40 @@ public final class PhotonTracer implements SurfaceIntegrator {
                   photonCollection.clear();
                   photonMap.findPhotons(this, ray.getPointOnRay(ray.t).get(), Double.POSITIVE_INFINITY);
                   final double maxDistSq = photonCollection.last().distSq;
-                  double minDist = Math.sqrt(photonCollection.first().distSq);
+                  double minDistSq = photonCollection.first().distSq;
                   // System.out.println("Min/Max dist: " + minDist + " / " + Math.sqrt(maxDistSq));
 
-                  //DEBUG...
-                  if (minDist < 1) {
-                     minDist = (1.0 - minDist / 1.0);
-                     updateImage((int) ray.pixelX, (int) ray.pixelY, minDist, minDist, minDist);
+                  // DEBUG...
+                  if (minDistSq < 1 && minDistSq > 0) {
+                     minDistSq = 1.0 / minDistSq;
+                     // updateImage((int) ray.pixelX, (int) ray.pixelY, minDist, minDist, minDist);
+                     updateImage((int) ray.pixelX, (int) ray.pixelY, minDistSq * throughputR, minDistSq * throughputG, minDistSq
+                                 * throughputB);
                   }
-                  //                  final int nPhotons = photonCollection.size();
-                  //                  final Color photonColor = new Color(0);
-                  //                  for (final CollectedPhoton photon : photonCollection) {
-                  //                     final double cosWi = ray.intersection.surfaceNormal.dot(-photon.photon.dx, -photon.photon.dy, -photon.photon.dz);
-                  //                     if (cosWi > 0) {
-                  //                           /*
-                  //                            * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
-                  //                            * ray with the response of the material...
-                  //                            */
-                  //                           photonColor.set(photon.photon.powerR, photon.photon.powerG, photon.photon.powerB);
-                  //                           ray.intersection.material.evaluateBRDF(photonColor, ray.direction.inverted(), new Vec3(-photon.photon.dx, -photon.photon.dy, -photon.photon.dz), ray.intersection);
-                  //                           directIllumContribution.scaleAdd(photonColor, cosWi );
-                  //                        }
-                  //                  }
+                  // final int nPhotons = photonCollection.size();
+                  // final Color photonColor = new Color(0);
+                  // for (final CollectedPhoton photon : photonCollection) {
+                  // final double cosWi = ray.intersection.surfaceNormal.dot(-photon.photon.dx, -photon.photon.dy,
+                  // -photon.photon.dz);
+                  // if (cosWi > 0) {
+                  // /*
+                  // * Compute the reflected spectrum/power by modulating the energy transmitted along the shadow
+                  // * ray with the response of the material...
+                  // */
+                  // photonColor.set(photon.photon.powerR, photon.photon.powerG, photon.photon.powerB);
+                  // ray.intersection.material.evaluateBRDF(photonColor, ray.direction.inverted(), new
+                  // Vec3(-photon.photon.dx, -photon.photon.dy, -photon.photon.dz), ray.intersection);
+                  // directIllumContribution.scaleAdd(photonColor, cosWi );
+                  // }
+                  // }
                }
 
                /*
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
-               //               updateImage((int) ray.pixelX, (int) ray.pixelY, throughputR * directIllumContribution.r, throughputG
-               //                     * directIllumContribution.g, throughputB * directIllumContribution.b);
+               // updateImage((int) ray.pixelX, (int) ray.pixelY, throughputR * directIllumContribution.r, throughputG
+               // * directIllumContribution.g, throughputB * directIllumContribution.b);
 
                /*
                 * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the
@@ -759,4 +737,40 @@ public final class PhotonTracer implements SurfaceIntegrator {
       }
    }
 
+   private static final Comparator photonXComparator = new Comparator<Photon>() {
+
+      @Override
+      public int compare(final Photon o1, final Photon o2) {
+         if (o1.x < o2.x)
+            return -1;
+         if (o1.x > o2.x)
+            return 1;
+         return 0;
+      }
+
+   };
+   private static final Comparator photonYComparator = new Comparator<Photon>() {
+
+      @Override
+      public int compare(final Photon o1, final Photon o2) {
+         if (o1.y < o2.y)
+            return -1;
+         if (o1.y > o2.y)
+            return 1;
+         return 0;
+      }
+
+   };
+   private static final Comparator photonZComparator = new Comparator<Photon>() {
+
+      @Override
+      public int compare(final Photon o1, final Photon o2) {
+         if (o1.z < o2.z)
+            return -1;
+         if (o1.z > o2.z)
+            return 1;
+         return 0;
+      }
+
+   };
 }
