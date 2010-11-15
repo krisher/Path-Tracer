@@ -67,7 +67,7 @@ public final class IntegratorUtils {
       }
    }
 
-   public static final int DEFAULT_PIXEL_BLOCK_SIZE = 8;
+   public static final int DEFAULT_PIXEL_BLOCK_SIZE = 16;
    public static final int threads = Runtime.getRuntime().availableProcessors();
    public static final NumberFormat formatter = NumberFormat.getNumberInstance();
    public static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());

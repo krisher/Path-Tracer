@@ -74,14 +74,16 @@ public class SamplingUtils {
     * 
     * @param result
     *           A vector to store the result in.
-    * @param rng
-    *           A random number generator.
+    * @param r1
+    *           A uniform random number.
+    * @param r2
+    *           A uniform random number.
     * @return The probability with which the result was generated.
     */
-   public static final double uniformSampleSphere(final Vec3 result, final Random rng) {
-      result.z = 1.0 - 2.0 * rng.nextDouble();
+   public static final double uniformSampleSphere(final Vec3 result, final float r1, final float r2) {
+      result.z = 1.0 - 2.0 * r1;
       final double r = Math.sqrt(Math.max(0., 1. - result.z * result.z));
-      final double phi = 2.0 * Math.PI * rng.nextDouble();
+      final double phi = 2.0 * Math.PI * r2;
       result.x = r * Math.cos(phi);
       result.y = r * Math.sin(phi);
       return 1.0 / (4.0 * Math.PI);

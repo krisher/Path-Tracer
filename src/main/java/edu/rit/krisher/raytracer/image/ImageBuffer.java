@@ -38,6 +38,8 @@ public interface ImageBuffer {
    public void setPixels(int x, int y, int w, int h, float[] pixels);
 
 
+   // public void setMultisamplePixels(float[] pixelXY, float[] pixels);
+
    /**
     * Notification that a new image will be provided to this buffer via calls to
     * {@link #setPixels(int, int, int, int, float[])}. {@link #imagingDone()}

@@ -1,7 +1,5 @@
 package edu.rit.krisher.scene.light;
 
-import java.util.Random;
-
 import edu.rit.krisher.raytracer.rays.GeometryRay;
 import edu.rit.krisher.raytracer.rays.IntersectionInfo;
 import edu.rit.krisher.raytracer.rays.SampleRay;
@@ -88,15 +86,10 @@ public class PointLight implements EmissiveGeometry {
    }
 
    @Override
-   public int sampleEmission(final SampleRay[] woSamples, final int woOffset, final int woCount,
-         final Random rng) {
-      for (int i = 0; i < woCount; ++i) {
-         final SampleRay wo = woSamples[i + woOffset];
-         wo.origin.set(position);
-         SamplingUtils.uniformSampleSphere(wo.direction, rng);
-         wo.throughput.set(material);
-      }
-      return woCount;
+   public void sampleEmission(final SampleRay wo, final float r1, final float r2) {
+      wo.origin.set(position);
+      SamplingUtils.uniformSampleSphere(wo.direction, r1, r2);
+      wo.throughput.set(material);
    }
 
 }

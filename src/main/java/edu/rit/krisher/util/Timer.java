@@ -1,6 +1,7 @@
 package edu.rit.krisher.util;
 
 
+
 /**
  * Simple thread-safe timer utility that independently records time spent in one or more threads.
  * 
@@ -88,7 +89,7 @@ public final class Timer {
          } else
             nanoTime = accumTime;
       }
-      System.out.println("Time [" + name + "]: " + nanoTime / 1000000.0 + "ms");
+      System.out.println("Time [" + name + "]: " + nanoTime / 1000000000.0 + "s");
       return this;
    }
 }

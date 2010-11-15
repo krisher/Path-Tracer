@@ -145,4 +145,12 @@
 		</plugins>
 	</reporting>
 
+
+	<repositories>
+		<repository>
+			<id>internal.repo</id>
+			<name>Internal Repository</name>
+			<url>file://${basedir}/lib</url>
+		</repository>
+	</repositories>
 </project>

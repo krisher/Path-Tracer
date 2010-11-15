@@ -1,7 +1,5 @@
 package edu.rit.krisher.scene;
 
-import java.util.Random;
-
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.vecmath.Constants;
 import edu.rit.krisher.vecmath.Vec3;
@@ -32,19 +30,16 @@ public interface EmissiveGeometry extends Geometry {
    void sampleIrradiance(SampleRay wo, Vec3 point, float r1, float r2);
 
    /**
-    * Initializes the origin, direction, and sampleColor (radiance) in each of the wo SampleRays. Note that the origin
-    * should be perturbed slightly (e.g. by {@link Constants#EPSILON_D}) along the ray direction in order to ensure that
-    * the ray does not intersect with the light at the ray's origin with distance > 0 (due to precision errors).
+    * Initializes the origin, direction, and sampleColor (radiance) in the wo SampleRay. Note that the origin should be
+    * perturbed slightly (e.g. by {@link Constants#EPSILON_D}) along the ray direction in order to ensure that the ray
+    * does not intersect with the light at the ray's origin with distance > 0 (due to precision errors).
     * 
     * @param wo
-    *           An array of SampleRays to initialize.
-    * @param woOffset
-    *           The index in wo at which to start initializing samples.
-    * @param woCount
-    *           The maximum number of samples to generate.
-    * @param rng
-    *           A Random number generator for sampling.
-    * @return the number of rays in wo that were actually initialized.
+    *           A SampleRay to initialize.
+    * @param r1
+    *           A uniform random number used for Monte Carlo sampling
+    * @param r2
+    *           A uniform random number used for Monte Carlo sampling
     */
-   int sampleEmission(SampleRay[] wo, int woOffset, int woCount, Random rng);
+   void sampleEmission(SampleRay wo, float r1, float r2);
 }

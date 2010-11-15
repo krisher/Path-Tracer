@@ -1,7 +1,5 @@
 package edu.rit.krisher.scene.light;
 
-import java.util.Random;
-
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.scene.EmissiveGeometry;
@@ -69,19 +67,15 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    }
 
    @Override
-   public int sampleEmission(final SampleRay[] woSamples, final int woOffset, final int woCount, final Random rng) {
-      for (int i = 0; i < woCount; ++i) {
-         final SampleRay wo = woSamples[i + woOffset];
-         wo.origin.set(center);
-         SamplingUtils.uniformSampleSphere(wo.direction, rng); // Equal probability of sending a ray in any
-         // direction.
-         wo.origin.scaleAdd(wo.direction, radius + Constants.EPSILON_D); // Move the origin to the surface of the
-         // sphere.
-         // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
-         // hemisphere.
-         // SamplingUtils.uniformSampleHemisphere(wo.direction, rng);
-         material.getEmissionColor(wo.throughput, wo, null);
-      }
-      return woCount;
+   public void sampleEmission(final SampleRay wo, final float r1, final float r2) {
+      wo.origin.set(center);
+      SamplingUtils.uniformSampleSphere(wo.direction, r1, r2); // Equal probability of sending a ray in any
+      // direction.
+      wo.origin.scaleAdd(wo.direction, radius + Constants.EPSILON_D); // Move the origin to the surface of the
+      // sphere.
+      // TODO: this is treated as a point light here, once we have decided a position, must decide direction over the
+      // hemisphere.
+      // SamplingUtils.uniformSampleHemisphere(wo.direction, rng);
+      material.getEmissionColor(wo.throughput, wo, null);
    }
 }

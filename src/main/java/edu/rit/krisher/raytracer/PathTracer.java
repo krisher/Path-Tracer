@@ -18,7 +18,6 @@ import edu.rit.krisher.raytracer.image.ImageUtil;
 import edu.rit.krisher.raytracer.rays.SampleRay;
 import edu.rit.krisher.raytracer.sampling.SamplingUtils;
 import edu.rit.krisher.raytracer.sampling.UnsafePRNG;
-import edu.rit.krisher.scene.EmissiveGeometry;
 import edu.rit.krisher.scene.Geometry;
 import edu.rit.krisher.scene.Scene;
 import edu.rit.krisher.scene.material.Color;
@@ -228,12 +227,8 @@ public final class PathTracer implements SurfaceIntegrator {
       }
 
       private final void integrateIrradiance(final Rectangle rect, final SampleRay[] rays, int rayCount) {
-
          final Color directIllumContribution = new Color(0, 0, 0);
-
          final Geometry[] geometry = scene.getGeometry();
-         final EmissiveGeometry[] lights = scene.getLightSources();
-
          final Color bg = scene.getBackground();
 
          /*
@@ -280,7 +275,7 @@ public final class PathTracer implements SurfaceIntegrator {
                if (ray.specularBounce) {
                   ray.intersection.material.getEmissionColor(directIllumContribution, ray, ray.intersection);
                } else
-                  directIllumContribution.set(0, 0, 0);
+                  directIllumContribution.clear();
 
                /*
                 * Save the transmission weights, they may be overwritten if the ray is reused for the next path segment
