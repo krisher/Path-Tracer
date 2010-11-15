@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.jogamp</groupId>
+  <artifactId>gluegen-rt-natives</artifactId>
+  <version>20101110</version>
+  <versioning>
+    <versions>
+      <version>20101110</version>
+    </versions>
+    <lastUpdated>20101115052933</lastUpdated>
+  </versioning>
+</metadata>
