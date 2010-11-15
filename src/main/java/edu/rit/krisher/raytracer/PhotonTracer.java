@@ -588,8 +588,10 @@ public final class PhotonTracer implements SurfaceIntegrator {
                   /*
                    * Integrate contribution from direct illumination for the first hit only.
                    */
-                  final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D);
-                  illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(), directIllumContribution, ILLUMINATION_SAMPLES);
+                  // final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal,
+                  // Constants.EPSILON_D);
+                  // illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(),
+                  // directIllumContribution, ILLUMINATION_SAMPLES);
 
                   /*
                    * TODO: Sample photon map for indirect lighting contribution.
