@@ -38,7 +38,7 @@ import edu.rit.krisher.vecmath.Vec3;
 public final class PhotonTracer implements SurfaceIntegrator {
 
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
-   private static final int MAX_PHOTON_COLLECTION = 2;
+   private static final int MAX_PHOTON_COLLECTION = 5;
    private static final int MAX_PHOTONS = 10000;
 
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
@@ -214,7 +214,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
                            if (rayDepth >= 2)
                               bounceRay.throughput.multiply(1 / (1 - Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
                            bounceRay.throughput.multiply(throughputR, throughputG, throughputB);
-                           bounceRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(bounceRay.direction))
+                           bounceRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(ray.direction.inverted()))
                                                          / pdf);
 
                            bounceRay.pixelX = ray.pixelX;
@@ -237,6 +237,9 @@ public final class PhotonTracer implements SurfaceIntegrator {
       /*
        * Build KD Tree
        */
+      /*
+       * TODO: This must be normalized on a per-light basis...
+       */
       for (final Photon photon : photons) {
          if (photon == null)
             break;
@@ -244,6 +247,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
          photon.powerG /= totalPaths;
          photon.powerB /= totalPaths;
       }
+      System.out.println("Light paths traced: " + totalPaths);
       System.out.println("Total photons: " + photonCount);
       return buildPhotonMap(photons, photonCount);
    }
@@ -260,8 +264,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
        * @param leftChild
        * @param rightChild
        */
-      public KDNode(final int splitAxis, final Photon splitLocation, final KDNode leftChild,
-            final KDNode rightChild) {
+      public KDNode(final int splitAxis, final Photon splitLocation, final KDNode leftChild, final KDNode rightChild) {
          super();
          this.splitAxis = splitAxis;
          this.splitPhoton = splitLocation;
@@ -366,7 +369,6 @@ public final class PhotonTracer implements SurfaceIntegrator {
                                                                                                                                + mid + 1, count - mid - 1));
    }
 
-
    private static final class PhotonIntegrator implements Runnable, PhotonHandler {
       private static final int ILLUMINATION_SAMPLES = 4;
       // private static final double gaussFalloffControl = 1;
@@ -418,8 +420,7 @@ public final class PhotonTracer implements SurfaceIntegrator {
       private Rectangle rect;
 
       public PhotonIntegrator(final Scene scene, final ImageBuffer image, final Queue<Rectangle> workQueue,
-            final KDNode photonMap, final int pixelSampleRate, final int recursionDepth,
-            final AtomicInteger doneSignal) {
+            final KDNode photonMap, final int pixelSampleRate, final int recursionDepth, final AtomicInteger doneSignal) {
          this.recursionDepth = recursionDepth;
          this.imageBuffer = image;
          this.scene = scene;
@@ -465,7 +466,6 @@ public final class PhotonTracer implements SurfaceIntegrator {
                /* Generate Eye Rays */
                SamplingUtils.generatePixelSamples(rays, new Rectangle(0, 0, rect.width, rect.height), pixelSampleRate, rng);
                scene.getCamera().sample(rays, imageSize.width, imageSize.height, rect.x, rect.y, rng);
-
 
                /* Visibility pass */
                IntegratorUtils.processHits(rays, rayCount, scene.getGeometry());
@@ -547,6 +547,17 @@ public final class PhotonTracer implements SurfaceIntegrator {
                }
 
                /*
+                * Save the transmission weights, they may be overwritten if the ray is reused for the next path segment
+                * below.
+                */
+               final double throughputR = ray.throughput.r
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
+               final double throughputG = ray.throughput.g
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
+               final double throughputB = ray.throughput.b
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
+
+               /*
                 * Diffuse surfaces with a wide distribution of reflectivity are relatively unlikely to bounce to a small
                 * emissive object, which introduces significant variance without an extremely large number of samples.
                 * Diffuse surfaces will be tested for direct illumination explicitly below, so we ignore the emissive
@@ -564,19 +575,9 @@ public final class PhotonTracer implements SurfaceIntegrator {
                 */
                if (ray.specularBounce) {
                   ray.intersection.material.getEmissionColor(directIllumContribution, ray, ray.intersection);
-               } else
+               } else {
                   directIllumContribution.set(0, 0, 0);
-
-               /*
-                * Save the transmission weights, they may be overwritten if the ray is reused for the next path segment
-                * below.
-                */
-               final double throughputR = ray.throughput.r
-               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
-               final double throughputG = ray.throughput.g
-               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
-               final double throughputB = ray.throughput.b
-               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
+               }
 
                /*
                 * Sample direct illumination at diffuse intersections.
@@ -587,27 +588,16 @@ public final class PhotonTracer implements SurfaceIntegrator {
                   /*
                    * Integrate contribution from direct illumination for the first hit only.
                    */
-                  if (false && rayDepth == 0) {
-                     final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D);
-                     illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(), directIllumContribution, ILLUMINATION_SAMPLES);
-                  }
+                  final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_D);
+                  illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(), directIllumContribution, ILLUMINATION_SAMPLES);
+
                   /*
                    * TODO: Sample photon map for indirect lighting contribution.
                    */
                   photonCollection.clear();
                   photonMap.findPhotons(this, ray.getPointOnRay(ray.t).get(), Double.POSITIVE_INFINITY);
                   final double maxDistSq = photonCollection.last().distSq;
-                  // double minDistSq = photonCollection.first().distSq;
-                  // // System.out.println("Min/Max dist: " + minDist + " / " + Math.sqrt(maxDistSq));
-                  //
-                  // // DEBUG...
-                  // if (minDistSq < 0.05 && minDistSq > 0) {
-                  // minDistSq = 0.05 / minDistSq;
-                  // // updateImage((int) ray.pixelX, (int) ray.pixelY, minDist, minDist, minDist);
-                  // updateImage((int) ray.pixelX, (int) ray.pixelY, minDistSq * throughputR, minDistSq * throughputG,
-                  // minDistSq
-                  // * throughputB);
-                  // }
+                  final Vec3 hitPoint = ray.getPointOnRay(ray.t);
                   final int nPhotons = photonCollection.size();
                   final Color photonColor = new Color(0);
                   for (final CollectedPhoton photon : photonCollection) {
@@ -619,9 +609,12 @@ public final class PhotonTracer implements SurfaceIntegrator {
                          */
                         photonColor.set(photon.photon.powerR, photon.photon.powerG, photon.photon.powerB);
                         ray.intersection.material.evaluateBRDF(photonColor, ray.direction.inverted(), new Vec3(-photon.photon.dx, -photon.photon.dy, -photon.photon.dz), ray.intersection);
-                        directIllumContribution.scaleAdd(photonColor, cosWi);
+                        double weight = 1.0 - (hitPoint.distanceSq(photon.photon.x, photon.photon.y, photon.photon.z) / maxDistSq);
+                        weight = weight * weight * 3.0 / Math.PI;
+                        directIllumContribution.scaleAdd(photonColor, cosWi * weight / (nPhotons * maxDistSq));
                      }
                   }
+
                }
 
                /*

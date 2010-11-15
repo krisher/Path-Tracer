@@ -69,7 +69,8 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    @Override
    public void sampleEmission(final SampleRay wo, final float r1, final float r2) {
       wo.origin.set(center);
-      SamplingUtils.uniformSampleSphere(wo.direction, r1, r2); // Equal probability of sending a ray in any
+      final double pdf = SamplingUtils.uniformSampleSphere(wo.direction, r1, r2); // Equal probability of sending a ray
+                                                                                  // in any
       // direction.
       wo.origin.scaleAdd(wo.direction, radius + Constants.EPSILON_D); // Move the origin to the surface of the
       // sphere.
@@ -77,5 +78,6 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       // hemisphere.
       // SamplingUtils.uniformSampleHemisphere(wo.direction, rng);
       material.getEmissionColor(wo.throughput, wo, null);
+      wo.throughput.multiply(1.0 / pdf);
    }
 }
