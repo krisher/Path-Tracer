@@ -56,7 +56,16 @@
 									<classifier>linux-amd64</classifier>
 									<type>jar</type>
 									<overWrite>true</overWrite>
-									<outputDirectory>${project.build.directory}/lib</outputDirectory>
+									<outputDirectory>${project.build.directory}/lib/linux-amd64</outputDirectory>
+								</artifactItem>
+                        <artifactItem>
+									<groupId>com.jogamp</groupId>
+									<artifactId>gluegen-rt-natives</artifactId>
+									<version>20101110</version>
+									<classifier>linux-amd64</classifier>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}/lib/linux-amd64</outputDirectory>
 								</artifactItem>
 							</artifactItems>
 						</configuration>
@@ -97,7 +106,19 @@
 			<classifier>swing</classifier>
 			<scope>compile</scope>
 		</dependency>
-
+        <dependency>
+			<groupId>com.jogamp</groupId>
+			<artifactId>jocl</artifactId>
+			<version>20101110</version>
+			<scope>compile</scope>
+		</dependency>
+      <dependency>
+			<groupId>com.jogamp</groupId>
+			<artifactId>gluegen-rt</artifactId>
+			<version>20101110</version>
+			<scope>compile</scope>
+		</dependency>
+      
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -110,7 +131,6 @@
 			<version>1.1</version>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
 
 

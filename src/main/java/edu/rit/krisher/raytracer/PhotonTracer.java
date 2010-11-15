@@ -38,8 +38,8 @@ import edu.rit.krisher.vecmath.Vec3;
 public final class PhotonTracer implements SurfaceIntegrator {
 
    private final Timer timer = new Timer("Ray Trace (Thread Timing)");
-   private static final int MAX_PHOTON_COLLECTION = 5;
-   private static final int MAX_PHOTONS = 10000;
+   private static final int MAX_PHOTON_COLLECTION = 50;
+   private static final int MAX_PHOTONS = 200000;
 
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
 
