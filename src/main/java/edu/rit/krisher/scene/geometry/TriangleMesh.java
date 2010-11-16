@@ -68,6 +68,14 @@ public class TriangleMesh implements Geometry {
       }
       return normals;
    }
+   
+   public float[] getVertices() {
+      return vertices;
+   }
+   
+   public int[] getTriIndices() {
+      return triangleIndices;
+   }
 
    public void transform(final Transform transform) {
       final Vec3 vert = new Vec3();

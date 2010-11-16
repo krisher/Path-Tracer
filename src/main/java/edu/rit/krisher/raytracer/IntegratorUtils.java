@@ -168,7 +168,7 @@ public final class IntegratorUtils {
     * a closer intersection is found, the ray.intersection.hitGeometry is set to null to indicate an obstruction.
     * 
     * @param rays
-    *           A non-null array of at least 'count' non-null SampleRays. The origin and direction of the rays must be
+    *           A non-null array of at least 'count' non-null SampleRays. The t, origin, and direction of the rays must be
     *           initialized prior to this call.
     * @param count
     *           The first 'count' rays in the rays array are processed for intersection.

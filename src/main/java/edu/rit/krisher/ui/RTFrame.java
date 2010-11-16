@@ -22,6 +22,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import net.miginfocom.swing.MigLayout;
+import edu.rit.krisher.raytracer.CLPathTracer;
 import edu.rit.krisher.raytracer.PathTracer;
 import edu.rit.krisher.raytracer.PhotonTracer;
 import edu.rit.krisher.raytracer.SurfaceIntegrator;
@@ -45,13 +46,13 @@ public class RTFrame extends JFrame {
    final JButton saveButton = new JButton("Save Image");
    final JFileChooser saveChooser = new JFileChooser(".");
 
-   private final SurfaceIntegrator[] integrators = new SurfaceIntegrator[] { new PathTracer(), new PhotonTracer() };
+   private final SurfaceIntegrator[] integrators = new SurfaceIntegrator[] { new PathTracer(), new PhotonTracer(), new CLPathTracer() };
 
    public RTFrame() {
       final Container contentPane = getContentPane();
 
       rtControls.setBorder(BorderFactory.createTitledBorder("Ray Tracer"));
-      rtControls.setIntegratorChoices("Path Tracer", "Photon Tracer");
+      rtControls.setIntegratorChoices("Path Tracer", "Photon Tracer", "CL Path Tracer");
       rtControls.addActionListener(rtControlListener);
       contentPane.setLayout(new MigLayout("", "[fill]u[grow]"));
       contentPane.add(rtControls, "ay top");

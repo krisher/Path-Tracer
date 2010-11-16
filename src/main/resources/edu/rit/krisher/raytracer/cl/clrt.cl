@@ -1,4 +1,5 @@
-//#define SMALL_D 1e-10
+//#pragma OPENCL EXTENSION cl_amd_printf : enable
+#define SMALL_D 1e-7f
 // TODO: Consider making these structs of arrays instead of arrays of structs
 // for better use of memory bandwidth across threads.
 //
@@ -22,7 +23,7 @@ typedef struct {
 	float t;
 	float u;
 	float v;
-	int triangle;
+	unsigned int triangle;
 } intersection; //16b
 
 
@@ -37,13 +38,13 @@ void ray_triangle_isect(
 		float *u, /* output for barycentric isect coord */
 		float *v, /* output for barycentric isect coord */
 		unsigned int *hit_tri, /* output for triangle index if isect occurred */
-		__global vec3 *tri_verts, /* vertex buffer */
-		__global int *vert_indices) /* triplets of vertex indices for each triangle */
+		const __global vec3 *tri_verts, /* vertex buffer */
+		const __global int *vert_indices) /* triplets of vertex indices for each triangle */
 {
 	/* Load triangle verts from global memory */
-	__global vec3 *vert0 = &tri_verts[vert_indices[triangleOffs]];
-	__global vec3 *vert1 = &tri_verts[vert_indices[triangleOffs + 1]];
-	__global vec3 *vert2 = &tri_verts[vert_indices[triangleOffs + 2]];
+	const __global vec3 *vert0 = &tri_verts[vert_indices[triangleOffs]];
+	const __global vec3 *vert1 = &tri_verts[vert_indices[triangleOffs + 1]];
+	const __global vec3 *vert2 = &tri_verts[vert_indices[triangleOffs + 2]];
 
 	/* Compute edges */
 	const float4 base_vert = (float4)(vert0->x, vert0->y, vert0->z, 0.0f);
@@ -55,7 +56,7 @@ void ray_triangle_isect(
 	/*
 	 * Ray nearly parallel to triangle plane, or degenerate triangle...
 	 */
-	if (divisor < 1e-10 && divisor > -1e-10) {
+	if (divisor < SMALL_D && divisor > -SMALL_D) {
 		return;
 	}
 
@@ -77,7 +78,7 @@ void ray_triangle_isect(
 
 	const float isectDist = dot(q, e1) / divisor;
 
-	if (isectDist > *t) {
+	if (isectDist > *t || isectDist < SMALL_D) {
 		return;
 	}
 
@@ -90,10 +91,10 @@ void ray_triangle_isect(
 
 __kernel void find_intersections(
 		__global intersection *hits,
-		__global ray *rays,
+		const __global ray *rays,
 		const unsigned int ray_count,
-		__global vec3 *tri_verts,
-		__global int *vert_indices,
+		const __global vec3 *tri_verts,
+		const __global int *vert_indices,
 		const unsigned int tri_count
 		)
 {
@@ -122,24 +123,23 @@ __kernel void find_intersections(
 		++ray_struct;
 		float4 ray_struct1 = *ray_struct;
 		ray_o = (float4)(ray_struct0.xyz, 0.0f);
-		ray_d = (float4)(ray_struct0.w, ray_struct1.xy, 0.0f);
+		ray_d = (float4)(ray_struct0.w, ray_struct1.x, ray_struct1.y, 0.0f);
 		maxT = ray_struct1.w;
 	}
 
+//	printf("Ray o: %f, %f, %f\n", ray_o.x, ray_o.y, ray_o.z);
+//	printf("Ray d: %f, %f, %f\n", ray_d.x, ray_d.y, ray_d.z);
 	/*
 	 * Iterate over all triangles to find closest intersection...
 	 */
 	unsigned int hit_tri = tri_count;
 	float u, v;
 	for (unsigned int tri_idx=0; tri_idx < tri_count; ++tri_idx) {
-		ray_triangle_isect(	ray_o, ray_d, tri_idx * 3, &maxT,
+			ray_triangle_isect(	ray_o, ray_d, tri_idx * 3, &maxT,
 				&u,	&v,	&hit_tri, tri_verts, vert_indices);
 	}
 
-	// Write intersection info to output buffer.
-
-
-    hits[ray_idx].t = maxT;
+	hits[ray_idx].t = maxT;
 	hits[ray_idx].u = u;
 	hits[ray_idx].v = v;
 	hits[ray_idx].triangle = hit_tri;

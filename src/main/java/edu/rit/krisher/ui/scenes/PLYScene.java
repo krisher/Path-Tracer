@@ -14,6 +14,7 @@ import edu.rit.krisher.scene.Material;
 import edu.rit.krisher.scene.acceleration.KDGeometryContainer;
 import edu.rit.krisher.scene.acceleration.KDPartitionStrategy;
 import edu.rit.krisher.scene.acceleration.KDTreeMetrics;
+import edu.rit.krisher.scene.acceleration.SAHPartitionStrategey;
 import edu.rit.krisher.scene.camera.DoFCamera;
 import edu.rit.krisher.scene.camera.PinholeCamera;
 import edu.rit.krisher.scene.geometry.TriangleMesh;
@@ -37,7 +38,7 @@ public class PLYScene<C extends Camera> extends AbstractSceneDescription<C> {
    private final Transform modelTransform;
 
    public PLYScene(final String name, final C camera, final URL modelFile) {
-      this(name, camera, modelFile, null, null, null, false, null);
+      this(name, camera, modelFile, null, null, new SAHPartitionStrategey(), false, null);
    }
 
    public PLYScene(final String name, final C camera, final URL modelFile, final Material modelMat,

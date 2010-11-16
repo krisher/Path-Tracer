@@ -35,7 +35,7 @@ public final class PathTracer implements SurfaceIntegrator {
 
    private static final int ILLUMINATION_SAMPLES = 4;
 
-   private final Timer timer = new Timer("Ray Trace (Thread Timing)");
+   private final Timer timer = new Timer("Path Trace (Thread Timing)");
 
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
 
