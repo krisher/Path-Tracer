@@ -55,6 +55,7 @@ public class CLPathTracer implements SurfaceIntegrator {
    private static final Logger log = Logger.getLogger("CL Path Tracer");
    private static final Map<ImageBuffer, AtomicInteger> active = new ConcurrentHashMap<ImageBuffer, AtomicInteger>();
    private static final String FIND_INTERSECTIONS_KERNEL = "find_intersections";
+   private static final String TEST_INTERSECTIONS_KERNEL = "test_intersections";
 
    private final Timer timer = new Timer("CL Path Trace (Thread Timing)");
 
@@ -67,7 +68,7 @@ public class CLPathTracer implements SurfaceIntegrator {
       printPlatformInfo();
       final boolean cpu = "cpu".equalsIgnoreCase(System.getProperty("opencl.device"));
       log.info("Using " + (cpu ? "CPU" : "GPU") + " for kernel execution (opencl.device == "
-            + System.getProperty("opencl.device") + ")");
+               + System.getProperty("opencl.device") + ")");
       context = CLContext.create(cpu ? Type.CPU : Type.GPU);
 
       // context = CLContext.create(CLPlatform.listCLPlatforms()[0], Type.GPU);
@@ -92,6 +93,7 @@ public class CLPathTracer implements SurfaceIntegrator {
    private class Intersector {
       private final int localWorkSize;
       private final CLKernel isectKernel;
+      private final CLKernel itestKernel;
       private final CLCommandQueue commandQueue;
       private final CLBuffer<FloatBuffer> vertBuff;
       private final CLBuffer<IntBuffer> indexBuff;
@@ -100,10 +102,11 @@ public class CLPathTracer implements SurfaceIntegrator {
       public Intersector(final float[] verts, final int[] indices) {
 
          log.info("Creating CL ray intersector with " + (verts.length / 3) + " vertices, " + (indices.length / 3)
-               + " triangles.");
+                  + " triangles.");
 
          commandQueue = device.createCommandQueue(Mode.OUT_OF_ORDER_MODE);
          isectKernel = program.createCLKernel(FIND_INTERSECTIONS_KERNEL);
+         itestKernel = program.createCLKernel(TEST_INTERSECTIONS_KERNEL);
          log.info("Program compilation status: " + program.getBuildStatus(device));
          log.info("Compilation info-log:\n" + program.getBuildLog());
 
@@ -125,15 +128,21 @@ public class CLPathTracer implements SurfaceIntegrator {
          indexBuff.getBuffer().flip();
          commandQueue.putWriteBuffer(indexBuff, true);
 
+
          isectKernel.setArg(3, vertBuff);
          isectKernel.setArg(4, indexBuff);
          isectKernel.setArg(5, triCount);
+
+         itestKernel.setArg(3, vertBuff);
+         itestKernel.setArg(4, indexBuff);
+         itestKernel.setArg(5, triCount);
          log.info("Transferred Scene Geometry to CL device.");
       }
 
       public synchronized void processHits(final GeometryRay[] rays, final int count) {
-         final CLBuffer<ByteBuffer> hitBuffer = context.createByteBuffer(4 * count * 4, Mem.WRITE_ONLY, Mem.USE_BUFFER);
+         final CLBuffer<ByteBuffer> hitBuffer = context.createByteBuffer(count * 4 * 4, Mem.WRITE_ONLY);
          final CLBuffer<FloatBuffer> rayBuffer = context.createFloatBuffer(8 * count, Mem.READ_ONLY);
+
          final FloatBuffer rayBuff = rayBuffer.getBuffer();
          for (int i = 0; i < count; ++i) {
             final GeometryRay ray = rays[i];
@@ -147,13 +156,13 @@ public class CLPathTracer implements SurfaceIntegrator {
             rayBuff.put(Float.POSITIVE_INFINITY);
          }
          rayBuff.flip();
-         commandQueue.putWriteBuffer(rayBuffer, true);
+         commandQueue.putWriteBuffer(rayBuffer, false);
 
          final CLEventList eList = new CLEventList(1);
          isectKernel.setArg(0, hitBuffer).setArg(1, rayBuffer).setArg(2, count);
          final int workItems = (int) (Math.ceil(count / (float) localWorkSize) * localWorkSize);
          commandQueue.put1DRangeKernel(isectKernel, 0, workItems, localWorkSize, eList);
-         //System.out.println(eList.getEvent(0).isComplete());
+         // System.out.println(eList.getEvent(0).isComplete());
          commandQueue.putReadBuffer(hitBuffer, true);
 
          final ByteBuffer hitB = hitBuffer.getBuffer();
@@ -177,7 +186,7 @@ public class CLPathTracer implements SurfaceIntegrator {
       // this.geometry = geometry;
 
       final int[] geometryPrimOffset = new int[geometry.length]; // Map from geometry index to the starting primitive
-                                                                 // index for that geometry.
+      // index for that geometry.
 
       int vertComponentTotal = 0; // Total number of vertex components.
       int indicesTotal = 0; // Total number of vertex indices (3 per triangle)
@@ -190,7 +199,7 @@ public class CLPathTracer implements SurfaceIntegrator {
       final float[] verts = new float[vertComponentTotal];
       final int[] indices = new int[indicesTotal];
       final int[] primToGeometry = new int[indicesTotal / 3]; // Map of triangle ID to the geometry instance that it
-                                                              // came from.
+      // came from.
       vertComponentTotal = 0;
       indicesTotal = 0;
       for (int i = 0; i < geometry.length; ++i) {
@@ -199,7 +208,8 @@ public class CLPathTracer implements SurfaceIntegrator {
          System.arraycopy(meshVerts, 0, verts, vertComponentTotal, meshVerts.length);
          final int[] meshIndices = mesh.getTriIndices();
          Arrays.fill(primToGeometry, indicesTotal / 3, indicesTotal / 3 + meshIndices.length / 3, i);
-         for (int j = 0; j < meshIndices.length; ++j) { //Offset the vertex indices by the running total of vertices from other geometry.
+         for (int j = 0; j < meshIndices.length; ++j) { // Offset the vertex indices by the running total of vertices
+            // from other geometry.
             indices[j + indicesTotal] = meshIndices[j] + vertComponentTotal / 3;
          }
          indicesTotal += meshIndices.length;
@@ -266,8 +276,7 @@ public class CLPathTracer implements SurfaceIntegrator {
       /*
        * Tiled work distribution...
        */
-      final Rectangle[] imageChunks = IntegratorUtils.chunkRectangle(imageSize.width, imageSize.height, Math.max(2, 64
-            / pixelSampleRate));
+      final Rectangle[] imageChunks = IntegratorUtils.chunkRectangle(imageSize.width, imageSize.height, Math.max(2, 64 / pixelSampleRate));
       /*
        * Thread-safe spin-lock based countdown latch to monitor progress for this image. When this reaches 0, the
        * ImageBuffer is notified that the rendering is complete.
@@ -389,14 +398,7 @@ public class CLPathTracer implements SurfaceIntegrator {
                // pixelNormalization[dst] += filter;
                // }
 
-               /* Visibility pass */
-               intersector.processHits(rays, rayCount);
-               for (int i = 0; i < rayCount; ++i) {
-                  final SampleRay ray = rays[i];
-                  if (ray.hitGeometry != null) {
-                     ray.hitGeometry.getHitData(ray, ray.intersection);
-                  }
-               }
+
 
                /* Trace Rays */
                integrateIrradiance(rays, rays.length);
@@ -439,7 +441,14 @@ public class CLPathTracer implements SurfaceIntegrator {
           * we reach the maximum depth, or all rays have terminated.
           */
          for (int rayDepth = 0; rayDepth <= recursionDepth && rayCount > 0; rayDepth++) {
-
+            /* Visibility pass */
+            intersector.processHits(rays, rayCount);
+            for (int i = 0; i < rayCount; ++i) {
+               final SampleRay ray = rays[i];
+               if (ray.hitGeometry != null) {
+                  ray.hitGeometry.getHitData(ray, ray.intersection);
+               }
+            }
             /*
              * Number of rays that will be processed in the next iteration
              */
@@ -452,7 +461,7 @@ public class CLPathTracer implements SurfaceIntegrator {
                    * No intersection, process for the scene background color.
                    */
                   updateImage((int) ray.pixelX, (int) ray.pixelY, bg.r * ray.throughput.r, bg.g * ray.throughput.g, bg.b
-                        * ray.throughput.b);
+                              * ray.throughput.b);
                   /*
                    * This path is terminated.
                    */
@@ -485,11 +494,11 @@ public class CLPathTracer implements SurfaceIntegrator {
                 * below.
                 */
                final double throughputR = ray.throughput.r
-                     * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
+               * (ray.extinction.r == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.r) * ray.t));
                final double throughputG = ray.throughput.g
-                     * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
+               * (ray.extinction.g == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.g) * ray.t));
                final double throughputB = ray.throughput.b
-                     * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
+               * (ray.extinction.b == 0.0 ? 1.0 : Math.exp(Math.log(ray.extinction.b) * ray.t));
 
                /*
                 * Specular and refractive materials do not benefit from direct illuminant sampling, since their
@@ -499,14 +508,14 @@ public class CLPathTracer implements SurfaceIntegrator {
                if (ray.intersection.material.isDiffuse()) {
                   final Vec3 illumRayOrigin = ray.getPointOnRay(ray.t).scaleAdd(ray.intersection.surfaceNormal, Constants.EPSILON_F);
                   illumSampler.sampleDirectIllumination(illumRayOrigin, ray.intersection, ray.direction.inverted(), directIllumContribution, ILLUMINATION_SAMPLES);
-               } 
+               }
 
                /*
                 * Add the contribution to the pixel, modulated by the transmission across all previous bounces in this
                 * path.
                 */
                updateImage((int) ray.pixelX, (int) ray.pixelY, throughputR * directIllumContribution.r, throughputG
-                     * directIllumContribution.g, throughputB * directIllumContribution.b);
+                           * directIllumContribution.g, throughputB * directIllumContribution.b);
 
                /*
                 * If we have not reached the maximum recursion depth, generate a new reflection/refraction ray for the
@@ -530,7 +539,7 @@ public class CLPathTracer implements SurfaceIntegrator {
                         irradSampleRay.throughput.multiply(1 / (1 - Math.min(1.0 / (recursionDepth + 1), 1.0 - ImageUtil.luminance((float) throughputR, (float) throughputG, (float) throughputB))));
                      irradSampleRay.throughput.multiply(throughputR, throughputG, throughputB);
                      irradSampleRay.throughput.multiply(Math.abs(ray.intersection.surfaceNormal.dot(irradSampleRay.direction))
-                           / pdf);
+                                                        / pdf);
 
                      irradSampleRay.pixelX = ray.pixelX;
                      irradSampleRay.pixelY = ray.pixelY;
@@ -545,8 +554,7 @@ public class CLPathTracer implements SurfaceIntegrator {
 
             }
             rayCount = outRayCount;
-            /* Process all active rays for intersection with scene geometry */
-            IntegratorUtils.processHits(rays, rayCount, geometry);
+
          }
       }
 

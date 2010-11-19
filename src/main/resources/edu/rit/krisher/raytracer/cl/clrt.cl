@@ -30,7 +30,7 @@ typedef struct {
 /*
  * Moller-Trumbore ray/triangle intersection (based on Java implementation).
  */
-void ray_triangle_isect(
+bool ray_triangle_isect(
 		const float4 origin, /* ray origin */
 		const float4 direction, /* ray direction */
 		const unsigned int triangleOffs, /* triangle index */
@@ -57,7 +57,7 @@ void ray_triangle_isect(
 	 * Ray nearly parallel to triangle plane, or degenerate triangle...
 	 */
 	if (divisor < SMALL_D && divisor > -SMALL_D) {
-		return;
+		return false;
 	}
 
 	const float4 translated_origin = origin - base_vert;
@@ -68,18 +68,18 @@ void ray_triangle_isect(
 	 */
 	const float e0dist = dot(p, translated_origin) / divisor;
 	if (e0dist < 0 || e0dist > 1) {
-		return;
+		return false;
 	}
 
 	const float e1dist = dot(q, direction) / divisor;
 	if (e1dist < 0 || e1dist + e0dist> 1) {
-		return;
+		return false;
 	}
 
 	const float isectDist = dot(q, e1) / divisor;
 
 	if (isectDist > *t || isectDist < SMALL_D) {
-		return;
+		return false;
 	}
 
 	/* Found intersection, store tri index, isect dist, and barycentric coords. */
@@ -87,6 +87,7 @@ void ray_triangle_isect(
 	*u = e0dist;
 	*v = e1dist;
 	*hit_tri = triangleOffs / 3;
+	return true;
 }
 
 __kernel void find_intersections(
@@ -143,5 +144,61 @@ __kernel void find_intersections(
 	hits[ray_idx].u = u;
 	hits[ray_idx].v = v;
 	hits[ray_idx].triangle = hit_tri;
+}
+
+__kernel void test_intersections(
+		__global char *hits,
+		const __global ray *rays,
+		const unsigned int ray_count,
+		const __global vec3 *tri_verts,
+		const __global int *vert_indices,
+		const unsigned int tri_count
+		)
+{
+	const int ray_idx = get_global_id(0);
+	/*
+	 * Check to make sure we acutally have a ray to process in this thread.
+	 * May enqueue more workitems than needed to fill workgroup.
+	 */
+	if (ray_idx >= ray_count) {
+		return;
+	}
+
+	float4 ray_o;
+	float4 ray_d;
+	float maxT;
+	/*
+	 * As long as we access float4's at 16b aligned addresses
+	 * this results in slightly more efficient access than pulling
+	 * the ray components out piece by piece.
+	 *
+	 * TODO: This would permit memory coalescing if ray components were stored sequentially instead of interleaved.
+	 */
+	{
+		__global float4 *ray_struct = (__global float4 *)&rays[ray_idx];
+		float4 ray_struct0 = *ray_struct;
+		++ray_struct;
+		float4 ray_struct1 = *ray_struct;
+		ray_o = (float4)(ray_struct0.xyz, 0.0f);
+		ray_d = (float4)(ray_struct0.w, ray_struct1.x, ray_struct1.y, 0.0f);
+		maxT = ray_struct1.w;
+	}
+
+//	printf("Ray o: %f, %f, %f\n", ray_o.x, ray_o.y, ray_o.z);
+//	printf("Ray d: %f, %f, %f\n", ray_d.x, ray_d.y, ray_d.z);
+	/*
+	 * Iterate over all triangles to find closest intersection...
+	 */
+	unsigned int hit_tri = tri_count;
+	float u, v;
+	for (unsigned int tri_idx=0; tri_idx < tri_count; ++tri_idx) {
+			if (ray_triangle_isect(	ray_o, ray_d, tri_idx * 3, &maxT,
+				&u,	&v,	&hit_tri, tri_verts, vert_indices)) {
+				hits[ray_idx] = 1;
+				return;
+			}
+	}
+
+	hits[ray_idx] = 0;
 }
 
