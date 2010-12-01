@@ -118,7 +118,7 @@ public class TriangleMesh implements Geometry {
          intersectsTriangleBarycentric(baryCoords, ray, ray.primitiveID);
          interpolatedNormal(data.surfaceNormal, baryCoords[1], baryCoords[2], ray.primitiveID);
          // TODO: Tangent vector should be based on shading (texture) coords if specified.
-         Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
+         Vec3.computePerpendicularVec(data.tangentVector, data.surfaceNormal);
       }
    }
 

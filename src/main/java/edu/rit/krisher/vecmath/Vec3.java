@@ -69,7 +69,7 @@ public final class Vec3 implements Transform {
    }
 
    public double[] get() {
-      return new double[] {x, y, z};
+      return new double[] { x, y, z };
    }
 
    public final Vec3 add(final Vec3 vector) {
@@ -214,16 +214,22 @@ public final class Vec3 implements Transform {
    }
 
    public final Vec3 componentMinimums(final double x, final double y, final double z) {
-      if (x < this.x) this.x = x;
-      if (y < this.y) this.y = y;
-      if (z < this.z) this.z = z;
+      if (x < this.x)
+         this.x = x;
+      if (y < this.y)
+         this.y = y;
+      if (z < this.z)
+         this.z = z;
       return this;
    }
 
    public final Vec3 componentMaximums(final double x, final double y, final double z) {
-      if (x > this.x) this.x = x;
-      if (y > this.y) this.y = y;
-      if (z > this.z) this.z = z;
+      if (x > this.x)
+         this.x = x;
+      if (y > this.y)
+         this.y = y;
+      if (z > this.z)
+         this.z = z;
       return this;
    }
 
@@ -259,19 +265,25 @@ public final class Vec3 implements Transform {
     * Computes a unit-length vector that is perpendicular to the specified normal vector. The direction in the
     * perpendicular plane is arbitrarily chosen.
     * 
-    * @param tangentResult
+    * @param result
     *           A non-null vector in which to store the result.
     * @param surfaceNormal
     *           A non-null unit length vector that the computed result will be perpendicular to.
+    * @return The result vector that was passed in (and is now initialized to a perpendicular vector).
     */
-   public static void computeTangentVector(final Vec3 tangentResult, final Vec3 surfaceNormal) {
-      tangentResult.set(0, 1, 0);
-      if (Math.abs(tangentResult.dot(surfaceNormal)) > 0.9) {
-         // Small angle, pick a better vector...
-         tangentResult.x = -1.0;
-         tangentResult.y = 0;
+   public static Vec3 computePerpendicularVec(final Vec3 result, final Vec3 surfaceNormal) {
+      if (surfaceNormal.y > 0.9 || surfaceNormal.y < -0.9) {
+         final double invLen = 1.0 / Math.sqrt(surfaceNormal.z * surfaceNormal.z + surfaceNormal.y * surfaceNormal.y);
+         result.x = 0d;
+         result.y = -surfaceNormal.z * invLen;
+         result.z = surfaceNormal.y * invLen;
+      } else {
+         final double len = 1.0 / Math.sqrt(surfaceNormal.z * surfaceNormal.z + surfaceNormal.x * surfaceNormal.x);
+         result.x = surfaceNormal.z * len;
+         result.y = 0d;
+         result.z = -surfaceNormal.x * len;
       }
-      tangentResult.cross(surfaceNormal).normalize();
+      return result;
    }
 
    public static final double length(final double x, final double y, final double z) {

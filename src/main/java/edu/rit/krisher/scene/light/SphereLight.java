@@ -26,15 +26,10 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
       pointToCenter.multiply(lightDistInv);
 
       /*
-       * Construct an orthonormal basis around the direction vector
-       */
-      final Vec3 tangentXAxis = new Vec3();
-      Vec3.computeTangentVector(tangentXAxis, pointToCenter);
-      /*
        * The maximum angle from originToCenter for a ray eminating from origin that will hit the sphere.
        */
       final double sinMaxAngle = radius * lightDistInv;
-      final double cosMaxAngle = Math.sqrt(1 - sinMaxAngle * sinMaxAngle);
+      final double cosMaxAngle = Math.sqrt(1.0 - sinMaxAngle * sinMaxAngle);
 
       /*
        * Uniform sample density over the solid angle subtended by the sphere wrt. the origin point. Taken from Shirley
@@ -43,15 +38,19 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
        * Basically generates a random polar coordinate in a disc perpendicular to the direction from sphere center to
        * ray origin. The coordinate is projected back onto the sphere surface to determine the ray direction.
        */
-      final double cosRandomAzimuth = 1.0 + r1 * (cosMaxAngle - 1.0);
-      final double sinRandomAzimuth = Math.sqrt(1.0 - cosRandomAzimuth * cosRandomAzimuth);
-      final double randomPolar = 2.0 * Math.PI * r2;
+      final double cosTheta = 1.0 + r1 * (cosMaxAngle - 1.0);
+      final double sinTheta = Math.sqrt(1.0 - cosTheta * cosTheta);
+      final double phi = 2.0 * Math.PI * r2;
+
+      /*
+       * Construct an orthonormal basis around the direction vector
+       */
+      final Vec3 tangentXAxis = Vec3.computePerpendicularVec(new Vec3(), pointToCenter);
 
 
-
-      wo.direction.x = Math.cos(randomPolar) * sinRandomAzimuth;
-      wo.direction.y = Math.sin(randomPolar) * sinRandomAzimuth;
-      wo.direction.z = cosRandomAzimuth;
+      wo.direction.x = Math.cos(phi) * sinTheta;
+      wo.direction.y = Math.sin(phi) * sinTheta;
+      wo.direction.z = cosTheta;
       ShadingUtils.shadingCoordsToWorld(wo.direction, pointToCenter, tangentXAxis);
 
       // wo.intersection.surfaceNormal.set(wo.getPointOnRay(isectDist).subtract(center).multiply(1.0 / radius));
@@ -70,7 +69,7 @@ public final class SphereLight extends Sphere implements EmissiveGeometry {
    public void sampleEmission(final SampleRay wo, final float r1, final float r2) {
       wo.origin.set(center);
       final double pdf = SamplingUtils.uniformSampleSphere(wo.direction, r1, r2); // Equal probability of sending a ray
-                                                                                  // in any
+      // in any
       // direction.
       wo.origin.scaleAdd(wo.direction, radius + Constants.EPSILON_D); // Move the origin to the surface of the
       // sphere.

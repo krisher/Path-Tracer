@@ -21,9 +21,13 @@ public class ShadingUtils {
     *           A vector representing the world-space x-axis in the tangent plane of the shading point.
     */
    public static final void shadingCoordsToWorld(final Vec3 vec, final Vec3 shadingNormal, final Vec3 shadingX) {
+      /*
+       * Find y axis vector
+       */
       final double yAxisX = shadingNormal.y * shadingX.z - shadingNormal.z * shadingX.y;
       final double yAxisY = shadingNormal.z * shadingX.x - shadingNormal.x * shadingX.z;
       final double yAxisZ = shadingNormal.x * shadingX.y - shadingNormal.y * shadingX.x;
+
 
       vec.set(vec.x * shadingX.x + vec.y * yAxisX + vec.z * shadingNormal.x, vec.x * shadingX.y + vec.y * yAxisY
               + vec.z * shadingNormal.y, vec.x * shadingX.z + vec.y * yAxisZ + vec.z * shadingNormal.z);

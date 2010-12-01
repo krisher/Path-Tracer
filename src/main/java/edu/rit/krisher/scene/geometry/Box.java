@@ -84,7 +84,7 @@ public class Box implements Geometry {
       data.material = material;
       data.materialCoords = new double[] { hitPt.x, hitPt.y, hitPt.z };
       data.surfaceNormal.set(isectNormal);
-      Vec3.computeTangentVector(data.tangentVector, data.surfaceNormal);
+      Vec3.computePerpendicularVec(data.tangentVector, data.surfaceNormal);
    }
 
    @Override
